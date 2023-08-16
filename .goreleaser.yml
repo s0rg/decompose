@@ -1,9 +1,6 @@
 # .goreleaser.yml
 project_name: decompose
 
-permissions:
-  contents: write
-
 before:
   hooks:
     - go mod download
