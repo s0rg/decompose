@@ -8,11 +8,11 @@ import (
 )
 
 type nodeJSON struct {
-	Name        string              `json:"name"`
-	Image       *string             `json:"image,omitempty"`
-	IsExternal  bool                `json:"is_external"`
-	Ports       []string            `json:"ports"`
-	Connections map[string][]string `json:"connected"`
+	Name       string              `json:"name"`
+	Image      *string             `json:"image,omitempty"`
+	IsExternal bool                `json:"is_external"`
+	Ports      []string            `json:"ports"`
+	Connected  map[string][]string `json:"connected"`
 }
 
 type JSON struct {
@@ -27,10 +27,10 @@ func NewJSON() *JSON {
 
 func (j *JSON) AddNode(n *node.Node) error {
 	jn := &nodeJSON{
-		Name:        n.Name,
-		IsExternal:  n.IsExternal(),
-		Ports:       make([]string, len(n.Ports)),
-		Connections: make(map[string][]string),
+		Name:       n.Name,
+		IsExternal: n.IsExternal(),
+		Ports:      make([]string, len(n.Ports)),
+		Connected:  make(map[string][]string),
 	}
 
 	if n.Image != "" {
@@ -57,12 +57,12 @@ func (j *JSON) AddEdge(srcID, dstID string, port node.Port) {
 		return
 	}
 
-	con, ok := src.Connections[dst.Name]
+	con, ok := src.Connected[dst.Name]
 	if !ok {
 		con = make([]string, 0, 1)
 	}
 
-	src.Connections[dst.Name] = append(con, port.Label())
+	src.Connected[dst.Name] = append(con, port.Label())
 }
 
 func (j *JSON) Write(w io.Writer) {

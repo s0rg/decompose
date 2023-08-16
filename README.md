@@ -18,11 +18,11 @@ dot](https://www.graphviz.org/doc/info/lang.html) or json stream of elements:
 
 ```
 type Node struct {
-    Name        string              `json:"name"`            // container name
-    Image       *string             `json:"image,omitempty"` // docker image (if any)
-    IsExternal  bool                `json:"is_external"`     // 'external' flag - this host is not inside container
-    Ports       []string            `json:"ports"`           // ports description i.e. '443/tcp'
-    Connections map[string][]string `json:"connected"`       // mapping name -> ports slice
+    Name       string              `json:"name"`            // container name
+    Image      *string             `json:"image,omitempty"` // docker image (if any)
+    IsExternal bool                `json:"is_external"`     // 'external' flag - this host is not inside container
+    Ports      []string            `json:"ports"`           // ports description i.e. '443/tcp'
+    Connected  map[string][]string `json:"connected"`       // mapping name -> ports slice
 }
 ```
 
