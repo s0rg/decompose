@@ -1,0 +1,5 @@
+dist/
+vendor/
+*.out
+*.pprof
+*_profile.pdf

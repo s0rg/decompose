@@ -1,0 +1,58 @@
+# .goreleaser.yml
+project_name: decompose
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: decompose-bin
+    dir: .
+    main: ./cmd/decompose
+    env: [CGO_ENABLED=0]
+    ldflags:
+      - -s -w
+      - -X main.GitTag={{.Tag}}
+      - -X main.GitHash={{.ShortCommit}}
+      - -X main.BuildDate={{.Date}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: decompose
+    format: tar.gz
+    builds:
+      - decompose-bin
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+nfpms:
+  - id: packages
+    file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    homepage: https://github.com/s0rg/decompose
+    description: Reverse-engineering tool for docker environments.
+    maintainer: s0rg
+    license: MIT
+    vendor: decompose
+    formats:
+      - deb
+      - rpm
+
+changelog:
+  filters:
+    exclude:
+      - '^chore'
+      - '^docs'
+      - '^refactor'
+      - '^style'
+      - '^test'
