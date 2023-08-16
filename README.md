@@ -29,7 +29,7 @@ type Node struct {
 
 # features
 
-- produces detailed system decription with ports
+- produces detailed system description with ports
 - fast, it scans ~400 containers in around 5 seconds
 - more than 95% test-coverage
 
