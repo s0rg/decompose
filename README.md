@@ -57,6 +57,23 @@ possible flags with default values:
         show version
 ```
 
+# examples
+
+Get dot file:
+```
+sudo decompose > connections.dot
+```
+
+Get json stream:
+```
+sudo decompose -format json | jq '{name}'
+```
+
+Get only tcp connections:
+```
+sudo decompose -proto tcp > tcp.dot
+```
+
 
 # known limitations
 
