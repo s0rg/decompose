@@ -127,12 +127,12 @@ func (l *Loader) insert(n *node.JSON) {
 }
 
 func (l *Loader) isExternalNode(id string) (yes bool) {
-	node, ok := l.nodes[id]
+	n, ok := l.nodes[id]
 	if !ok {
 		return false
 	}
 
-	return node.IsExternal()
+	return n.IsExternal()
 }
 
 func (l *Loader) Build(b Builder) error {
