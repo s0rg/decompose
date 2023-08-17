@@ -2,10 +2,19 @@ package netgraph_test
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/s0rg/decompose/internal/netgraph"
 )
+
+type failReader struct {
+	Err error
+}
+
+func (fr *failReader) Read(_ []byte) (n int, err error) {
+	return 0, fr.Err
+}
 
 func TestParseNetstat(t *testing.T) {
 	t.Parallel()
@@ -34,6 +43,22 @@ tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED`
 	}
 
 	if len(res) != 4 {
+		t.Fail()
+	}
+}
+
+func TestParseNetstatError(t *testing.T) {
+	t.Parallel()
+
+	myErr := errors.New("test-err")
+	reader := &failReader{Err: myErr}
+
+	_, err := netgraph.ParseNetstat(reader)
+	if err == nil {
+		t.Fatal("err == nil")
+	}
+
+	if !errors.Is(err, myErr) {
 		t.Fail()
 	}
 }

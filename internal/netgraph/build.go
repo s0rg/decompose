@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
-
-	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -30,6 +27,7 @@ func Build(
 	grb Builder,
 	knd NetProto,
 	follow string,
+	local bool,
 ) error {
 	log.Println("Gathering containers info...")
 
@@ -55,11 +53,11 @@ func Build(
 		return nil
 	}
 
-	locals := buildIPMap(containers)
+	neighbours := buildIPMap(containers)
 
 	log.Println("Building nodes...")
 
-	nodes := buildNodes(containers, locals, follow)
+	nodes := buildNodes(containers, neighbours, follow, local)
 
 	log.Printf("Found %d nodes", len(nodes))
 
@@ -72,7 +70,7 @@ func Build(
 	log.Println("Processing nodes...")
 
 	for id, node := range nodes {
-		node.Ports = compactPorts(node.Ports)
+		node.Ports = node.Ports.Dedup()
 
 		if err = grb.AddNode(node); err != nil {
 			return fmt.Errorf("node [%s]: %w", id, err)
@@ -81,7 +79,7 @@ func Build(
 
 	log.Println("Building edges...")
 
-	buildEdges(containers, locals, nodes, follow, grb.AddEdge)
+	buildEdges(containers, neighbours, nodes, follow, grb.AddEdge)
 
 	log.Println("Done!")
 
@@ -102,15 +100,16 @@ func buildIPMap(cntrs []*Container) (rv map[string]*Container) {
 
 func buildNodes(
 	cntrs []*Container,
-	local map[string]*Container,
-	focus string,
+	neighbours map[string]*Container,
+	follow string,
+	local bool,
 ) (rv map[string]*node.Node) {
 	rv = make(map[string]*node.Node)
 
 	var skip bool
 
 	for _, con := range cntrs {
-		skip = !con.Match(focus)
+		skip = !con.Match(follow)
 
 		n := &node.Node{
 			ID:    con.ID,
@@ -133,11 +132,15 @@ func buildNodes(
 				Value: int(c.RemotePort),
 			}
 
-			if lc, ok := local[rip]; ok { // known, skip it
-				if skip && lc.Match(focus) {
+			if lc, ok := neighbours[rip]; ok {
+				if skip && lc.Match(follow) {
 					skip = false
 				}
 
+				return
+			}
+
+			if local {
 				return
 			}
 
@@ -200,48 +203,6 @@ func buildEdges(
 			}
 		})
 	}
-}
-
-func compactPorts(in []node.Port) (rv []node.Port) {
-	state := make(map[string]set.Set[int])
-
-	for i := 0; i < len(in); i++ {
-		p := &in[i]
-
-		s, ok := state[p.Kind]
-		if !ok {
-			s = make(set.Set[int])
-
-			state[p.Kind] = s
-		}
-
-		s.Add(p.Value)
-	}
-
-	total := 0
-
-	for _, s := range state {
-		total += len(s)
-	}
-
-	rv = make([]node.Port, 0, total)
-
-	for k, s := range state {
-		ports := s.List()
-
-		if len(ports) > 1 {
-			sort.Ints(ports)
-		}
-
-		for _, p := range ports {
-			rv = append(rv, node.Port{
-				Kind:  k,
-				Value: p,
-			})
-		}
-	}
-
-	return rv
 }
 
 func percentOf(a, b int) float64 {

@@ -47,12 +47,15 @@ issues:
         - gosec
     - path: internal/builder/json\.go
       linters:
-        - govet
         - errchkjson
+    - path: internal/node/json\.go
+      linters:
+        - govet
     - path: internal/builder/builder\.go
       linters:
         - ireturn
     - path: ._test\.go
       linters:
         - goerr113
-        - dupl
+        - ireturn
+        - funlen
