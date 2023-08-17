@@ -22,18 +22,20 @@ func TestPortLabel(t *testing.T) {
 	}
 }
 
-func TestNodeIsExternal(t *testing.T) {
+func TestPortsDedup(t *testing.T) {
 	t.Parallel()
 
-	n := node.Node{}
-
-	if !n.IsExternal() {
-		t.Fail()
+	ports := []node.Port{
+		{Kind: "tcp", Value: 1},
+		{Kind: "udp", Value: 1},
+		{Kind: "tcp", Value: 1},
+		{Kind: "udp", Value: 2},
+		{Kind: "tcp", Value: 3},
 	}
 
-	n.ID = "id"
+	rv := node.Ports(ports).Dedup()
 
-	if n.IsExternal() {
+	if len(rv) != 4 {
 		t.Fail()
 	}
 }

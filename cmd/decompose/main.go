@@ -32,9 +32,11 @@ var (
 )
 
 var (
-	fSilent, fVersion, fHelp bool
-	fProto, fFormat          string
-	fOut, fFollow            string
+	fSilent, fVersion bool
+	fHelp, fLocal     bool
+	fProto, fFormat   string
+	fOut, fFollow     string
+	fLoad             []string
 )
 
 func version() string {
@@ -64,11 +66,18 @@ func setupFlags() {
 	flag.BoolVar(&fSilent, "silent", false, "suppress progress messages in stderr")
 	flag.BoolVar(&fVersion, "version", false, "show version")
 	flag.BoolVar(&fHelp, "help", false, "show this help")
+	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
 
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
-	flag.StringVar(&fFollow, "follow", "", "follow only this container by id or name")
+	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json or dot")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
+
+	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
+		fLoad = append(fLoad, v)
+
+		return nil
+	})
 
 	flag.Usage = usage
 }
@@ -95,6 +104,7 @@ func writeOut(name string, writer func(io.Writer)) error {
 func run() error {
 	fProto = strings.ToLower(strings.TrimSpace(fProto))
 	fFormat = strings.ToLower(strings.TrimSpace(fFormat))
+	fFollow = strings.TrimSpace(fFollow)
 
 	proto, ok := netgraph.ParseNetProto(fProto)
 	if !ok {
@@ -110,6 +120,74 @@ func run() error {
 		return nil
 	}
 
+	var (
+		act string
+		err error
+	)
+
+	if len(fLoad) > 0 {
+		act = "load"
+		err = doLoad(bldr, proto, fFollow, fLocal, fLoad)
+	} else {
+		act = "build"
+		err = doBuild(bldr, proto, fFollow, fLocal)
+	}
+
+	if err != nil {
+		return fmt.Errorf("%s: %w", act, err)
+	}
+
+	if err = writeOut(strings.TrimSpace(fOut), bldr.Write); err != nil {
+		return fmt.Errorf("output: %w", err)
+	}
+
+	return nil
+}
+
+func doLoad(
+	b netgraph.Builder,
+	p netgraph.NetProto,
+	follow string,
+	local bool,
+	files []string,
+) error {
+	var proto string
+
+	switch p {
+	case netgraph.ALL:
+	case netgraph.TCP, netgraph.UDP:
+		proto = p.String()
+	}
+
+	ldr := netgraph.NewLoader(proto, follow, local)
+
+	for _, fn := range files {
+		fd, err := os.Open(fn)
+		if err != nil {
+			return fmt.Errorf("open %s: %w", fn, err)
+		}
+
+		err = ldr.Load(fd)
+		fd.Close()
+
+		if err != nil {
+			return fmt.Errorf("load %s: %w", fn, err)
+		}
+	}
+
+	if err := ldr.Build(b); err != nil {
+		return fmt.Errorf("build: %w", err)
+	}
+
+	return nil
+}
+
+func doBuild(
+	b netgraph.Builder,
+	p netgraph.NetProto,
+	follow string,
+	local bool,
+) error {
 	cli, err := netgraph.NewDockerClient()
 	if err != nil {
 		return fmt.Errorf("docker: %w", err)
@@ -117,12 +195,8 @@ func run() error {
 
 	defer cli.Close()
 
-	if err = netgraph.Build(cli, bldr, proto, strings.TrimSpace(fFollow)); err != nil {
+	if err = netgraph.Build(cli, b, p, follow, local); err != nil {
 		return fmt.Errorf("graph: %w", err)
-	}
-
-	if err = writeOut(strings.TrimSpace(fOut), bldr.Write); err != nil {
-		return fmt.Errorf("output: %w", err)
 	}
 
 	return nil

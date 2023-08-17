@@ -16,7 +16,7 @@ type Container struct {
 }
 
 func (ct *Container) Match(v string) bool {
-	return v == "" || (ct.Name == v || ct.ID == v)
+	return v == "" || ct.Name == v
 }
 
 func (ct *Container) SetConnections(conns []*Connection) {

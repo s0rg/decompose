@@ -58,12 +58,6 @@ func TestContainerMatch(t *testing.T) {
 
 	c.ID = id
 
-	if !c.Match(id) { // by id
-		t.Fail()
-	}
-
-	c.ID = ""
-
 	if c.Match(id) { // by id
 		t.Fail()
 	}
@@ -110,8 +104,6 @@ func TestContainerOutbounds(t *testing.T) {
 		})
 
 		if res != tc.Outbounds {
-			t.Log(tc.Conns[0])
-
 			t.Fatalf("test case[%d] fail want %d got %d", i, tc.Outbounds, res)
 		}
 	}

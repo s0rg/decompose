@@ -7,41 +7,18 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
-type nodeJSON struct {
-	Name       string              `json:"name"`
-	Image      *string             `json:"image,omitempty"`
-	IsExternal bool                `json:"is_external"`
-	Ports      []string            `json:"ports"`
-	Connected  map[string][]string `json:"connected"`
-}
-
 type JSON struct {
-	state map[string]*nodeJSON
+	state map[string]*node.JSON
 }
 
 func NewJSON() *JSON {
 	return &JSON{
-		state: make(map[string]*nodeJSON),
+		state: make(map[string]*node.JSON),
 	}
 }
 
 func (j *JSON) AddNode(n *node.Node) error {
-	jn := &nodeJSON{
-		Name:       n.Name,
-		IsExternal: n.IsExternal(),
-		Ports:      make([]string, len(n.Ports)),
-		Connected:  make(map[string][]string),
-	}
-
-	if n.Image != "" {
-		jn.Image = &n.Image
-	}
-
-	for i := 0; i < len(n.Ports); i++ {
-		jn.Ports[i] = n.Ports[i].Label()
-	}
-
-	j.state[n.ID] = jn
+	j.state[n.ID] = n.ToJSON()
 
 	return nil
 }
