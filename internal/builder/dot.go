@@ -33,9 +33,12 @@ type DOT struct {
 }
 
 func NewDOT() *DOT {
-	return &DOT{
-		g: dot.NewGraph(dot.Directed),
-	}
+	g := dot.NewGraph(dot.Directed)
+
+	g.Attr("splines", "spline")
+	g.Attr("concentrate", dot.Literal("true"))
+
+	return &DOT{g: g}
 }
 
 func (d *DOT) AddNode(n *node.Node) error {
@@ -82,7 +85,9 @@ func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
 		return
 	}
 
-	color := portToColor(port.Label())
+	color := labelColor(
+		min(srcID, dstID) + max(srcID, dstID) + port.Label(),
+	)
 
 	d.g.
 		EdgeWithPorts(src, dst, outPort, port.String(), port.Label()).
@@ -94,7 +99,7 @@ func (d *DOT) Write(w io.Writer) {
 	d.g.Write(w)
 }
 
-func portToColor(label string) (rv string) {
+func labelColor(label string) (rv string) {
 	h := fnv.New64a()
 
 	_, _ = io.WriteString(h, label)
