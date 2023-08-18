@@ -1,4 +1,4 @@
-package netgraph
+package graph
 
 import (
 	"net"

@@ -1,5 +1,8 @@
 dist/
 vendor/
 *.out
+*.png
+*.svg
+*.json
 *.pprof
 *_profile.pdf

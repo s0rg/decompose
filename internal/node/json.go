@@ -4,6 +4,7 @@ type JSON struct {
 	Name       string              `json:"name"`
 	Image      *string             `json:"image,omitempty"`
 	IsExternal bool                `json:"is_external"`
+	Networks   []string            `json:"networks"`
 	Listen     []string            `json:"listen"`
 	Connected  map[string][]string `json:"connected"`
 }

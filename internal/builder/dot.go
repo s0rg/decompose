@@ -1,9 +1,13 @@
+//go:build !test
+
 package builder
 
 import (
 	"fmt"
+	"hash/fnv"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/emicklei/dot"
 
@@ -35,13 +39,23 @@ func NewDOT() *DOT {
 }
 
 func (d *DOT) AddNode(n *node.Node) error {
-	color := "black"
+	var label, color string
+
 	if n.IsExternal() {
 		color = "red"
+		label = fmt.Sprintf("external: %s", n.Name)
+	} else {
+		color = "black"
+		label = fmt.Sprintf(
+			"%s&#92;nimage: %s&#92;nnet: %s",
+			n.Name,
+			n.Image,
+			strings.Join(n.Networks, ", "),
+		)
 	}
 
 	rb := d.g.Node(n.ID).Attr("color", color).NewRecordBuilder()
-	rb.FieldWithId(n.Name+"&#92;n"+n.Image, outPort)
+	rb.FieldWithId(label, outPort)
 	rb.Nesting(func() {
 		for i := 0; i < len(n.Ports); i++ {
 			p := &n.Ports[i]
@@ -68,7 +82,7 @@ func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
 		return
 	}
 
-	color := portToColor(port.Value)
+	color := portToColor(port.Label())
 
 	d.g.
 		EdgeWithPorts(src, dst, outPort, port.String(), port.Label()).
@@ -80,6 +94,16 @@ func (d *DOT) Write(w io.Writer) {
 	d.g.Write(w)
 }
 
-func portToColor(i int) (rv string) {
-	return colors[i%len(colors)]
+func portToColor(label string) (rv string) {
+	h := fnv.New64a()
+
+	_, _ = io.WriteString(h, label)
+
+	hash := int(h.Sum64())
+
+	if hash < 0 {
+		hash = -hash
+	}
+
+	return colors[hash%len(colors)]
 }

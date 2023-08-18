@@ -1,15 +1,15 @@
-package netgraph_test
+package graph_test
 
 import (
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 func TestConnectionIsListener(t *testing.T) {
 	t.Parallel()
 
-	c := netgraph.Connection{}
+	c := graph.Connection{}
 
 	if !c.IsListener() {
 		t.Fail()
@@ -25,7 +25,7 @@ func TestConnectionIsListener(t *testing.T) {
 func TestConnectionIsInbound(t *testing.T) {
 	t.Parallel()
 
-	c := netgraph.Connection{}
+	c := graph.Connection{}
 
 	c.RemotePort = 1
 

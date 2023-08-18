@@ -1,9 +1,9 @@
-package netgraph_test
+package graph_test
 
 import (
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 func TestParseNetproto(t *testing.T) {
@@ -12,16 +12,16 @@ func TestParseNetproto(t *testing.T) {
 	testCases := []struct {
 		Val   string
 		Valid bool
-		Want  netgraph.NetProto
+		Want  graph.NetProto
 	}{
-		{Val: "tcp", Valid: true, Want: netgraph.TCP},
-		{Val: "udp", Valid: true, Want: netgraph.UDP},
-		{Val: "all", Valid: true, Want: netgraph.ALL},
+		{Val: "tcp", Valid: true, Want: graph.TCP},
+		{Val: "udp", Valid: true, Want: graph.UDP},
+		{Val: "all", Valid: true, Want: graph.ALL},
 		{Val: "bad", Valid: false},
 	}
 
 	for i, tc := range testCases {
-		got, ok := netgraph.ParseNetProto(tc.Val)
+		got, ok := graph.ParseNetProto(tc.Val)
 
 		if ok != tc.Valid {
 			t.Fatalf("case[%d] failed for '%s' want: %t got: %t", i, tc.Val, tc.Valid, ok)
@@ -50,7 +50,7 @@ func TestNetprotoString(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		p, _ := netgraph.ParseNetProto(tc.Val)
+		p, _ := graph.ParseNetProto(tc.Val)
 
 		if p.Flag() != tc.Want {
 			t.Fatalf("case[%d] failed for '%s' want: %s got: %s", i, tc.Val, tc.Want, p.Flag())

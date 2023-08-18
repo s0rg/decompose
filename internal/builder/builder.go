@@ -1,9 +1,11 @@
+//go:build !test
+
 package builder
 
 import (
 	"io"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 const (
@@ -12,7 +14,7 @@ const (
 )
 
 type Builder interface {
-	netgraph.Builder
+	graph.Builder
 	Write(io.Writer)
 }
 

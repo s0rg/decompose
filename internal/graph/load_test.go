@@ -1,20 +1,20 @@
-package netgraph_test
+package graph_test
 
 import (
 	"bytes"
 	"errors"
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 func TestLoaderLoadError(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	buf := bytes.NewBufferString(`{`)
 
-	if err := ldr.Load(buf); err == nil {
+	if err := ldr.LoadStream(buf); err == nil {
 		t.Fail()
 	}
 }
@@ -22,7 +22,7 @@ func TestLoaderLoadError(t *testing.T) {
 func TestLoaderBuildError(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	buf := bytes.NewBufferString(`{
     "name": "test",
     "is_remote": false,
@@ -35,7 +35,7 @@ func TestLoaderBuildError(t *testing.T) {
 
 	bld := &testBuilder{Err: myErr}
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("err=", err)
 	}
 
@@ -52,7 +52,7 @@ func TestLoaderBuildError(t *testing.T) {
 func TestLoaderSingle(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	bld := &testBuilder{}
 	buf := bytes.NewBufferString(`{
     "name": "test",
@@ -62,7 +62,7 @@ func TestLoaderSingle(t *testing.T) {
     "connected": null
     }`)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -78,7 +78,7 @@ func TestLoaderSingle(t *testing.T) {
 func TestLoaderBadPorts(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	bld := &testBuilder{}
 	buf := bytes.NewBufferString(`{
     "name": "test",
@@ -87,7 +87,7 @@ func TestLoaderBadPorts(t *testing.T) {
     "connected": null
     }`)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -103,7 +103,7 @@ func TestLoaderBadPorts(t *testing.T) {
 func TestLoaderEdges(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	bld := &testBuilder{}
 	buf := bytes.NewBufferString(`{
     "name": "test1",
@@ -116,7 +116,7 @@ func TestLoaderEdges(t *testing.T) {
     "connected": {"test1":["1/tcp"]}
     }`)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -132,20 +132,22 @@ func TestLoaderEdges(t *testing.T) {
 func TestLoaderSeveral(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "", false)
+	ldr := graph.NewLoader("", "", false)
 	bld := &testBuilder{}
 
-	if err := ldr.Load(bytes.NewBufferString(`{
+	if err := ldr.LoadStream(bytes.NewBufferString(`{
     "name": "test1",
     "listen": ["1/tcp"],
+    "networks": ["foo"],
     "connected": {"test2":["2/tcp"]}
     }`)); err != nil {
 		t.Fatal("load1 err=", err)
 	}
 
-	if err := ldr.Load(bytes.NewBufferString(`{
+	if err := ldr.LoadStream(bytes.NewBufferString(`{
     "name": "test2",
     "listen": ["2/tcp"],
+    "networks": ["foo"],
     "connected": {"test1":["1/tcp"]}
     }`)); err != nil {
 		t.Fatal("load2 err=", err)
@@ -163,20 +165,22 @@ func TestLoaderSeveral(t *testing.T) {
 func TestLoaderEdgesProto(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("tcp", "", false)
+	ldr := graph.NewLoader("tcp", "", false)
 	bld := &testBuilder{}
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "listen": ["1/udp"],
+    "networks": ["foo"],
     "connected": {"test2":["2/tcp"]}
     }
     {
     "name": "test2",
     "listen": ["2/tcp"],
+    "networks": ["foo"],
     "connected": {"test1":["1/udp"]}
     }`)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -192,7 +196,7 @@ func TestLoaderEdgesProto(t *testing.T) {
 func TestLoaderEdgesFollowNone(t *testing.T) {
 	t.Parallel()
 
-	ldr := netgraph.NewLoader("", "foo", false)
+	ldr := graph.NewLoader("", "foo", false)
 	bld := &testBuilder{}
 	buf := bytes.NewBufferString(`{
     "name": "test1",
@@ -205,7 +209,7 @@ func TestLoaderEdgesFollowNone(t *testing.T) {
     "connected": {"test1":["1/udp"]}
     }`)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -237,9 +241,9 @@ func TestLoaderEdgesFollowOne(t *testing.T) {
     "connected": {"test1":["1/udp"]}
     }`)
 
-	ldr := netgraph.NewLoader("udp", "test3", false)
+	ldr := graph.NewLoader("udp", "test3", false)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -260,6 +264,7 @@ func TestLoaderLocal(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "listen": ["1/udp"],
+    "networks": ["foo"],
     "connected": {"test2":["2/tcp"]}
     }
     {
@@ -270,9 +275,9 @@ func TestLoaderLocal(t *testing.T) {
     }
     `)
 
-	ldr := netgraph.NewLoader("", "", true)
+	ldr := graph.NewLoader("", "", true)
 
-	if err := ldr.Load(buf); err != nil {
+	if err := ldr.LoadStream(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 

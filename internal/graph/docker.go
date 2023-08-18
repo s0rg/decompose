@@ -1,6 +1,6 @@
 //go:build !test
 
-package netgraph
+package graph
 
 import (
 	"context"
