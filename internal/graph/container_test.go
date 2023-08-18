@@ -1,18 +1,18 @@
-package netgraph_test
+package graph_test
 
 import (
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 var testCases = []struct {
-	Conns     []*netgraph.Connection
+	Conns     []*graph.Connection
 	Listeners int
 	Outbounds int
 }{
 	{
-		Conns: []*netgraph.Connection{
+		Conns: []*graph.Connection{
 			{LocalPort: 1, RemotePort: 2}, // inbound
 			{LocalPort: 1, RemotePort: 0}, // listener
 			{LocalPort: 2, RemotePort: 1}, // outbound
@@ -21,7 +21,7 @@ var testCases = []struct {
 		Outbounds: 1,
 	},
 	{
-		Conns: []*netgraph.Connection{
+		Conns: []*graph.Connection{
 			{LocalPort: 1, RemotePort: 2}, // inbound
 			{LocalPort: 2, RemotePort: 1}, // outbound
 		},
@@ -29,7 +29,7 @@ var testCases = []struct {
 		Outbounds: 1,
 	},
 	{
-		Conns: []*netgraph.Connection{
+		Conns: []*graph.Connection{
 			{LocalPort: 1, RemotePort: 2}, // inbound
 			{LocalPort: 1, RemotePort: 0}, // listener
 		},
@@ -37,7 +37,7 @@ var testCases = []struct {
 		Outbounds: 0,
 	},
 	{
-		Conns: []*netgraph.Connection{
+		Conns: []*graph.Connection{
 			{LocalPort: 1, RemotePort: 2}, // inbound
 		},
 		Listeners: 0,
@@ -48,7 +48,7 @@ var testCases = []struct {
 func TestContainerMatch(t *testing.T) {
 	t.Parallel()
 
-	c := netgraph.Container{}
+	c := graph.Container{}
 
 	const id = "test-id"
 
@@ -77,9 +77,9 @@ func TestContainerListeners(t *testing.T) {
 
 		res := 0
 
-		c := netgraph.Container{}
+		c := graph.Container{}
 		c.SetConnections(tc.Conns)
-		c.ForEachListener(func(_ *netgraph.Connection) {
+		c.ForEachListener(func(_ *graph.Connection) {
 			res++
 		})
 
@@ -97,9 +97,9 @@ func TestContainerOutbounds(t *testing.T) {
 
 		res := 0
 
-		c := netgraph.Container{}
+		c := graph.Container{}
 		c.SetConnections(tc.Conns)
-		c.ForEachOutbound(func(_ *netgraph.Connection) {
+		c.ForEachOutbound(func(_ *graph.Connection) {
 			res++
 		})
 

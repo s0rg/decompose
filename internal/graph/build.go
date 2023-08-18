@@ -1,4 +1,4 @@
-package netgraph
+package graph
 
 import (
 	"context"
@@ -104,17 +104,22 @@ func buildNodes(
 	follow string,
 	local bool,
 ) (rv map[string]*node.Node) {
-	rv = make(map[string]*node.Node)
-
 	var skip bool
+
+	rv = make(map[string]*node.Node)
 
 	for _, con := range cntrs {
 		skip = !con.Match(follow)
 
 		n := &node.Node{
-			ID:    con.ID,
-			Name:  con.Name,
-			Image: con.Image,
+			ID:       con.ID,
+			Name:     con.Name,
+			Image:    con.Image,
+			Networks: make([]string, 0, len(con.Endpoints)),
+		}
+
+		for _, epn := range con.Endpoints {
+			n.Networks = append(n.Networks, epn)
 		}
 
 		con.ForEachListener(func(c *Connection) {
@@ -126,7 +131,6 @@ func buildNodes(
 
 		con.ForEachOutbound(func(c *Connection) {
 			rip := c.RemoteIP.String()
-
 			rport := node.Port{
 				Kind:  c.Kind.String(),
 				Value: int(c.RemotePort),

@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/s0rg/decompose/internal/builder"
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 const (
@@ -106,7 +106,7 @@ func run() error {
 	fFormat = strings.ToLower(strings.TrimSpace(fFormat))
 	fFollow = strings.TrimSpace(fFollow)
 
-	proto, ok := netgraph.ParseNetProto(fProto)
+	proto, ok := graph.ParseNetProto(fProto)
 	if !ok {
 		fmt.Printf("unknown prototol: '%s'\n", fProto)
 
@@ -145,8 +145,8 @@ func run() error {
 }
 
 func doLoad(
-	b netgraph.Builder,
-	p netgraph.NetProto,
+	b graph.Builder,
+	p graph.NetProto,
 	follow string,
 	local bool,
 	files []string,
@@ -154,12 +154,12 @@ func doLoad(
 	var proto string
 
 	switch p {
-	case netgraph.ALL:
-	case netgraph.TCP, netgraph.UDP:
+	case graph.ALL:
+	case graph.TCP, graph.UDP:
 		proto = p.String()
 	}
 
-	ldr := netgraph.NewLoader(proto, follow, local)
+	ldr := graph.NewLoader(proto, follow, local)
 
 	for _, fn := range files {
 		fd, err := os.Open(fn)
@@ -167,7 +167,7 @@ func doLoad(
 			return fmt.Errorf("open %s: %w", fn, err)
 		}
 
-		err = ldr.Load(fd)
+		err = ldr.LoadStream(fd)
 		fd.Close()
 
 		if err != nil {
@@ -183,19 +183,19 @@ func doLoad(
 }
 
 func doBuild(
-	b netgraph.Builder,
-	p netgraph.NetProto,
+	b graph.Builder,
+	p graph.NetProto,
 	follow string,
 	local bool,
 ) error {
-	cli, err := netgraph.NewDockerClient()
+	cli, err := graph.NewDockerClient()
 	if err != nil {
 		return fmt.Errorf("docker: %w", err)
 	}
 
 	defer cli.Close()
 
-	if err = netgraph.Build(cli, b, p, follow, local); err != nil {
+	if err = graph.Build(cli, b, p, follow, local); err != nil {
 		return fmt.Errorf("graph: %w", err)
 	}
 

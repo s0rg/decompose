@@ -1,11 +1,11 @@
-package netgraph_test
+package graph_test
 
 import (
 	"bytes"
 	"errors"
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 )
 
 type failReader struct {
@@ -37,7 +37,7 @@ tcp        0      0 172.20.4.198:3306       invalid                 ESTABLISHED
 tcp        0      0 172.20.4.198:bad        172.20.4.198:3306       ESTABLISHED
 tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED`)
 
-	res, err := netgraph.ParseNetstat(b)
+	res, err := graph.ParseNetstat(b)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestParseNetstatError(t *testing.T) {
 	myErr := errors.New("test-err")
 	reader := &failReader{Err: myErr}
 
-	_, err := netgraph.ParseNetstat(reader)
+	_, err := graph.ParseNetstat(reader)
 	if err == nil {
 		t.Fatal("err == nil")
 	}

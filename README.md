@@ -20,7 +20,8 @@ dot](https://www.graphviz.org/doc/info/lang.html) or json stream of elements:
 type Node struct {
     Name       string              `json:"name"`            // container name
     Image      *string             `json:"image,omitempty"` // docker image (if any)
-    IsExternal bool                `json:"is_external"`     // 'external' flag - this host is from outside
+    IsExternal bool                `json:"is_external"`     // this host is external
+    Networks   []string            `json:"networks"`        // network names
     Listen     []string            `json:"listen"`          // ports description i.e. '443/tcp'
     Connected  map[string][]string `json:"connected"`       // mapping name -> ports slice
 }
@@ -29,15 +30,15 @@ type Node struct {
 
 # features
 
-- produces detailed system description with ports
+- produces detailed connections graph with ports
 - fast, it scans ~400 containers in around 5 seconds
 - 100% test-coverage
 
 
 # known limitations
 
-- runs only on linux, as it uses nsenter
-- runs only from root, same reason
+- **runs only on linux**, as it uses nsenter
+- **runs only as root**, same reason
 - only established and listen connections are listed
 
 
@@ -94,4 +95,27 @@ sudo decompose -format json > nodes-1.json
 Rebuild graph from json streams, filter by protocol, skip remote hosts and save as `dot` (no need to be root):
 ```
 decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph.dot
+```
+
+
+# example result
+
+Scheme taken from [redis-cluster](https://github.com/s0rg/redis-cluster-compose):
+
+
+![svg](https://github.com/s0rg/redis-cluster-compose/blob/main/redis-cluster.svg)
+
+
+Steps to reproduce:
+
+```shell
+git clone https://github.com/s0rg/redis-cluster-compose.git
+cd redis-cluster-compose
+docker compose up
+```
+
+in other terminal:
+
+```shell
+sudo decompose | dot -Tsvg > redis-cluster.svg
 ```

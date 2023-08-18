@@ -1,4 +1,4 @@
-package netgraph
+package graph
 
 import (
 	"encoding/json"
@@ -31,7 +31,7 @@ func NewLoader(proto, follow string, local bool) *Loader {
 	}
 }
 
-func (l *Loader) Load(r io.Reader) error {
+func (l *Loader) LoadStream(r io.Reader) error {
 	jr := json.NewDecoder(r)
 
 	for jr.More() {
@@ -64,8 +64,9 @@ func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
 	nod, ok := l.nodes[id]
 	if !ok {
 		nod = &node.Node{
-			ID:   id,
-			Name: n.Name,
+			ID:       id,
+			Name:     n.Name,
+			Networks: n.Networks,
 		}
 
 		if n.Image != nil {

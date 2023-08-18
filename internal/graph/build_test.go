@@ -1,4 +1,4 @@
-package netgraph_test
+package graph_test
 
 import (
 	"context"
@@ -6,20 +6,20 @@ import (
 	"net"
 	"testing"
 
-	"github.com/s0rg/decompose/internal/netgraph"
+	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"
 )
 
 type testClient struct {
 	Err  error
-	Data []*netgraph.Container
+	Data []*graph.Container
 }
 
 func (tc *testClient) Containers(
 	_ context.Context,
-	_ netgraph.NetProto,
+	_ graph.NetProto,
 	fn func(int, int),
-) ([]*netgraph.Container, error) {
+) ([]*graph.Container, error) {
 	if tc.Err != nil {
 		return nil, tc.Err
 	}
@@ -63,7 +63,7 @@ func TestBuildError(t *testing.T) {
 	myErr := errors.New("test error")
 	cli := &testClient{Err: myErr}
 
-	err := netgraph.Build(cli, nil, netgraph.ALL, "", false)
+	err := graph.Build(cli, nil, graph.ALL, "", false)
 	if err == nil {
 		t.Fatal("err is nil")
 	}
@@ -76,13 +76,13 @@ func TestBuildError(t *testing.T) {
 func TestBuildOneConainer(t *testing.T) {
 	t.Parallel()
 
-	cli := &testClient{Data: []*netgraph.Container{
+	cli := &testClient{Data: []*graph.Container{
 		{},
 	}}
 
 	bld := &testBuilder{}
 
-	if err := netgraph.Build(cli, bld, netgraph.ALL, "", false); err != nil {
+	if err := graph.Build(cli, bld, graph.ALL, "", false); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -91,8 +91,8 @@ func TestBuildOneConainer(t *testing.T) {
 	}
 }
 
-func makeContainer(name, ip string) *netgraph.Container {
-	return &netgraph.Container{
+func makeContainer(name, ip string) *graph.Container {
+	return &graph.Container{
 		ID:    name + "-id",
 		Name:  name,
 		Image: name + "-image:latest",
@@ -102,37 +102,37 @@ func makeContainer(name, ip string) *netgraph.Container {
 	}
 }
 
-func testClientWithEnv() netgraph.ContainerClient {
+func testClientWithEnv() graph.ContainerClient {
 	node1 := net.ParseIP("1.1.1.1")
 	node2 := net.ParseIP("1.1.1.2")
 	node3 := net.ParseIP("1.1.1.3")
 	external := net.ParseIP("2.2.2.1")
 
-	cli := &testClient{Data: []*netgraph.Container{
+	cli := &testClient{Data: []*graph.Container{
 		makeContainer("1", node1.String()),
 		makeContainer("2", node2.String()),
 		makeContainer("3", node3.String()),
 	}}
 
 	// node 1
-	cli.Data[0].SetConnections([]*netgraph.Connection{
-		{LocalPort: 1, Kind: netgraph.TCP},                                     // listen 1
-		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Kind: netgraph.TCP},    // connected to node2:2
-		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Kind: netgraph.TCP}, // connected to external:1
+	cli.Data[0].SetConnections([]*graph.Connection{
+		{LocalPort: 1, Kind: graph.TCP},                                     // listen 1
+		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Kind: graph.TCP},    // connected to node2:2
+		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Kind: graph.TCP}, // connected to external:1
 	})
 
 	// node 2
-	cli.Data[1].SetConnections([]*netgraph.Connection{
-		{LocalPort: 2, Kind: netgraph.TCP},                                     // listen 2
-		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Kind: netgraph.TCP},    // connected to node3:3
-		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Kind: netgraph.TCP}, // connected to external:2
+	cli.Data[1].SetConnections([]*graph.Connection{
+		{LocalPort: 2, Kind: graph.TCP},                                     // listen 2
+		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Kind: graph.TCP},    // connected to node3:3
+		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Kind: graph.TCP}, // connected to external:2
 	})
 
 	// node 3
-	cli.Data[2].SetConnections([]*netgraph.Connection{
-		{LocalPort: 3, Kind: netgraph.TCP},                                     // listen 3
-		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Kind: netgraph.TCP},    // connected to node1:1
-		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Kind: netgraph.TCP}, // connected to external:3
+	cli.Data[2].SetConnections([]*graph.Connection{
+		{LocalPort: 3, Kind: graph.TCP},                                     // listen 3
+		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Kind: graph.TCP},    // connected to node1:1
+		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Kind: graph.TCP}, // connected to external:3
 	})
 
 	return cli
@@ -144,7 +144,7 @@ func TestBuildSimple(t *testing.T) {
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
 
-	if err := netgraph.Build(cli, bld, netgraph.ALL, "", false); err != nil {
+	if err := graph.Build(cli, bld, graph.ALL, "", false); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -159,7 +159,7 @@ func TestBuildFollow(t *testing.T) {
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
 
-	if err := netgraph.Build(cli, bld, netgraph.ALL, "1", false); err != nil {
+	if err := graph.Build(cli, bld, graph.ALL, "1", false); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -174,7 +174,7 @@ func TestBuildLocal(t *testing.T) {
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
 
-	if err := netgraph.Build(cli, bld, netgraph.ALL, "", true); err != nil {
+	if err := graph.Build(cli, bld, graph.ALL, "", true); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -189,7 +189,7 @@ func TestBuildNoNodes(t *testing.T) {
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
 
-	if err := netgraph.Build(cli, bld, netgraph.ALL, "4", false); err != nil {
+	if err := graph.Build(cli, bld, graph.ALL, "4", false); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -205,7 +205,7 @@ func TestBuildNodeError(t *testing.T) {
 	cli := testClientWithEnv()
 	bld := &testBuilder{Err: myErr}
 
-	err := netgraph.Build(cli, bld, netgraph.ALL, "", false)
+	err := graph.Build(cli, bld, graph.ALL, "", false)
 	if err == nil {
 		t.Fatal("err is nil")
 	}
