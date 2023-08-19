@@ -5,7 +5,9 @@ package graph
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,21 +18,24 @@ import (
 )
 
 const (
+	linuxOS      = "linux"
 	stateRunning = "running"
 	nsenterCmd   = "nsenter"
 	pingTimeout  = time.Second
 )
 
 type DockerClient struct {
-	cli *client.Client
-	cmd string
+	cli         *client.Client
+	connections func(context.Context, string, NetProto) ([]*Connection, error)
+	cmd         string
+	kind        string
 }
 
 func NewDockerClient() (rv *DockerClient, err error) {
 	rv = &DockerClient{}
 
-	if rv.cmd, err = exec.LookPath(nsenterCmd); err != nil {
-		return nil, fmt.Errorf("looking for %s: %w", nsenterCmd, err)
+	if err = rv.init(); err != nil {
+		return nil, fmt.Errorf("init: %w", err)
 	}
 
 	if rv.cli, err = client.NewClientWithOpts(
@@ -50,9 +55,34 @@ func NewDockerClient() (rv *DockerClient, err error) {
 	return rv, nil
 }
 
+func (d *DockerClient) init() (err error) {
+	d.kind = runtime.GOOS
+
+	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
+		if d.cmd, err = exec.LookPath(nsenterCmd); err != nil {
+			return fmt.Errorf("looking for %s: %w", nsenterCmd, err)
+		}
+
+		d.kind += "/netns"
+		d.connections = d.conectionsNetns
+
+		return nil
+	}
+
+	// non-linux or non-root
+	d.kind += "/container"
+	d.connections = d.conectionsContainer
+
+	return nil
+}
+
+func (d *DockerClient) Kind() string {
+	return d.kind
+}
+
 func (d *DockerClient) Containers(
 	ctx context.Context,
-	kind NetProto,
+	proto NetProto,
 	progress func(int, int),
 ) (rv []*Container, err error) {
 	containers, err := d.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
@@ -75,7 +105,7 @@ func (d *DockerClient) Containers(
 			Name:  strings.TrimLeft(doc.Names[0], "/"),
 		}
 
-		conns, err := d.conections(ctx, doc.ID, kind)
+		conns, err := d.connections(ctx, doc.ID, proto)
 		if err != nil {
 			return nil, fmt.Errorf("container: %s connections: %w", doc.ID, err)
 		}
@@ -110,10 +140,10 @@ func (d *DockerClient) Close() (err error) {
 	return nil
 }
 
-func (d *DockerClient) conections(
+func (d *DockerClient) conectionsNetns(
 	ctx context.Context,
 	containerID string,
-	kind NetProto,
+	proto NetProto,
 ) (
 	rv []*Connection,
 	err error,
@@ -123,7 +153,7 @@ func (d *DockerClient) conections(
 		return nil, fmt.Errorf("inspect: %w", err)
 	}
 
-	arg := []string{"-t", strconv.Itoa(info.State.Pid), "-n", "netstat", "-an" + kind.Flag()}
+	arg := append([]string{"-t", strconv.Itoa(info.State.Pid), "-n"}, netstatCmd(proto)...)
 	cmd := exec.CommandContext(ctx, d.cmd, arg...)
 
 	pipe, err := cmd.StdoutPipe()
@@ -142,4 +172,41 @@ func (d *DockerClient) conections(
 	}
 
 	return rv, nil
+}
+
+func (d *DockerClient) conectionsContainer(
+	ctx context.Context,
+	containerID string,
+	proto NetProto,
+) (
+	rv []*Connection,
+	err error,
+) {
+	exe, err := d.cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
+		Tty:          true,
+		AttachStdout: true,
+		Cmd:          netstatCmd(proto),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create: %w", err)
+	}
+
+	resp, err := d.cli.ContainerExecAttach(ctx, exe.ID, types.ExecStartCheck{
+		Tty: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("attach: %w", err)
+	}
+
+	defer resp.Close()
+
+	if rv, err = ParseNetstat(resp.Reader); err != nil {
+		return nil, fmt.Errorf("parse: %w", err)
+	}
+
+	return rv, nil
+}
+
+func netstatCmd(p NetProto) []string {
+	return []string{"netstat", "-an" + p.Flag()}
 }

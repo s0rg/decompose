@@ -195,6 +195,8 @@ func doBuild(
 
 	defer cli.Close()
 
+	log.Println("Starting with method:", cli.Kind())
+
 	if err = graph.Build(cli, b, p, follow, local); err != nil {
 		return fmt.Errorf("graph: %w", err)
 	}
