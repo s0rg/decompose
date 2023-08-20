@@ -80,13 +80,7 @@ func TestBuildOneConainer(t *testing.T) {
 		{},
 	}}
 
-	bld := &testBuilder{}
-
-	if err := graph.Build(cli, bld, graph.ALL, "", false); err != nil {
-		t.Fatalf("err = %v", err)
-	}
-
-	if bld.Nodes > 0 {
+	if err := graph.Build(cli, nil, graph.ALL, "", false); err == nil {
 		t.Fail()
 	}
 }
@@ -187,13 +181,8 @@ func TestBuildNoNodes(t *testing.T) {
 	t.Parallel()
 
 	cli := testClientWithEnv()
-	bld := &testBuilder{}
 
-	if err := graph.Build(cli, bld, graph.ALL, "4", false); err != nil {
-		t.Fatalf("err = %v", err)
-	}
-
-	if bld.Nodes > 0 || bld.Edges > 0 {
+	if err := graph.Build(cli, nil, graph.ALL, "4", false); err == nil {
 		t.Fail()
 	}
 }

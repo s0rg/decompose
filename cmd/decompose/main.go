@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/s0rg/decompose/internal/builder"
+	"github.com/s0rg/decompose/internal/client"
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -188,7 +189,7 @@ func doBuild(
 	follow string,
 	local bool,
 ) error {
-	cli, err := graph.NewDockerClient()
+	cli, err := client.NewDocker()
 	if err != nil {
 		return fmt.Errorf("docker: %w", err)
 	}

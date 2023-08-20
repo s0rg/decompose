@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -9,9 +10,11 @@ import (
 )
 
 const (
-	minContainers = 2
-	minReport     = 10
+	minItems  = 2
+	minReport = 10
 )
+
+var ErrNotEnough = errors.New("not enough items")
 
 type ContainerClient interface {
 	Containers(context.Context, NetProto, func(int, int)) ([]*Container, error)
@@ -27,7 +30,7 @@ func Build(
 	grb Builder,
 	knd NetProto,
 	follow string,
-	local bool,
+	onlyLocal bool,
 ) error {
 	log.Println("Gathering containers info...")
 
@@ -47,33 +50,29 @@ func Build(
 
 	log.Printf("Found %d alive containers", len(containers))
 
-	if len(containers) < minContainers {
-		log.Println("No suitable amount of containers found, nothing to do...")
-
-		return nil
+	if len(containers) < minItems {
+		return fmt.Errorf("%w: containers", err)
 	}
 
 	neighbours := buildIPMap(containers)
 
 	log.Println("Building nodes...")
 
-	nodes := buildNodes(containers, neighbours, follow, local)
+	nodes := buildNodes(containers, neighbours, follow, onlyLocal)
 
 	log.Printf("Found %d nodes", len(nodes))
 
-	if len(nodes) < minContainers {
-		log.Println("Not enought nodes found, nothing to do...")
-
-		return nil
+	if len(nodes) < minItems {
+		return fmt.Errorf("%w: nodes", err)
 	}
 
 	log.Println("Processing nodes...")
 
-	for id, node := range nodes {
+	for _, node := range nodes {
 		node.Ports = node.Ports.Dedup()
 
 		if err = grb.AddNode(node); err != nil {
-			return fmt.Errorf("node [%s]: %w", id, err)
+			return fmt.Errorf("node '%s': %w", node.Name, err)
 		}
 	}
 
@@ -102,7 +101,7 @@ func buildNodes(
 	cntrs []*Container,
 	neighbours map[string]*Container,
 	follow string,
-	local bool,
+	onlyLocal bool,
 ) (rv map[string]*node.Node) {
 	var skip bool
 
@@ -111,30 +110,11 @@ func buildNodes(
 	for _, con := range cntrs {
 		skip = !con.Match(follow)
 
-		n := &node.Node{
-			ID:       con.ID,
-			Name:     con.Name,
-			Image:    con.Image,
-			Networks: make([]string, 0, len(con.Endpoints)),
-		}
-
-		for _, epn := range con.Endpoints {
-			n.Networks = append(n.Networks, epn)
-		}
-
-		con.ForEachListener(func(c *Connection) {
-			n.Ports = append(n.Ports, node.Port{
-				Value: int(c.LocalPort),
-				Kind:  c.Kind.String(),
-			})
-		})
+		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image}
 
 		con.ForEachOutbound(func(c *Connection) {
 			rip := c.RemoteIP.String()
-			rport := node.Port{
-				Kind:  c.Kind.String(),
-				Value: int(c.RemotePort),
-			}
+			rport := node.Port{Kind: c.Kind.String(), Value: int(c.RemotePort)}
 
 			if lc, ok := neighbours[rip]; ok {
 				if skip && lc.Match(follow) {
@@ -144,26 +124,34 @@ func buildNodes(
 				return
 			}
 
-			if local {
+			if onlyLocal || skip {
 				return
 			}
 
 			rem, ok := rv[rip]
 			if !ok {
-				rem = &node.Node{
-					ID:   rip,
-					Name: rip,
-				}
-
+				rem = &node.Node{ID: rip, Name: rip}
 				rv[rip] = rem
 			}
 
 			rem.Ports = append(rem.Ports, rport)
 		})
 
-		if !skip {
-			rv[con.ID] = n
+		if skip {
+			continue
 		}
+
+		n.Networks = make([]string, 0, len(con.Endpoints))
+
+		for _, epn := range con.Endpoints {
+			n.Networks = append(n.Networks, epn)
+		}
+
+		con.ForEachListener(func(c *Connection) {
+			n.Ports = append(n.Ports, node.Port{Kind: c.Kind.String(), Value: int(c.LocalPort)})
+		})
+
+		rv[con.ID] = n
 	}
 
 	return rv
@@ -183,11 +171,7 @@ func buildEdges(
 		}
 
 		con.ForEachOutbound(func(c *Connection) {
-			port := node.Port{
-				Kind:  c.Kind.String(),
-				Value: int(c.RemotePort),
-			}
-
+			port := node.Port{Kind: c.Kind.String(), Value: int(c.RemotePort)}
 			key := c.RemoteIP.String()
 
 			if ldst, ok := local[key]; ok && (ldst.Match(follow) || con.Match(follow)) {
