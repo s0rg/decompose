@@ -33,8 +33,8 @@ type Node struct {
 - os-independent, it uses different strategies to get container connections:
     * running on **linux as root** is the fastest way and it will work with all types of containers (even
             `scratch`-based)
-    * running as non-**root** or on non-linux OS will attempt to run `netsat` inside container, if this fails
-    (i.e. for missing `netstat` binary), no connetctions for such container will be gathered
+    * running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
+    (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - produces detailed connections graph with ports
 - fast, it scans ~400 containers in around 5 seconds
 - 100% test-coverage
