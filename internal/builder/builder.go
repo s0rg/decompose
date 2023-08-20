@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	kindDOT  = "dot"
-	kindJSON = "json"
+	kindDOT         = "dot"
+	kindJSON        = "json"
+	kindStructurizr = "sdsl"
 )
 
 type Builder interface {
@@ -24,6 +25,8 @@ func Create(kind string) (b Builder, ok bool) {
 		return NewDOT(), true
 	case kindJSON:
 		return NewJSON(), true
+	case kindStructurizr:
+		return NewStructurizr(), true
 	}
 
 	return

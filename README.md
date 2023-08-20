@@ -13,9 +13,10 @@
 Reverse-engineering tool for docker environments.
 
 
-Takes all network connections from your docker containers, and produces [graphviz
-dot](https://www.graphviz.org/doc/info/lang.html) or json stream of elements:
-
+Takes all network connections from your docker containers and can export them as:
+- [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
+- [structurizr dsl](https://github.com/structurizr/dsl)
+- json stream of elements:
 ```
 type Node struct {
     Name       string              `json:"name"`            // container name
@@ -55,7 +56,7 @@ possible flags with default values:
   -follow string
         follow only this container by name
   -format string
-        output format: json or dot (default "dot")
+        output format: json, dot or sdsl for structurizr dsl (default "dot")
   -help
         show this help
   -load value
@@ -95,9 +96,9 @@ Save json stream:
 sudo decompose -format json > nodes-1.json
 ```
 
-Rebuild graph from json streams, filter by protocol, skip remote hosts and save as `dot` (no need to be root):
+Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot` (no need to be root):
 ```
-decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph.dot
+decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph-merged.dot
 ```
 
 

@@ -71,7 +71,7 @@ func setupFlags() {
 
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
-	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json or dot")
+	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json, dot or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {

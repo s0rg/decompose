@@ -51,7 +51,7 @@ func Build(
 	log.Printf("Found %d alive containers", len(containers))
 
 	if len(containers) < minItems {
-		return fmt.Errorf("%w: containers", err)
+		return fmt.Errorf("%w: containers", ErrNotEnough)
 	}
 
 	neighbours := buildIPMap(containers)
@@ -63,7 +63,7 @@ func Build(
 	log.Printf("Found %d nodes", len(nodes))
 
 	if len(nodes) < minItems {
-		return fmt.Errorf("%w: nodes", err)
+		return fmt.Errorf("%w: nodes", ErrNotEnough)
 	}
 
 	log.Println("Processing nodes...")
