@@ -13,20 +13,66 @@
 Reverse-engineering tool for docker environments.
 
 
-Takes all network connections from your docker containers and can export them as:
+Takes all network connections from your docker containers and exports them as:
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
-- json stream of elements:
-```
-type Node struct {
+- json stream of items:
+```go
+type Item struct {
     Name       string              `json:"name"`            // container name
     Image      *string             `json:"image,omitempty"` // docker image (if any)
     IsExternal bool                `json:"is_external"`     // this host is external
-    Networks   []string            `json:"networks"`        // network names
+    Meta       *Meta               `json:"meta,omitempty"`  // metadata, see below
     Listen     []string            `json:"listen"`          // ports description i.e. '443/tcp'
-    Connected  map[string][]string `json:"connected"`       // mapping name -> ports slice
+    Networks   []string            `json:"networks"`        // network names
+    Connected  map[string][]string `json:"connected"`       // name -> ports slice
+}
+
+type Meta struct {
+	Info string   `json:"info"`
+	Tags []string `json:"tags"`
 }
 ```
+
+example:
+
+```json
+{
+    "name": "foo-1",
+    "image": "repo/foo:latest",
+    "is_external": false,
+    "meta": {
+        "info": "foo info",
+        "tags": ["foo"]
+    },
+    "listen": ["80/tcp"],
+    "networks": ["test-net"],
+    "connected": {
+        "bar-1": ["443/tcp"]
+    }
+}
+```
+
+
+# metadata format
+
+To enrich output with detailed descriptions, you can provide additional `json` file, with metadata i.e.:
+
+```json
+{
+    "foo": {
+        "info": "",
+        "tags": []
+    },
+    "bar": {
+        "info": "",
+        "tags": []
+    }
+}
+```
+
+Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
+one of provided keys in given file.
 
 
 # features
@@ -63,6 +109,8 @@ possible flags with default values:
         load json stream, can be used multiple times
   -local
         skip external hosts
+  -meta string
+        json with metadata (info and tags) to enrich output graph
   -out string
         output: filename or "-" for stdout (default "-")
   -proto string

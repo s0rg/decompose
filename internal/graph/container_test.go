@@ -45,30 +45,6 @@ var testCases = []struct {
 	},
 }
 
-func TestContainerMatch(t *testing.T) {
-	t.Parallel()
-
-	c := graph.Container{}
-
-	const id = "test-id"
-
-	if !c.Match("") { // empty string match all
-		t.Fail()
-	}
-
-	c.ID = id
-
-	if c.Match(id) { // by id
-		t.Fail()
-	}
-
-	c.Name = id
-
-	if !c.Match(id) { // by name
-		t.Fail()
-	}
-}
-
 func TestContainerListeners(t *testing.T) {
 	t.Parallel()
 

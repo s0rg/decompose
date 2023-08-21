@@ -11,39 +11,53 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
+type testEnricher struct{}
+
+func (de *testEnricher) Enrich(_ *node.Node) {}
+
 func TestJSON(t *testing.T) {
 	t.Parallel()
 
-	const raw = `{
-          "name": "test1",
-          "is_external": false,
-          "networks": ["test"],
-          "listen": ["1/udp"],
-          "connected": {}
-        }
-    `
+	testNode := node.JSON{
+		Name:      "test1",
+		Networks:  []string{"test"},
+		Listen:    []string{"1/udp", "2/tcp"},
+		Connected: make(map[string][]string),
+	}
+
+	jnode, err := json.Marshal(testNode)
+	if err != nil {
+		t.Fatal("marshal err=", err)
+	}
 
 	var rawCompact bytes.Buffer
 
-	if err := json.Compact(&rawCompact, []byte(raw)); err != nil {
+	if err := json.Compact(&rawCompact, jnode); err != nil {
 		t.Fatal("raw compact err=", err)
 	}
 
-	ldr := graph.NewLoader("", "", false)
+	bldr := builder.NewJSON()
+	ext := &testEnricher{}
 
-	if err := ldr.LoadStream(bytes.NewBufferString(raw)); err != nil {
+	cfg := &graph.Config{
+		Builder:  bldr,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
+
+	ldr := graph.NewLoader(cfg)
+
+	if err := ldr.LoadStream(bytes.NewBuffer(jnode)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
-	bld := builder.NewJSON()
-
-	if err := ldr.Build(bld); err != nil {
+	if err := ldr.Build(); err != nil {
 		t.Fatal("build err=", err)
 	}
 
 	var buf bytes.Buffer
 
-	bld.Write(&buf)
+	bldr.Write(&buf)
 
 	var resCompact bytes.Buffer
 
@@ -52,6 +66,9 @@ func TestJSON(t *testing.T) {
 	}
 
 	if rawCompact.String() != resCompact.String() {
+		t.Log("want:", rawCompact.String())
+		t.Log("got:", resCompact.String())
+
 		t.Fail()
 	}
 }
@@ -74,21 +91,28 @@ func TestJSONAddEdge(t *testing.T) {
           "connected": {"test1":["1/udp"]}
         }`
 
-	ldr := graph.NewLoader("", "", false)
+	bldr := builder.NewJSON()
+	ext := &testEnricher{}
+
+	cfg := &graph.Config{
+		Builder:  bldr,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
+
+	ldr := graph.NewLoader(cfg)
 
 	if err := ldr.LoadStream(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
-	bld := builder.NewJSON()
-
-	if err := ldr.Build(bld); err != nil {
+	if err := ldr.Build(); err != nil {
 		t.Fatal("build err=", err)
 	}
 
 	var buf bytes.Buffer
 
-	bld.Write(&buf)
+	bldr.Write(&buf)
 
 	if strings.Count(buf.String(), "test2") < 2 {
 		t.Fail()
@@ -125,15 +149,22 @@ func TestJSONAddBadEdges(t *testing.T) {
 
 	bld.Write(&buf)
 
-	ldr := graph.NewLoader("", "", false)
+	tb := &testBuilder{}
+	ext := &testEnricher{}
+
+	cfg := &graph.Config{
+		Builder:  tb,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
+
+	ldr := graph.NewLoader(cfg)
 
 	if err := ldr.LoadStream(&buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
-	tb := &testBuilder{}
-
-	if err := ldr.Build(tb); err != nil {
+	if err := ldr.Build(); err != nil {
 		t.Fatal("build err=", err)
 	}
 

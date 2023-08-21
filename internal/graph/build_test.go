@@ -57,13 +57,20 @@ func (tb *testBuilder) AddEdge(_, _ string, _ node.Port) {
 	tb.Edges++
 }
 
+type testEnricher struct{}
+
+func (de *testEnricher) Enrich(_ *node.Node) {}
+
 func TestBuildError(t *testing.T) {
 	t.Parallel()
 
 	myErr := errors.New("test error")
 	cli := &testClient{Err: myErr}
+	cfg := &graph.Config{
+		Proto: graph.ALL,
+	}
 
-	err := graph.Build(cli, nil, graph.ALL, "", false)
+	err := graph.Build(cfg, cli)
 	if err == nil {
 		t.Fatal("err is nil")
 	}
@@ -80,7 +87,11 @@ func TestBuildOneConainer(t *testing.T) {
 		{},
 	}}
 
-	if err := graph.Build(cli, nil, graph.ALL, "", false); err == nil {
+	cfg := &graph.Config{
+		Proto: graph.ALL,
+	}
+
+	if err := graph.Build(cfg, cli); err == nil {
 		t.Fail()
 	}
 }
@@ -137,8 +148,14 @@ func TestBuildSimple(t *testing.T) {
 
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:  bld,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
 
-	if err := graph.Build(cli, bld, graph.ALL, "", false); err != nil {
+	if err := graph.Build(cfg, cli); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -152,8 +169,15 @@ func TestBuildFollow(t *testing.T) {
 
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:  bld,
+		Enricher: ext,
+		Proto:    graph.ALL,
+		Follow:   "1",
+	}
 
-	if err := graph.Build(cli, bld, graph.ALL, "1", false); err != nil {
+	if err := graph.Build(cfg, cli); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -167,8 +191,15 @@ func TestBuildLocal(t *testing.T) {
 
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:   bld,
+		Enricher:  ext,
+		Proto:     graph.ALL,
+		OnlyLocal: true,
+	}
 
-	if err := graph.Build(cli, bld, graph.ALL, "", true); err != nil {
+	if err := graph.Build(cfg, cli); err != nil {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -181,8 +212,12 @@ func TestBuildNoNodes(t *testing.T) {
 	t.Parallel()
 
 	cli := testClientWithEnv()
+	cfg := &graph.Config{
+		Proto:  graph.ALL,
+		Follow: "4",
+	}
 
-	if err := graph.Build(cli, nil, graph.ALL, "4", false); err == nil {
+	if err := graph.Build(cfg, cli); err == nil {
 		t.Fail()
 	}
 }
@@ -193,8 +228,14 @@ func TestBuildNodeError(t *testing.T) {
 	myErr := errors.New("test error")
 	cli := testClientWithEnv()
 	bld := &testBuilder{Err: myErr}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:  bld,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
 
-	err := graph.Build(cli, bld, graph.ALL, "", false)
+	err := graph.Build(cfg, cli)
 	if err == nil {
 		t.Fatal("err is nil")
 	}

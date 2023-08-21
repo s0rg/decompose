@@ -14,20 +14,16 @@ import (
 const idSuffix = "-id"
 
 type Loader struct {
-	nodes  map[string]*node.Node
-	edges  map[string]map[string]node.Ports
-	proto  string
-	follow string
-	local  bool
+	nodes map[string]*node.Node
+	edges map[string]map[string]node.Ports
+	cfg   *Config
 }
 
-func NewLoader(proto, follow string, local bool) *Loader {
+func NewLoader(cfg *Config) *Loader {
 	return &Loader{
-		local:  local,
-		proto:  proto,
-		follow: follow,
-		nodes:  make(map[string]*node.Node),
-		edges:  make(map[string]map[string]node.Ports),
+		cfg:   cfg,
+		nodes: make(map[string]*node.Node),
+		edges: make(map[string]map[string]node.Ports),
 	}
 }
 
@@ -47,14 +43,6 @@ func (l *Loader) LoadStream(r io.Reader) error {
 	return nil
 }
 
-func (l *Loader) matchNode(name string) bool {
-	return l.follow == "" || name == l.follow
-}
-
-func (l *Loader) matchProto(proto string) bool {
-	return l.proto == "" || proto == l.proto
-}
-
 func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
 	id = n.Name
 	if !n.IsExternal {
@@ -72,9 +60,15 @@ func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
 		if n.Image != nil {
 			nod.Image = *n.Image
 		}
+
+		if n.Meta != nil {
+			nod.Meta = n.Meta
+		} else {
+			l.cfg.Enricher.Enrich(nod)
+		}
 	}
 
-	if !(n.IsExternal && l.local) {
+	if !(n.IsExternal && l.cfg.OnlyLocal) {
 		nod.Ports = append(nod.Ports, l.preparePorts(n.Listen)...)
 	}
 
@@ -88,7 +82,7 @@ func (l *Loader) prepareEdges(id string, n *node.JSON) (rv map[string]node.Ports
 		rv = make(map[string]node.Ports)
 	}
 
-	skip = !l.matchNode(n.Name)
+	skip = !l.cfg.MatchName(n.Name)
 
 	for k, p := range n.Connected {
 		prep := l.preparePorts(p)
@@ -96,7 +90,7 @@ func (l *Loader) prepareEdges(id string, n *node.JSON) (rv map[string]node.Ports
 			continue
 		}
 
-		if skip && l.matchNode(k) {
+		if skip && l.cfg.MatchName(k) {
 			skip = false
 		}
 
@@ -119,7 +113,7 @@ func (l *Loader) insert(n *node.JSON) {
 	id, nod := l.prepareNode(n)
 	cons, skip := l.prepareEdges(id, n)
 
-	if !l.matchNode(n.Name) && skip {
+	if skip {
 		return
 	}
 
@@ -136,25 +130,25 @@ func (l *Loader) isExternalNode(id string) (yes bool) {
 	return n.IsExternal()
 }
 
-func (l *Loader) Build(b Builder) error {
+func (l *Loader) Build() error {
 	for id, node := range l.nodes {
-		if l.local && l.isExternalNode(id) {
+		if l.cfg.OnlyLocal && l.isExternalNode(id) {
 			continue
 		}
 
-		if err := b.AddNode(node); err != nil {
+		if err := l.cfg.Builder.AddNode(node); err != nil {
 			return fmt.Errorf("node %s: %w", node.Name, err)
 		}
 	}
 
 	for srcID, dmap := range l.edges {
-		if l.local && l.isExternalNode(srcID) {
+		if l.cfg.OnlyLocal && l.isExternalNode(srcID) {
 			continue
 		}
 
 		for dstID, ports := range dmap {
 			if l.isExternalNode(dstID) {
-				if l.local {
+				if l.cfg.OnlyLocal {
 					continue
 				}
 			} else {
@@ -164,8 +158,8 @@ func (l *Loader) Build(b Builder) error {
 			ports = ports.Dedup()
 
 			for i := 0; i < len(ports); i++ {
-				if l.matchProto(ports[i].Kind) {
-					b.AddEdge(srcID, dstID, ports[i])
+				if l.cfg.MatchProto(ports[i].Kind) {
+					l.cfg.Builder.AddEdge(srcID, dstID, ports[i])
 				}
 			}
 		}
@@ -178,7 +172,7 @@ func (l *Loader) preparePorts(lst []string) (rv []node.Port) {
 	rv = make([]node.Port, 0, len(lst))
 
 	for _, v := range lst {
-		if p, ok := parsePort(v); ok && l.matchProto(p.Kind) {
+		if p, ok := parsePort(v); ok && l.cfg.MatchProto(p.Kind) {
 			rv = append(rv, p)
 		}
 	}

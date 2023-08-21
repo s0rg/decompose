@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -37,7 +38,10 @@ var (
 	fHelp, fLocal     bool
 	fProto, fFormat   string
 	fOut, fFollow     string
+	fMeta             string
 	fLoad             []string
+
+	ErrUnknown = errors.New("unknown")
 )
 
 func version() string {
@@ -73,6 +77,7 @@ func setupFlags() {
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json, dot or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
+	flag.StringVar(&fMeta, "meta", "", "json with metadata (info and tags) to enrich output graph")
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
 		fLoad = append(fLoad, v)
@@ -102,36 +107,62 @@ func writeOut(name string, writer func(io.Writer)) error {
 	return nil
 }
 
-func run() error {
-	fProto = strings.ToLower(strings.TrimSpace(fProto))
-	fFormat = strings.ToLower(strings.TrimSpace(fFormat))
-	fFollow = strings.TrimSpace(fFollow)
-
-	proto, ok := graph.ParseNetProto(fProto)
+func prepareConfig(
+	blder graph.Builder,
+	fproto, fextra, ffollow string,
+	flocal bool,
+) (cfg *graph.Config, err error) {
+	proto, ok := graph.ParseNetProto(fproto)
 	if !ok {
-		fmt.Printf("unknown prototol: '%s'\n", fProto)
-
-		return nil
+		return nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fproto)
 	}
 
+	extra := graph.NewMetaLoader()
+
+	if fextra != "" {
+		fd, err := os.Open(fextra)
+		if err != nil {
+			return nil, fmt.Errorf("extra open '%s': %w", fextra, err)
+		}
+
+		err = extra.FromReader(fd)
+		fd.Close()
+
+		if err != nil {
+			return nil, fmt.Errorf("extra load '%s': %w", fextra, err)
+		}
+	}
+
+	cfg = &graph.Config{
+		Builder:   blder,
+		Enricher:  extra,
+		Proto:     proto,
+		Follow:    ffollow,
+		OnlyLocal: flocal,
+	}
+
+	return cfg, nil
+}
+
+func run() error {
 	bldr, ok := builder.Create(fFormat)
 	if !ok {
-		fmt.Printf("unknown format: '%s'\n", fFormat)
-
-		return nil
+		return fmt.Errorf("%w format: %s", ErrUnknown, fFormat)
 	}
 
-	var (
-		act string
-		err error
-	)
+	cfg, err := prepareConfig(bldr, fProto, fMeta, fFollow, fLocal)
+	if err != nil {
+		return fmt.Errorf("config: %w", err)
+	}
+
+	var act string
 
 	if len(fLoad) > 0 {
 		act = "load"
-		err = doLoad(bldr, proto, fFollow, fLocal, fLoad)
+		err = doLoad(cfg, fLoad)
 	} else {
 		act = "build"
-		err = doBuild(bldr, proto, fFollow, fLocal)
+		err = doBuild(cfg)
 	}
 
 	if err != nil {
@@ -146,21 +177,10 @@ func run() error {
 }
 
 func doLoad(
-	b graph.Builder,
-	p graph.NetProto,
-	follow string,
-	local bool,
+	cfg *graph.Config,
 	files []string,
 ) error {
-	var proto string
-
-	switch p {
-	case graph.ALL:
-	case graph.TCP, graph.UDP:
-		proto = p.String()
-	}
-
-	ldr := graph.NewLoader(proto, follow, local)
+	ldr := graph.NewLoader(cfg)
 
 	for _, fn := range files {
 		fd, err := os.Open(fn)
@@ -176,7 +196,7 @@ func doLoad(
 		}
 	}
 
-	if err := ldr.Build(b); err != nil {
+	if err := ldr.Build(); err != nil {
 		return fmt.Errorf("build: %w", err)
 	}
 
@@ -184,10 +204,7 @@ func doLoad(
 }
 
 func doBuild(
-	b graph.Builder,
-	p graph.NetProto,
-	follow string,
-	local bool,
+	cfg *graph.Config,
 ) error {
 	cli, err := client.NewDocker()
 	if err != nil {
@@ -198,7 +215,7 @@ func doBuild(
 
 	log.Println("Starting with method:", cli.Kind())
 
-	if err = graph.Build(cli, b, p, follow, local); err != nil {
+	if err = graph.Build(cfg, cli); err != nil {
 		return fmt.Errorf("graph: %w", err)
 	}
 

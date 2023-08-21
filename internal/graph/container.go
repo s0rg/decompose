@@ -15,10 +15,6 @@ type Container struct {
 	listeners []*Connection
 }
 
-func (ct *Container) Match(v string) bool {
-	return v == "" || ct.Name == v
-}
-
 func (ct *Container) SetConnections(conns []*Connection) {
 	lseen := make(set.Set[string])
 	oseen := make(set.Set[string])
