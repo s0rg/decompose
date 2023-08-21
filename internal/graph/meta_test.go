@@ -37,8 +37,8 @@ func TestExtraEnrich(t *testing.T) {
 `)
 
 	testCases := []struct {
-		Node        node.Node
 		WantInfoKey string
+		Node        node.Node
 		WantTagsNum int
 		Want        bool
 	}{
