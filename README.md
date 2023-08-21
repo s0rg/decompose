@@ -1,6 +1,7 @@
 [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/s0rg/decompose/blob/master/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
+![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg)
 
 [![CI](https://github.com/s0rg/decompose/workflows/ci/badge.svg)](https://github.com/s0rg/decompose/actions?query=workflow%3Aci)
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
@@ -29,8 +30,8 @@ type Item struct {
 }
 
 type Meta struct {
-	Info string   `json:"info"`
-	Tags []string `json:"tags"`
+    Info string   `json:"info"`
+    Tags []string `json:"tags"`
 }
 ```
 
@@ -61,18 +62,18 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 ```json
 {
     "foo": {
-        "info": "",
-        "tags": []
+        "info": "info for foo",
+        "tags": ["some"]
     },
     "bar": {
-        "info": "",
-        "tags": []
+        "info": "info for bar",
+        "tags": ["other", "not-foo"]
     }
 }
 ```
 
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
-one of provided keys in given file.
+one of provided keys, like `foo-1` or `bar-1` for this example.
 
 
 # features
