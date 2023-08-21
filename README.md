@@ -13,11 +13,12 @@
 
 Reverse-engineering tool for docker environments.
 
-
 Takes all network connections from your docker containers and exports them as:
+
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
 - json stream of items:
+
 ```go
 type Item struct {
     Name       string              `json:"name"`            // container name
@@ -54,7 +55,6 @@ example:
 }
 ```
 
-
 # metadata format
 
 To enrich output with detailed descriptions, you can provide additional `json` file, with metadata i.e.:
@@ -75,23 +75,20 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
 one of provided keys, like `foo-1` or `bar-1` for this example.
 
-
 # features
 
 - os-independent, it uses different strategies to get container connections:
-    * running on **linux as root** is the fastest way and it will work with all types of containers (even
-            `scratch`-based)
-    * running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
+  - running on **linux as root** is the fastest way and it will work with all types of containers (even
+    `scratch`-based)
+  - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - produces detailed connections graph with ports
 - fast, it scans ~400 containers in around 5 seconds
 - 100% test-coverage
 
-
 # known limitations
 
 - only established and listen connections are listed
-
 
 # usage
 
@@ -111,7 +108,7 @@ possible flags with default values:
   -local
         skip external hosts
   -meta string
-        json with metadata (info and tags) to enrich output graph
+        filename with json metadata for enrichment
   -out string
         output: filename or "-" for stdout (default "-")
   -proto string
@@ -122,42 +119,52 @@ possible flags with default values:
         show version
 ```
 
+*note* docker-daemon socket for connection is taken from env, you can set `DOCKER_HOST=connection-url` to use another
+docker-daemon.
 
 # examples
 
 Get `dot` file:
-```
-sudo decompose > connections.dot
+
+```shell
+decompose > connections.dot
 ```
 
-Get json stream:
-```
-sudo decompose -format json | jq '{name}'
+Process json stream:
+
+```shell
+decompose -format json | jq '{name}'
 ```
 
 Get only tcp connections as `dot`:
-```
-sudo decompose -proto tcp > tcp.dot
+
+```shell
+decompose -proto tcp > tcp.dot
 ```
 
 Save json stream:
-```
-sudo decompose -format json > nodes-1.json
+
+```shell
+decompose -format json > nodes-1.json
 ```
 
-Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot` (no need to be root):
-```
+Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:
+
+```shell
 decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph-merged.dot
 ```
 
+Load json stream, enrich and save as `structurizr dsl`:
+
+```shell
+decompose -load nodes-1.json -meta metadata.json -format sdsl > decomposed.dsl
+```
 
 # example result
 
 Scheme taken from [redis-cluster](https://github.com/s0rg/redis-cluster-compose):
 
-
 ![svg](https://github.com/s0rg/redis-cluster-compose/blob/main/redis-cluster.svg)
-
 
 Steps to reproduce:
 

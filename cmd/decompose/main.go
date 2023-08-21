@@ -77,7 +77,7 @@ func setupFlags() {
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json, dot or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
-	flag.StringVar(&fMeta, "meta", "", "json with metadata (info and tags) to enrich output graph")
+	flag.StringVar(&fMeta, "meta", "", "filename with json metadata for enrichment")
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
 		fLoad = append(fLoad, v)
