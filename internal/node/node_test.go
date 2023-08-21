@@ -31,6 +31,7 @@ func TestNodeToJSON(t *testing.T) {
 		Image    string
 		PortsNum int
 		External bool
+		HasExtra bool
 	}{
 		{
 			Node: &node.Node{
@@ -43,7 +44,6 @@ func TestNodeToJSON(t *testing.T) {
 			},
 			Name:     "test-name",
 			PortsNum: 2,
-			External: false,
 		},
 		{
 			Node: &node.Node{
@@ -69,7 +69,24 @@ func TestNodeToJSON(t *testing.T) {
 			Name:     "test-name",
 			Image:    "test-image",
 			PortsNum: 1,
-			External: false,
+		},
+		{
+			Node: &node.Node{
+				ID:    "test-id",
+				Name:  "test-name",
+				Image: "test-image",
+				Ports: []node.Port{
+					{Kind: "udp", Value: 53},
+				},
+				Meta: &node.Meta{
+					Info: "test",
+					Tags: []string{"test"},
+				},
+			},
+			Name:     "test-name",
+			Image:    "test-image",
+			PortsNum: 1,
+			HasExtra: true,
 		},
 	}
 
@@ -86,6 +103,10 @@ func TestNodeToJSON(t *testing.T) {
 
 		if len(j.Listen) != tc.PortsNum {
 			t.Fatal("listen", tc)
+		}
+
+		if tc.HasExtra && j.Meta == nil {
+			t.Fatal("extra", tc)
 		}
 
 		if tc.Image == "" {

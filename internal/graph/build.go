@@ -25,16 +25,17 @@ type Builder interface {
 	AddEdge(string, string, node.Port)
 }
 
+type Enricher interface {
+	Enrich(*node.Node)
+}
+
 func Build(
+	cfg *Config,
 	cli ContainerClient,
-	grb Builder,
-	knd NetProto,
-	follow string,
-	onlyLocal bool,
 ) error {
 	log.Println("Gathering containers info...")
 
-	containers, err := cli.Containers(context.Background(), knd, func(cur, total int) {
+	containers, err := cli.Containers(context.Background(), cfg.Proto, func(cur, total int) {
 		switch {
 		case cur == 0:
 			return
@@ -58,7 +59,7 @@ func Build(
 
 	log.Println("Building nodes...")
 
-	nodes := buildNodes(containers, neighbours, follow, onlyLocal)
+	nodes := buildNodes(cfg, containers, neighbours)
 
 	log.Printf("Found %d nodes", len(nodes))
 
@@ -71,14 +72,16 @@ func Build(
 	for _, node := range nodes {
 		node.Ports = node.Ports.Dedup()
 
-		if err = grb.AddNode(node); err != nil {
+		cfg.Enricher.Enrich(node)
+
+		if err = cfg.Builder.AddNode(node); err != nil {
 			return fmt.Errorf("node '%s': %w", node.Name, err)
 		}
 	}
 
 	log.Println("Building edges...")
 
-	buildEdges(containers, neighbours, nodes, follow, grb.AddEdge)
+	buildEdges(cfg, containers, neighbours, nodes)
 
 	log.Println("Done!")
 
@@ -98,17 +101,16 @@ func buildIPMap(cntrs []*Container) (rv map[string]*Container) {
 }
 
 func buildNodes(
+	cfg *Config,
 	cntrs []*Container,
 	neighbours map[string]*Container,
-	follow string,
-	onlyLocal bool,
 ) (rv map[string]*node.Node) {
 	var skip bool
 
 	rv = make(map[string]*node.Node)
 
 	for _, con := range cntrs {
-		skip = !con.Match(follow)
+		skip = !cfg.MatchName(con.Name)
 
 		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image}
 
@@ -117,14 +119,14 @@ func buildNodes(
 			rport := node.Port{Kind: c.Kind.String(), Value: int(c.RemotePort)}
 
 			if lc, ok := neighbours[rip]; ok {
-				if skip && lc.Match(follow) {
+				if skip && cfg.MatchName(lc.Name) {
 					skip = false
 				}
 
 				return
 			}
 
-			if onlyLocal || skip {
+			if cfg.OnlyLocal || skip {
 				return
 			}
 
@@ -158,11 +160,10 @@ func buildNodes(
 }
 
 func buildEdges(
+	cfg *Config,
 	cntrs []*Container,
 	local map[string]*Container,
 	nodes map[string]*node.Node,
-	follow string,
-	edgefn func(src, dst string, port node.Port),
 ) {
 	for _, con := range cntrs {
 		src, ok := nodes[con.ID]
@@ -174,18 +175,18 @@ func buildEdges(
 			port := node.Port{Kind: c.Kind.String(), Value: int(c.RemotePort)}
 			key := c.RemoteIP.String()
 
-			if ldst, ok := local[key]; ok && (ldst.Match(follow) || con.Match(follow)) {
-				edgefn(src.ID, ldst.ID, port)
+			if ldst, ok := local[key]; ok && (cfg.MatchName(ldst.Name) || cfg.MatchName(con.Name)) {
+				cfg.Builder.AddEdge(src.ID, ldst.ID, port)
 
 				return
 			}
 
-			if !con.Match(follow) {
+			if !cfg.MatchName(con.Name) {
 				return
 			}
 
 			if rdst, ok := nodes[key]; ok {
-				edgefn(src.ID, rdst.ID, port)
+				cfg.Builder.AddEdge(src.ID, rdst.ID, port)
 
 				return
 			}

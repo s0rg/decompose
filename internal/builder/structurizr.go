@@ -3,101 +3,70 @@
 package builder
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
+	sdsl "github.com/s0rg/decompose/internal/structurizr"
 )
 
-type container struct {
-	ID   string
-	Name string
-}
+const systemName = "de-composed system"
+
+var ErrDuplicate = errors.New("duplicate found")
 
 type Structurizr struct {
-	nodes map[string]*container
-	edges map[string]map[string][]string
+	state *sdsl.System
 }
 
 func NewStructurizr() *Structurizr {
 	return &Structurizr{
-		nodes: make(map[string]*container),
-		edges: make(map[string]map[string][]string),
+		state: sdsl.NewSystem(systemName),
 	}
 }
 
 func (s *Structurizr) AddNode(n *node.Node) error {
-	com := &container{
-		ID:   strings.ReplaceAll(n.Name, "-", "_"),
-		Name: n.Name,
+	cont, ok := s.state.AddContainer(n.ID, n.Name)
+	if !ok {
+		return fmt.Errorf("%w: %s", ErrDuplicate, n.Name)
 	}
 
-	s.nodes[n.ID] = com
+	cont.Technology = n.Image
+	cont.Tags = make([]string, 0, len(n.Ports)+len(n.Networks))
+
+	for _, p := range n.Ports {
+		cont.Tags = append(cont.Tags, "listen:"+p.Label())
+	}
+
+	for _, n := range n.Networks {
+		cont.Tags = append(cont.Tags, "net:"+n)
+	}
+
+	if n.IsExternal() {
+		cont.Tags = append(cont.Tags, "external")
+	}
+
+	if n.Meta != nil {
+		cont.Description = n.Meta.Info
+		cont.Tags = append(cont.Tags, n.Meta.Tags...)
+	}
 
 	return nil
 }
 
 func (s *Structurizr) AddEdge(srcID, dstID string, port node.Port) {
-	csrc, ok := s.nodes[srcID]
+	rel, ok := s.state.AddRelation(srcID, dstID)
 	if !ok {
 		return
 	}
 
-	cdst, ok := s.nodes[dstID]
-	if !ok {
-		return
-	}
-
-	edges, ok := s.edges[csrc.ID]
-	if !ok {
-		edges = make(map[string][]string)
-	}
-
-	dedges, ok := edges[cdst.ID]
-	if !ok {
-		dedges = make([]string, 0, 1)
-	}
-
-	dedges = append(dedges, port.Label())
-
-	edges[cdst.ID] = dedges
-	s.edges[csrc.ID] = edges
+	rel.Tags = append(rel.Tags, port.Label())
 }
 
 func (s *Structurizr) Write(w io.Writer) {
-	bw := bufio.NewWriter(w)
-
-	fmt.Fprintln(bw, `workspace {
-    model {
-        s = softwareSystem "Software System" {`)
-
-	for _, com := range s.nodes {
-		fmt.Fprintf(bw, `%s = container "%s"
-`, com.ID, com.Name)
+	ws := sdsl.Workspace{
+		System: s.state,
 	}
 
-	fmt.Fprintln(bw, "}")
-
-	for srcID, edges := range s.edges {
-		for dstID, ports := range edges {
-			for _, label := range ports {
-				fmt.Fprintf(bw, `%s -> %s "%s"
-`, srcID, dstID, label)
-			}
-		}
-	}
-
-	fmt.Fprintln(bw, `}
-
-views {
-        container s {
-            include *
-            autoLayout lr
-        }
-    }
-}`)
-
-	_ = bw.Flush()
+	ws.Write(w)
 }

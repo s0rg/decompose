@@ -1,11 +1,12 @@
 package node
 
 type Node struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Image    string   `json:"image"`
-	Ports    Ports    `json:"ports"`
-	Networks []string `json:"networks"`
+	ID       string
+	Name     string
+	Image    string
+	Networks []string
+	Meta     *Meta
+	Ports    Ports
 }
 
 func (n *Node) IsExternal() bool {
@@ -16,9 +17,13 @@ func (n *Node) ToJSON() (rv *JSON) {
 	rv = &JSON{
 		Name:       n.Name,
 		IsExternal: n.IsExternal(),
-		Networks:   make([]string, len(n.Networks)),
+		Networks:   n.Networks,
 		Listen:     make([]string, len(n.Ports)),
 		Connected:  make(map[string][]string),
+	}
+
+	if n.Meta != nil {
+		rv.Meta = n.Meta
 	}
 
 	if n.Image != "" {
@@ -28,8 +33,6 @@ func (n *Node) ToJSON() (rv *JSON) {
 	for i := 0; i < len(n.Ports); i++ {
 		rv.Listen[i] = n.Ports[i].Label()
 	}
-
-	copy(rv.Networks, n.Networks)
 
 	return rv
 }
