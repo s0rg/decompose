@@ -29,6 +29,10 @@ test-cover: test
 lint:
 	golangci-lint run
 
+markdown-fix:
+	# https://github.com/executablebooks/mdformat
+	mdformat .
+
 clean:
 	[ -f "${BIN}" ] && rm "${BIN}"
 	[ -f "${COP}" ] && rm "${COP}"
