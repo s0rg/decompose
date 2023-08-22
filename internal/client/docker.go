@@ -188,14 +188,14 @@ func (d *Docker) conectionsContainer(
 		Cmd:          netstatCmd(proto),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("create: %w", err)
+		return nil, fmt.Errorf("exec-create: %w", err)
 	}
 
 	resp, err := d.cli.ContainerExecAttach(ctx, exe.ID, types.ExecStartCheck{
 		Tty: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("attach: %w", err)
+		return nil, fmt.Errorf("exec-attach: %w", err)
 	}
 
 	defer resp.Close()

@@ -57,6 +57,16 @@ func (d *DOT) AddNode(n *node.Node) error {
 		)
 	}
 
+	if n.Meta != nil {
+		if len(n.Meta.Info) > 0 {
+			label += "&#92;ninfo: " + n.Meta.Info
+		}
+
+		if len(n.Meta.Tags) > 0 {
+			label += "&#92;ntags: " + strings.Join(n.Meta.Tags, ",")
+		}
+	}
+
 	rb := d.g.Node(n.ID).Attr("color", color).NewRecordBuilder()
 	rb.FieldWithId(label, outPort)
 	rb.Nesting(func() {
