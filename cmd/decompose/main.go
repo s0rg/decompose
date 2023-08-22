@@ -109,7 +109,7 @@ func writeOut(name string, writer func(io.Writer)) error {
 
 func prepareConfig(
 	blder graph.Builder,
-	fproto, fextra, ffollow string,
+	fproto, fmeta, ffollow string,
 	flocal bool,
 ) (cfg *graph.Config, err error) {
 	proto, ok := graph.ParseNetProto(fproto)
@@ -117,25 +117,25 @@ func prepareConfig(
 		return nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fproto)
 	}
 
-	extra := graph.NewMetaLoader()
+	meta := graph.NewMetaLoader()
 
-	if fextra != "" {
-		fd, err := os.Open(fextra)
+	if fmeta != "" {
+		fd, err := os.Open(fmeta)
 		if err != nil {
-			return nil, fmt.Errorf("extra open '%s': %w", fextra, err)
+			return nil, fmt.Errorf("meta open '%s': %w", fmeta, err)
 		}
 
-		err = extra.FromReader(fd)
+		err = meta.FromReader(fd)
 		fd.Close()
 
 		if err != nil {
-			return nil, fmt.Errorf("extra load '%s': %w", fextra, err)
+			return nil, fmt.Errorf("meta load '%s': %w", fmeta, err)
 		}
 	}
 
 	cfg = &graph.Config{
 		Builder:   blder,
-		Enricher:  extra,
+		Enricher:  meta,
 		Proto:     proto,
 		Follow:    ffollow,
 		OnlyLocal: flocal,
@@ -158,11 +158,9 @@ func run() error {
 	var act string
 
 	if len(fLoad) > 0 {
-		act = "load"
-		err = doLoad(cfg, fLoad)
+		act, err = "load", doLoad(cfg, fLoad)
 	} else {
-		act = "build"
-		err = doBuild(cfg)
+		act, err = "build", doBuild(cfg)
 	}
 
 	if err != nil {

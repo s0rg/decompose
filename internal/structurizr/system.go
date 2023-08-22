@@ -1,9 +1,7 @@
 package srtructurizr
 
 import (
-	"fmt"
 	"io"
-	"strings"
 )
 
 type System struct {
@@ -93,42 +91,24 @@ func (s *System) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 	return rv, true
 }
 
-func (s *System) WriteContainers(w io.Writer) {
-	const tabs = "\t\t\t"
+func (s *System) WriteContainers(w io.Writer, level int) {
+	putCommon(w, level, s.Description, "", s.Tags)
 
-	if s.Description != "" {
-		fmt.Fprint(w, tabs)
-		fmt.Fprintf(w, `description "%s"`, s.Description)
-		fmt.Fprintln(w, "")
-	}
-
-	if len(s.Tags) > 0 {
-		fmt.Fprint(w, tabs)
-		fmt.Fprintf(w, `tags "%s"`, strings.Join(s.Tags, ","))
-		fmt.Fprintln(w, "")
-	}
+	next := level + 1
 
 	for _, cont := range s.containers {
-		fmt.Fprint(w, tabs)
-		fmt.Fprintf(w, "%s = container ", cont.ID)
-		fmt.Fprintf(w, `"%s" {`, cont.Name)
-		fmt.Fprintln(w, "")
-		cont.Write(w)
-		fmt.Fprint(w, tabs)
-		fmt.Fprintln(w, "}")
+		putBlock(w, next, blockContainer, cont.ID, cont.Name)
+		cont.Write(w, next+1)
+		putEnd(w, next)
 	}
 }
 
-func (s *System) WriteRelations(w io.Writer) {
-	const tabs = "\t\t"
-
+func (s *System) WriteRelations(w io.Writer, level int) {
 	for srcID, dest := range s.relationships {
 		for dstID, rel := range dest {
-			fmt.Fprint(w, tabs)
-			fmt.Fprintf(w, "%s -> %s {\n", srcID, dstID)
-			rel.Write(w)
-			fmt.Fprint(w, tabs)
-			fmt.Fprintln(w, "}")
+			putRelation(w, level, srcID, dstID)
+			rel.Write(w, level+1)
+			putEnd(w, level)
 		}
 	}
 }

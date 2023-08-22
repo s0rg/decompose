@@ -3,8 +3,6 @@ package srtructurizr
 import (
 	"fmt"
 	"io"
-	"strings"
-	"unicode"
 )
 
 type Workspace struct {
@@ -14,39 +12,47 @@ type Workspace struct {
 }
 
 func (ws *Workspace) Write(w io.Writer) {
-	fmt.Fprintln(w, "workspace {")
+	var level int
 
-	if ws.Name != "" {
-		fmt.Fprintln(w, "\tname ")
-		fmt.Fprintf(w, `"%s"`, ws.Name)
-		fmt.Fprintln(w, "")
-	}
+	putHeader(w, level, headerWorkspace)
 
-	if ws.Description != "" {
-		fmt.Fprintln(w, "\tdescription ")
-		fmt.Fprintf(w, `"%s"`, ws.Description)
-		fmt.Fprintln(w, "")
-	}
+	level++
+	putKey(w, level, keyName, ws.Name)
+	putKey(w, level, keyDescription, ws.Description)
 
-	fmt.Fprintln(w, "\tmodel {")
+	fmt.Fprintln(w, "")
 
-	fmt.Fprintf(w, "\t\t%s = softwareSystem ", ws.System.ID)
-	fmt.Fprintf(w, `"%s"`, ws.System.Name)
-	fmt.Fprintln(w, " {")
-	ws.System.WriteContainers(w)
-	fmt.Fprintln(w, "\t\t}")
-	ws.System.WriteRelations(w)
-	fmt.Fprintln(w, "\t}\n\n\tviews {")
-	fmt.Fprintf(w, "\t\tcontainer %s {\n", ws.System.ID)
-	fmt.Fprintln(w, "\t\t\tinclude *\n\t\t\tautoLayout lr\n\t\t}\n\t}\n}")
-}
+	putHeader(w, level, headerModel)
 
-func safeID(v string) (id string) {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) || r == '-' {
-			return '_'
-		}
+	level++
+	putBlock(w, level, blockSystem, ws.System.ID, ws.System.Name)
+	ws.System.WriteContainers(w, level)
+	putEnd(w, level)
 
-		return r
-	}, v)
+	fmt.Fprintln(w, "")
+
+	ws.System.WriteRelations(w, level)
+
+	level--
+	putEnd(w, level) // model
+
+	fmt.Fprintln(w, "")
+
+	putHeader(w, level, headerViews)
+
+	level++
+	putView(w, level, blockContainer, ws.System.ID)
+
+	level++
+	putRaw(w, level, "include *")
+	putRaw(w, level, "autoLayout lr")
+
+	level--
+	putEnd(w, level) // container
+
+	level--
+	putEnd(w, level) // views
+
+	level--
+	putEnd(w, level) // workspace
 }
