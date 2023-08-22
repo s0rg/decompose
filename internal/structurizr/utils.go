@@ -31,7 +31,8 @@ func putView(
 	key, id string,
 ) {
 	fmt.Fprint(w, strings.Repeat(tab, level))
-	fmt.Fprintf(w, "%s %s {\n", key, id)
+	fmt.Fprintf(w, `%s %s "%s" {`, key, id, id)
+	fmt.Fprintln(w, "")
 }
 
 func putRaw(
