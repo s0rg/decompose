@@ -22,8 +22,8 @@ Takes all network connections from your docker containers and exports them as:
 ```go
 type Item struct {
     Name       string              `json:"name"`            // container name
-    Image      *string             `json:"image,omitempty"` // docker image (if any)
     IsExternal bool                `json:"is_external"`     // this host is external
+    Image      *string             `json:"image,omitempty"` // docker image (if any)
     Meta       *Meta               `json:"meta,omitempty"`  // metadata, see below
     Listen     []string            `json:"listen"`          // ports description i.e. '443/tcp'
     Networks   []string            `json:"networks"`        // network names
@@ -41,8 +41,8 @@ example:
 ```json
 {
     "name": "foo-1",
-    "image": "repo/foo:latest",
     "is_external": false,
+    "image": "repo/foo:latest",
     "meta": {
         "info": "foo info",
         "tags": ["foo"]
@@ -73,7 +73,7 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 ```
 
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
-one of provided keys, like `foo-1` or `bar-1` for this example.
+one of provided keys, like `foo-1` or `bar1` for this example.
 
 # features
 
