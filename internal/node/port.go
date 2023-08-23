@@ -30,7 +30,7 @@ func (ps Ports) Dedup() (rv Ports) {
 
 		s, ok := state[p.Kind]
 		if !ok {
-			s = make(set.Set[int])
+			s = make(set.Unordered[int])
 
 			state[p.Kind] = s
 		}
@@ -41,13 +41,13 @@ func (ps Ports) Dedup() (rv Ports) {
 	total := 0
 
 	for _, s := range state {
-		total += len(s)
+		total += s.Len()
 	}
 
 	rv = make([]Port, 0, total)
 
 	for k, s := range state {
-		ports := s.List()
+		ports := s.ToSlice()
 
 		if len(ports) > 1 {
 			sort.Ints(ports)

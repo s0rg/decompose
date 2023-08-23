@@ -16,8 +16,8 @@ type Container struct {
 }
 
 func (ct *Container) SetConnections(conns []*Connection) {
-	lseen := make(set.Set[string])
-	oseen := make(set.Set[string])
+	lseen := make(set.Unordered[string])
+	oseen := make(set.Unordered[string])
 
 	for _, con := range conns {
 		switch {
