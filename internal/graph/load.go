@@ -121,7 +121,7 @@ func (l *Loader) insert(n *node.JSON) {
 	l.edges[id] = cons
 }
 
-func (l *Loader) isExternalNode(id string) (yes bool) {
+func (l *Loader) isExternal(id string) (yes bool) {
 	n, ok := l.nodes[id]
 	if !ok {
 		return false
@@ -132,7 +132,7 @@ func (l *Loader) isExternalNode(id string) (yes bool) {
 
 func (l *Loader) Build() error {
 	for id, node := range l.nodes {
-		if l.cfg.OnlyLocal && l.isExternalNode(id) {
+		if l.cfg.OnlyLocal && l.isExternal(id) {
 			continue
 		}
 
@@ -142,30 +142,34 @@ func (l *Loader) Build() error {
 	}
 
 	for srcID, dmap := range l.edges {
-		if l.cfg.OnlyLocal && l.isExternalNode(srcID) {
+		if l.cfg.OnlyLocal && l.isExternal(srcID) {
 			continue
 		}
 
-		for dstID, ports := range dmap {
-			if l.isExternalNode(dstID) {
-				if l.cfg.OnlyLocal {
-					continue
-				}
-			} else {
-				dstID += idSuffix
-			}
-
-			ports = ports.Dedup()
-
-			for i := 0; i < len(ports); i++ {
-				if l.cfg.MatchProto(ports[i].Kind) {
-					l.cfg.Builder.AddEdge(srcID, dstID, ports[i])
-				}
-			}
-		}
+		l.processPorts(srcID, dmap)
 	}
 
 	return nil
+}
+
+func (l *Loader) processPorts(srcID string, dmap map[string]node.Ports) {
+	for dstID, ports := range dmap {
+		if l.isExternal(dstID) {
+			if l.cfg.OnlyLocal {
+				continue
+			}
+		} else {
+			dstID += idSuffix
+		}
+
+		ports = ports.Dedup()
+
+		for i := 0; i < len(ports); i++ {
+			if l.cfg.MatchProto(ports[i].Kind) {
+				l.cfg.Builder.AddEdge(srcID, dstID, ports[i])
+			}
+		}
+	}
 }
 
 func (l *Loader) preparePorts(lst []string) (rv []node.Port) {

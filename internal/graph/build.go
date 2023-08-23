@@ -59,7 +59,7 @@ func Build(
 
 	log.Println("Building nodes...")
 
-	nodes := buildNodes(cfg, containers, neighbours)
+	nodes := createNodes(cfg, containers, neighbours)
 
 	log.Printf("Found %d nodes", len(nodes))
 
@@ -81,7 +81,7 @@ func Build(
 
 	log.Println("Building edges...")
 
-	buildEdges(cfg, containers, neighbours, nodes)
+	createEdges(cfg, containers, neighbours, nodes)
 
 	log.Println("Done!")
 
@@ -100,7 +100,7 @@ func buildIPMap(cntrs []*Container) (rv map[string]*Container) {
 	return rv
 }
 
-func buildNodes(
+func createNodes(
 	cfg *Config,
 	cntrs []*Container,
 	neighbours map[string]*Container,
@@ -159,7 +159,7 @@ func buildNodes(
 	return rv
 }
 
-func buildEdges(
+func createEdges(
 	cfg *Config,
 	cntrs []*Container,
 	local map[string]*Container,
