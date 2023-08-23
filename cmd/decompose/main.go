@@ -158,8 +158,12 @@ func run() error {
 	var act string
 
 	if len(fLoad) > 0 {
+		log.Printf("Loading %d file(s)...", len(fLoad))
+
 		act, err = "load", doLoad(cfg, fLoad)
 	} else {
+		log.Println("Building graph...")
+
 		act, err = "build", doBuild(cfg)
 	}
 
@@ -167,7 +171,9 @@ func run() error {
 		return fmt.Errorf("%s: %w", act, err)
 	}
 
-	if err = writeOut(strings.TrimSpace(fOut), bldr.Write); err != nil {
+	log.Println("Writing:", bldr.Name())
+
+	if err = writeOut(fOut, bldr.Write); err != nil {
 		return fmt.Errorf("output: %w", err)
 	}
 

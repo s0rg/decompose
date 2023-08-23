@@ -17,6 +17,7 @@ const (
 type Builder interface {
 	graph.Builder
 	Write(io.Writer)
+	Name() string
 }
 
 func Create(kind string) (b Builder, ok bool) {

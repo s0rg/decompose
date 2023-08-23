@@ -83,8 +83,6 @@ func Build(
 
 	createEdges(cfg, containers, neighbours, nodes)
 
-	log.Println("Done!")
-
 	return nil
 }
 

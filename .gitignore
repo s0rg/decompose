@@ -3,6 +3,8 @@ vendor/
 *.out
 *.png
 *.svg
+*.dot
+*.dsl
 *.json
 *.pprof
 *_profile.pdf
