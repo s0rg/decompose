@@ -18,6 +18,10 @@ func NewJSON() *JSON {
 	}
 }
 
+func (j *JSON) Name() string {
+	return "json-stream"
+}
+
 func (j *JSON) AddNode(n *node.Node) error {
 	j.state[n.ID] = n.ToJSON()
 

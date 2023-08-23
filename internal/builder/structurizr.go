@@ -25,6 +25,10 @@ func NewStructurizr() *Structurizr {
 	}
 }
 
+func (s *Structurizr) Name() string {
+	return "structurizr-dsl"
+}
+
 func (s *Structurizr) AddNode(n *node.Node) error {
 	cont, ok := s.state.AddContainer(n.ID, n.Name)
 	if !ok {

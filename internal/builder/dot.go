@@ -41,6 +41,10 @@ func NewDOT() *DOT {
 	return &DOT{g: g}
 }
 
+func (d *DOT) Name() string {
+	return "graphviz-dot"
+}
+
 func (d *DOT) AddNode(n *node.Node) error {
 	var label, color string
 
