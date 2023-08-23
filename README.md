@@ -1,7 +1,8 @@
 [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/s0rg/decompose/blob/master/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
-![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg)
+
+<!-- ![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg) -->
 
 [![CI](https://github.com/s0rg/decompose/workflows/ci/badge.svg)](https://github.com/s0rg/decompose/actions?query=workflow%3Aci)
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
@@ -36,7 +37,7 @@ type Meta struct {
 }
 ```
 
-example:
+example with metadata filled:
 
 ```json
 {
@@ -44,8 +45,8 @@ example:
     "is_external": false,
     "image": "repo/foo:latest",
     "meta": {
-        "info": "foo info",
-        "tags": ["foo"]
+        "info": "info for foo",
+        "tags": ["some"]
     },
     "listen": ["80/tcp"],
     "networks": ["test-net"],
@@ -75,6 +76,8 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
 one of provided keys, like `foo-1` or `bar1` for this example.
 
+See [csv2meta.py](script/csv2meta.py) for example how to create such `json` fom csv.
+
 # features
 
 - os-independent, it uses different strategies to get container connections:
@@ -82,13 +85,17 @@ one of provided keys, like `foo-1` or `bar1` for this example.
     `scratch`-based)
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
-- produces detailed connections graph with ports
+- produces detailed connections graph **with ports**
 - fast, it scans ~400 containers in around 5 seconds
 - 100% test-coverage
 
 # known limitations
 
 - only established and listen connections are listed
+
+# installation
+
+- [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
 
 # usage
 
@@ -164,7 +171,8 @@ decompose -load nodes-1.json -meta metadata.json -format sdsl > decomposed.dsl
 
 Scheme taken from [redis-cluster](https://github.com/s0rg/redis-cluster-compose):
 
-![svg](https://github.com/s0rg/redis-cluster-compose/blob/main/redis-cluster.svg)
+![svg](https://github.com/s0rg/redis-cluster-compose/blob/main/redis-cluster.svg) *it may be too heavy to display it with
+browser, use `save image as` and open it locally*
 
 Steps to reproduce:
 
