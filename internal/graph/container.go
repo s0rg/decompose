@@ -24,13 +24,13 @@ func (ct *Container) SetConnections(conns []*Connection) {
 		case con.IsListener():
 			key := con.Kind.String() + strconv.Itoa(int(con.LocalPort))
 
-			if lseen.TryAdd(key) {
+			if lseen.Add(key) {
 				ct.listeners = append(ct.listeners, con)
 			}
 		case !con.IsInbound():
 			key := con.RemoteIP.String() + con.Kind.String() + strconv.Itoa(int(con.RemotePort))
 
-			if oseen.TryAdd(key) {
+			if oseen.Add(key) {
 				ct.outbounds = append(ct.outbounds, con)
 			}
 		}
