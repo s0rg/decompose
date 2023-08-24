@@ -185,5 +185,5 @@ docker compose up
 in other terminal:
 
 ```shell
-sudo decompose | dot -Tsvg > redis-cluster.svg
+decompose | dot -Tsvg > redis-cluster.svg
 ```

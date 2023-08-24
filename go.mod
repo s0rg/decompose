@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/docker/docker v24.0.5+incompatible
 	github.com/emicklei/dot v1.6.0
-	github.com/s0rg/set v1.1.2
+	github.com/s0rg/set v1.2.0
 )
 
 require (

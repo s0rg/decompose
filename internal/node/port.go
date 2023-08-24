@@ -47,7 +47,7 @@ func (ps Ports) Dedup() (rv Ports) {
 	rv = make([]Port, 0, total)
 
 	for k, s := range state {
-		ports := s.ToSlice()
+		ports := set.ToSlice(s)
 
 		if len(ports) > 1 {
 			sort.Ints(ports)
