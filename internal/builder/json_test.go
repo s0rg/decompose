@@ -37,6 +37,11 @@ func TestJSON(t *testing.T) {
 	}
 
 	bldr := builder.NewJSON()
+
+	if bldr.Name() != "json-stream" {
+		t.Fail()
+	}
+
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
