@@ -1,8 +1,10 @@
 SHELL=/usr/bin/env bash
 
 BIN=bin/decompose
-CMD=./cmd/decompose
 COP=cover.out
+
+CMD=./cmd/decompose
+ALL=./...
 
 GIT_TAG=`git describe --abbrev=0 2>/dev/null || echo -n "no-tag"`
 GIT_HASH=`git rev-parse --short HEAD 2>/dev/null || echo -n "no-git"`
@@ -15,19 +17,21 @@ export CGO_ENABLED=0
 .PHONY: build
 
 build: vet
-	go build -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
+	@go build -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
 
 vet:
-	go vet ./...
+	@go vet "${ALL}"
 
 test: vet
-	CGO_ENABLED=1 go test -race -count 1 -v -tags=test -coverprofile="${COP}" ./...
+	@CGO_ENABLED=1 go test -v -race -count 1 -tags=test \
+				-cover -coverpkg="${ALL}" -coverprofile="${COP}" \
+				"${ALL}"
 
 test-cover: test
-	go tool cover -func="${COP}"
+	@go tool cover -func="${COP}"
 
-lint:
-	golangci-lint run
+lint: vet
+	@golangci-lint run
 
 markdown-fix:
 	# https://github.com/executablebooks/mdformat
