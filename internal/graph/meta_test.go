@@ -32,6 +32,10 @@ func TestExtraEnrich(t *testing.T) {
     "baz": {
         "info": "its a baz",
         "tags": ["not-foo", "baz"]
+    },
+    "bazooka": {
+        "info": "its a bazooka!",
+        "tags": ["not-baz", "not-foo", "boom"]
     }
 }
 `)
@@ -54,6 +58,13 @@ func TestExtraEnrich(t *testing.T) {
 			WantInfoKey: "baz",
 			WantTagsNum: 2,
 		},
+		{
+			Node:        node.Node{Name: "bazooka-1"},
+			Want:        true,
+			WantInfoKey: "bazooka",
+			WantTagsNum: 3,
+		},
+
 		{
 			Node: node.Node{Name: "bar-1"},
 		},

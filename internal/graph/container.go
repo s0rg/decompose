@@ -15,6 +15,10 @@ type Container struct {
 	listeners []*Connection
 }
 
+func (ct *Container) ConnectionsCount() int {
+	return len(ct.outbounds) + len(ct.listeners)
+}
+
 func (ct *Container) SetConnections(conns []*Connection) {
 	lseen := make(set.Unordered[string])
 	oseen := make(set.Unordered[string])

@@ -14,11 +14,20 @@ linters:
     - gochecknoglobals
     - exhaustivestruct
     - nonamedreturns
+    - structcheck
     - tagliatelle
+    - nosnakecase
     - exhaustruct
+    - interfacer
     - varnamelen
     - scopelint
+    - deadcode
     - depguard
+    - maligned
+    - varcheck
+    - ifshort
+    - ireturn
+    - golint
     - gci
 
 linters-settings:
@@ -30,6 +39,7 @@ linters-settings:
   funlen:
     ignore-comments: true
   cyclop:
+    max-complexity: 11
     skip-tests: true
   gocritic:
     enabled-tags:
@@ -53,11 +63,7 @@ issues:
     - path: internal/node/json\.go
       linters:
         - govet # fieldalignment issue, ignored for json readability
-    - path: internal/builder/builder\.go
-      linters:
-        - ireturn
     - path: ._test\.go
       linters:
         - goerr113
-        - ireturn
         - funlen

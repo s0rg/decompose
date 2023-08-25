@@ -112,6 +112,10 @@ func createNodes(
 
 		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image}
 
+		if con.ConnectionsCount() == 0 {
+			log.Printf("No connections for container: %s:%s, try run as root", con.ID, con.Name)
+		}
+
 		con.ForEachOutbound(func(c *Connection) {
 			rip := c.RemoteIP.String()
 			rport := node.Port{Kind: c.Kind.String(), Value: int(c.RemotePort)}

@@ -10,6 +10,7 @@ var testCases = []struct {
 	Conns     []*graph.Connection
 	Listeners int
 	Outbounds int
+	Count     int
 }{
 	{
 		Conns: []*graph.Connection{
@@ -19,6 +20,7 @@ var testCases = []struct {
 		},
 		Listeners: 1,
 		Outbounds: 1,
+		Count:     2,
 	},
 	{
 		Conns: []*graph.Connection{
@@ -27,6 +29,7 @@ var testCases = []struct {
 		},
 		Listeners: 0,
 		Outbounds: 1,
+		Count:     1,
 	},
 	{
 		Conns: []*graph.Connection{
@@ -35,6 +38,7 @@ var testCases = []struct {
 		},
 		Listeners: 1,
 		Outbounds: 0,
+		Count:     1,
 	},
 	{
 		Conns: []*graph.Connection{
@@ -42,6 +46,7 @@ var testCases = []struct {
 		},
 		Listeners: 0,
 		Outbounds: 0,
+		Count:     0,
 	},
 }
 
@@ -81,6 +86,21 @@ func TestContainerOutbounds(t *testing.T) {
 
 		if res != tc.Outbounds {
 			t.Fatalf("test case[%d] fail want %d got %d", i, tc.Outbounds, res)
+		}
+	}
+}
+
+func TestContainerCount(t *testing.T) {
+	t.Parallel()
+
+	for i := 0; i < len(testCases); i++ {
+		tc := &testCases[i]
+
+		c := graph.Container{}
+		c.SetConnections(tc.Conns)
+
+		if res := c.ConnectionsCount(); res != tc.Count {
+			t.Fatalf("test case[%d] fail want %d got %d", i, tc.Count, res)
 		}
 	}
 }

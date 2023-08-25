@@ -244,3 +244,25 @@ func TestBuildNodeError(t *testing.T) {
 		t.Fatalf("unknown error, want: %v got: %v", myErr, err)
 	}
 }
+
+func TestBuildNoConnections(t *testing.T) {
+	t.Parallel()
+
+	cli := &testClient{Data: []*graph.Container{
+		makeContainer("1", "1.1.1.1"),
+		makeContainer("2", "2.2.2.2"),
+		makeContainer("3", "3.3.3.3"),
+	}}
+
+	bld := &testBuilder{}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:  bld,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
+
+	if err := graph.Build(cfg, cli); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+}
