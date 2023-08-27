@@ -37,9 +37,10 @@ linters-settings:
     check-shadowing: true
     enable-all: true
   funlen:
+    lines: 80
     ignore-comments: true
   cyclop:
-    max-complexity: 11
+    max-complexity: 15
     skip-tests: true
   gocritic:
     enabled-tags:

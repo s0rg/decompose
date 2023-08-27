@@ -18,38 +18,73 @@ Takes all network connections from your docker containers and exports them as:
 
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
+- ascii-tree
 - json stream of items:
 
 ```go
 type Item struct {
-    Name       string              `json:"name"`            // container name
-    IsExternal bool                `json:"is_external"`     // this host is external
-    Image      *string             `json:"image,omitempty"` // docker image (if any)
-    Meta       *Meta               `json:"meta,omitempty"`  // metadata, see below
-    Listen     []string            `json:"listen"`          // ports description i.e. '443/tcp'
-    Networks   []string            `json:"networks"`        // network names
-    Connected  map[string][]string `json:"connected"`       // name -> ports slice
+    Name       string              `json:"name"`              // container name
+    IsExternal bool                `json:"is_external"`       // this host is external
+    Image      *string             `json:"image,omitempty"`   // docker image (if any)
+    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see below
+    Process    *Process            `json:"process,omitempty"` // process info
+    Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
+    Networks   []string            `json:"networks"`          // network names
+    Volumes    []*Volume           `json:"volumes"`           // volumes
+    Connected  map[string][]string `json:"connected"`         // name -> ports slice
 }
 
 type Meta struct {
     Info string   `json:"info"`
     Tags []string `json:"tags"`
 }
+
+type Volume struct {
+    Type string `json:"type"`
+    Src  string `json:"src"`
+    Dst  string `json:"dst"`
+}
+
+type Process struct {
+    Cmd []string `json:"cmd"`
+    Env []string `json:"env"`
+}
 ```
 
-example with metadata filled:
+example with full info and metadata filled:
 
 ```json
 {
     "name": "foo-1",
     "is_external": false,
     "image": "repo/foo:latest",
+    "process": {
+        "cmd": [
+            "foo",
+            "-foo-arg"
+        ],
+        "env": [
+            "FOO=1"
+        ]
+    },
     "meta": {
         "info": "info for foo",
         "tags": ["some"]
     },
     "listen": ["80/tcp"],
     "networks": ["test-net"],
+    "volumes": [
+        {
+            "type": "volume",
+            "src": "/var/lib/docker/volumes/foo_1/_data",
+            "dst": "/data"
+        },
+        {
+            "type": "bind",
+            "src": "/path/to/foo.conf",
+            "dst": "/etc/foo.conf"
+        }
+    ],
     "connected": {
         "bar-1": ["443/tcp"]
     }
@@ -107,7 +142,9 @@ possible flags with default values:
   -follow string
         follow only this container by name
   -format string
-        output format: json, dot or sdsl for structurizr dsl (default "dot")
+        output format: dot, json, tree or sdsl for structurizr dsl (default "dot")
+  -full
+        extract full process info: (cmd, args, env) and volumes info
   -help
         show this help
   -load value
@@ -126,8 +163,11 @@ possible flags with default values:
         show version
 ```
 
-*note* docker-daemon socket for connection is taken from env, you can set `DOCKER_HOST=connection-url` to use another
-docker-daemon.
+## environment variables:
+
+- `DOCKER_HOST` - connection uri
+- `DOCKER_CERT_PATH` - directory path containing key.pem, cert.pm and ca.pem
+- `DOCKER_TLS_VERIFY` - enable client TLS verification
 
 # examples
 
@@ -149,10 +189,16 @@ Get only tcp connections as `dot`:
 decompose -proto tcp > tcp.dot
 ```
 
-Save json stream:
+Save full json stream:
 
 ```shell
-decompose -format json > nodes-1.json
+decompose -full -format json > nodes-1.json
+```
+
+Display as simple ascii-tree:
+
+```shell
+decompose -format tree
 ```
 
 Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:
@@ -164,7 +210,7 @@ decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph-merged
 Load json stream, enrich and save as `structurizr dsl`:
 
 ```shell
-decompose -load nodes-1.json -meta metadata.json -format sdsl > decomposed.dsl
+decompose -load nodes-1.json -meta metadata.json -format sdsl > workspace.dsl
 ```
 
 # example result

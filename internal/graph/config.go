@@ -6,6 +6,7 @@ type Config struct {
 	Follow    string
 	Proto     NetProto
 	OnlyLocal bool
+	FullInfo  bool
 }
 
 func (c *Config) MatchName(v string) (yes bool) {

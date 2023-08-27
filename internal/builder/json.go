@@ -47,7 +47,7 @@ func (j *JSON) AddEdge(srcID, dstID string, port node.Port) {
 	src.Connected[dst.Name] = append(con, port.Label())
 }
 
-func (j *JSON) Write(w io.Writer) {
+func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
 	nodes := make([]*node.JSON, 0, len(j.state))
 
 	for _, n := range j.state {
@@ -58,10 +58,16 @@ func (j *JSON) Write(w io.Writer) {
 		return nodes[i].Name < nodes[j].Name
 	})
 
+	for i, n := range nodes {
+		fn(n, i == len(nodes)-1)
+	}
+}
+
+func (j *JSON) Write(w io.Writer) {
 	jw := json.NewEncoder(w)
 	jw.SetIndent("", "  ")
 
-	for _, n := range nodes {
+	j.Sorted(func(n *node.JSON, _ bool) {
 		_ = jw.Encode(n)
-	}
+	})
 }

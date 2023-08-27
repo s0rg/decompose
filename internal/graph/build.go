@@ -17,7 +17,7 @@ const (
 var ErrNotEnough = errors.New("not enough items")
 
 type ContainerClient interface {
-	Containers(context.Context, NetProto, func(int, int)) ([]*Container, error)
+	Containers(context.Context, NetProto, bool, func(int, int)) ([]*Container, error)
 }
 
 type Builder interface {
@@ -35,16 +35,20 @@ func Build(
 ) error {
 	log.Println("Gathering containers info...")
 
-	containers, err := cli.Containers(context.Background(), cfg.Proto, func(cur, total int) {
-		switch {
-		case cur == 0:
-			return
-		case cur < total && cur%minReport > 0:
-			return
-		}
+	containers, err := cli.Containers(
+		context.Background(),
+		cfg.Proto,
+		cfg.FullInfo,
+		func(cur, total int) {
+			switch {
+			case cur == 0:
+				return
+			case cur < total && cur%minReport > 0:
+				return
+			}
 
-		log.Printf("Processing %d / %d [%.02f%%]", cur, total, percentOf(cur, total))
-	})
+			log.Printf("Processing %d / %d [%.02f%%]", cur, total, percentOf(cur, total))
+		})
 	if err != nil {
 		return fmt.Errorf("containers: %w", err)
 	}
@@ -110,7 +114,7 @@ func createNodes(
 	for _, con := range cntrs {
 		skip = !cfg.MatchName(con.Name)
 
-		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image}
+		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image, Volumes: []*node.Volume{}}
 
 		if con.ConnectionsCount() == 0 {
 			log.Printf("No connections for container: %s:%s, try run as root", con.ID, con.Name)
@@ -152,8 +156,23 @@ func createNodes(
 		}
 
 		con.ForEachListener(func(c *Connection) {
-			n.Ports = append(n.Ports, node.Port{Kind: c.Kind.String(), Value: int(c.LocalPort)})
+			port := node.Port{Kind: c.Kind.String(), Value: int(c.LocalPort)}
+
+			n.Ports = append(n.Ports, port)
 		})
+
+		if con.Process != nil {
+			n.Process = &node.Process{Cmd: con.Process.Cmd, Env: con.Process.Env}
+		}
+
+		if len(con.Volumes) > 0 {
+			n.Volumes = make([]*node.Volume, len(con.Volumes))
+
+			for i := 0; i < len(con.Volumes); i++ {
+				cv := con.Volumes[i]
+				n.Volumes[i] = &node.Volume{Type: cv.Type, Src: cv.Src, Dst: cv.Dst}
+			}
+		}
 
 		rv[con.ID] = n
 	}

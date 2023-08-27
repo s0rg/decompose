@@ -23,6 +23,7 @@ func TestJSON(t *testing.T) {
 		Networks:  []string{"test"},
 		Listen:    []string{"1/udp", "2/tcp"},
 		Connected: make(map[string][]string),
+		Volumes:   []*node.Volume{},
 	}
 
 	jnode, err := json.Marshal(testNode)

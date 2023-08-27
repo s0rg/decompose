@@ -43,7 +43,39 @@ func (l *Loader) LoadStream(r io.Reader) error {
 	return nil
 }
 
-func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
+func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
+	rv = &node.Node{
+		ID:       id,
+		Name:     n.Name,
+		Networks: n.Networks,
+	}
+
+	if n.Image != nil {
+		rv.Image = *n.Image
+	}
+
+	if n.Meta != nil {
+		rv.Meta = n.Meta
+	} else {
+		l.cfg.Enricher.Enrich(rv)
+	}
+
+	if !l.cfg.FullInfo {
+		return rv
+	}
+
+	if n.Process != nil {
+		rv.Process = n.Process
+	}
+
+	if len(n.Volumes) > 0 {
+		rv.Volumes = n.Volumes
+	}
+
+	return rv
+}
+
+func (l *Loader) loadNode(n *node.JSON) (id string, rv *node.Node) {
 	id = n.Name
 	if !n.IsExternal {
 		id += idSuffix
@@ -51,21 +83,7 @@ func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
 
 	nod, ok := l.nodes[id]
 	if !ok {
-		nod = &node.Node{
-			ID:       id,
-			Name:     n.Name,
-			Networks: n.Networks,
-		}
-
-		if n.Image != nil {
-			nod.Image = *n.Image
-		}
-
-		if n.Meta != nil {
-			nod.Meta = n.Meta
-		} else {
-			l.cfg.Enricher.Enrich(nod)
-		}
+		nod = l.createNode(id, n)
 	}
 
 	if !(n.IsExternal && l.cfg.OnlyLocal) {
@@ -75,7 +93,7 @@ func (l *Loader) prepareNode(n *node.JSON) (id string, rv *node.Node) {
 	return id, nod
 }
 
-func (l *Loader) prepareEdges(id string, n *node.JSON) (rv map[string]node.Ports, skip bool) {
+func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string]node.Ports, skip bool) {
 	var ok bool
 
 	if rv, ok = l.edges[id]; !ok {
@@ -110,8 +128,8 @@ func (l *Loader) prepareEdges(id string, n *node.JSON) (rv map[string]node.Ports
 }
 
 func (l *Loader) insert(n *node.JSON) {
-	id, nod := l.prepareNode(n)
-	cons, skip := l.prepareEdges(id, n)
+	id, nod := l.loadNode(n)
+	cons, skip := l.loadEdges(id, n)
 
 	if skip {
 		return

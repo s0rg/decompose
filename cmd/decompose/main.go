@@ -36,6 +36,7 @@ var (
 var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
+	fFull             bool
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta             string
@@ -72,10 +73,11 @@ func setupFlags() {
 	flag.BoolVar(&fVersion, "version", false, "show version")
 	flag.BoolVar(&fHelp, "help", false, "show this help")
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
+	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
-	flag.StringVar(&fFormat, "format", defaultFormat, "output format: json, dot or sdsl for structurizr dsl")
+	flag.StringVar(&fFormat, "format", defaultFormat, "output format: dot, json, tree or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "filename with json metadata for enrichment")
 
@@ -109,8 +111,7 @@ func writeOut(name string, writer func(io.Writer)) error {
 
 func prepareConfig(
 	blder graph.Builder,
-	fproto, fmeta, ffollow string,
-	flocal bool,
+	fproto, fmeta string,
 ) (cfg *graph.Config, err error) {
 	proto, ok := graph.ParseNetProto(fproto)
 	if !ok {
@@ -137,8 +138,9 @@ func prepareConfig(
 		Builder:   blder,
 		Enricher:  meta,
 		Proto:     proto,
-		Follow:    ffollow,
-		OnlyLocal: flocal,
+		Follow:    fFollow,
+		OnlyLocal: fLocal,
+		FullInfo:  fFull,
 	}
 
 	return cfg, nil
@@ -150,7 +152,7 @@ func run() error {
 		return fmt.Errorf("%w format: %s", ErrUnknown, fFormat)
 	}
 
-	cfg, err := prepareConfig(bldr, fProto, fMeta, fFollow, fLocal)
+	cfg, err := prepareConfig(bldr, fProto, fMeta)
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
