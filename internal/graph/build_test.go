@@ -18,6 +18,7 @@ type testClient struct {
 func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
+	_ bool,
 	fn func(int, int),
 ) ([]*graph.Container, error) {
 	if tc.Err != nil {
@@ -103,6 +104,13 @@ func makeContainer(name, ip string) *graph.Container {
 		Image: name + "-image:latest",
 		Endpoints: map[string]string{
 			ip: "test-net",
+		},
+		Process: &graph.ProcessInfo{
+			Cmd: []string{"test-app", "-test-arg"},
+			Env: []string{"FOO=BAR"},
+		},
+		Volumes: []*graph.VolumeInfo{
+			{Type: "bind"},
 		},
 	}
 }

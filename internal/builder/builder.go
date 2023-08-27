@@ -11,6 +11,7 @@ import (
 const (
 	kindDOT         = "dot"
 	kindJSON        = "json"
+	kindTREE        = "tree"
 	kindStructurizr = "sdsl"
 )
 
@@ -28,6 +29,8 @@ func Create(kind string) (b Builder, ok bool) {
 		return NewJSON(), true
 	case kindStructurizr:
 		return NewStructurizr(), true
+	case kindTREE:
+		return NewTree(), true
 	}
 
 	return

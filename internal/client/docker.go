@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
 	"github.com/s0rg/decompose/internal/graph"
@@ -26,9 +27,11 @@ const (
 	pingTimeout  = time.Second
 )
 
+type connExtactor func(context.Context, int, string, graph.NetProto) ([]*graph.Connection, error)
+
 type Docker struct {
 	cli         *client.Client
-	connections func(context.Context, string, graph.NetProto) ([]*graph.Connection, error)
+	connections connExtactor
 	cmd         string
 	kind        string
 }
@@ -83,7 +86,8 @@ func (d *Docker) Kind() string {
 func (d *Docker) Containers(
 	ctx context.Context,
 	proto graph.NetProto,
-	step func(int, int),
+	detailed bool,
+	progress func(int, int),
 ) (rv []*graph.Container, err error) {
 	containers, err := d.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
@@ -105,29 +109,34 @@ func (d *Docker) Containers(
 			Name:  strings.TrimLeft(doc.Names[0], "/"),
 		}
 
-		conns, err := d.connections(ctx, doc.ID, proto)
+		var pid int
+
+		if detailed {
+			info, err := d.cli.ContainerInspect(ctx, doc.ID)
+			if err != nil {
+				return nil, fmt.Errorf("inspect: %w", err)
+			}
+
+			con.Volumes = extractVolumesInfo(doc)
+			con.Process = extractProcessInfo(&info)
+			pid = info.State.Pid
+		}
+
+		conns, err := d.connections(ctx, pid, doc.ID, proto)
 		if err != nil {
 			return nil, fmt.Errorf("container: %s connections: %w", doc.ID, err)
 		}
 
 		con.SetConnections(conns)
 
-		con.Endpoints = make(map[string]string)
-
-		for name, n := range doc.NetworkSettings.Networks {
-			if n.EndpointID == "" {
-				continue
-			}
-
-			con.Endpoints[n.IPAddress] = name
-		}
+		con.Endpoints = extractEndpoints(doc.NetworkSettings.Networks)
 
 		rv = append(rv, con)
 
-		step(i, len(containers))
+		progress(i, len(containers))
 	}
 
-	step(len(containers), len(containers))
+	progress(len(containers), len(containers))
 
 	return slices.Clip(rv), nil
 }
@@ -142,18 +151,23 @@ func (d *Docker) Close() (err error) {
 
 func (d *Docker) conectionsNetns(
 	ctx context.Context,
+	pid int,
 	containerID string,
 	proto graph.NetProto,
 ) (
 	rv []*graph.Connection,
 	err error,
 ) {
-	info, err := d.cli.ContainerInspect(ctx, containerID)
-	if err != nil {
-		return nil, fmt.Errorf("inspect: %w", err)
+	if pid == 0 {
+		info, ierr := d.cli.ContainerInspect(ctx, containerID)
+		if ierr != nil {
+			return nil, fmt.Errorf("inspect: %w", ierr)
+		}
+
+		pid = info.State.Pid
 	}
 
-	arg := append([]string{"-t", strconv.Itoa(info.State.Pid), "-n"}, netstatCmd(proto)...)
+	arg := append([]string{"-t", strconv.Itoa(pid), "-n"}, netstatCmd(proto)...)
 	cmd := exec.CommandContext(ctx, d.cmd, arg...)
 
 	pipe, err := cmd.StdoutPipe()
@@ -176,6 +190,7 @@ func (d *Docker) conectionsNetns(
 
 func (d *Docker) conectionsContainer(
 	ctx context.Context,
+	_ int,
 	containerID string,
 	proto graph.NetProto,
 ) (
@@ -209,4 +224,45 @@ func (d *Docker) conectionsContainer(
 
 func netstatCmd(p graph.NetProto) []string {
 	return []string{"netstat", "-an" + p.Flag()}
+}
+
+func extractProcessInfo(
+	c *types.ContainerJSON,
+) (rv *graph.ProcessInfo) {
+	return &graph.ProcessInfo{
+		Cmd: c.Config.Cmd,
+		Env: c.Config.Env,
+	}
+}
+
+func extractEndpoints(
+	nets map[string]*network.EndpointSettings,
+) (rv map[string]string) {
+	rv = make(map[string]string)
+
+	for name, n := range nets {
+		if n.EndpointID == "" {
+			continue
+		}
+
+		rv[n.IPAddress] = name
+	}
+
+	return rv
+}
+
+func extractVolumesInfo(
+	c *types.Container,
+) (rv []*graph.VolumeInfo) {
+	rv = make([]*graph.VolumeInfo, len(c.Mounts))
+
+	for i, m := range c.Mounts {
+		rv[i] = &graph.VolumeInfo{
+			Type: string(m.Type),
+			Src:  m.Source,
+			Dst:  m.Destination,
+		}
+	}
+
+	return rv
 }

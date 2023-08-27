@@ -6,14 +6,29 @@ import (
 	"github.com/s0rg/set"
 )
 
-type Container struct {
-	Endpoints map[string]string
-	ID        string
-	Name      string
-	Image     string
-	outbounds []*Connection
-	listeners []*Connection
-}
+type (
+	ProcessInfo struct {
+		Cmd []string
+		Env []string
+	}
+
+	VolumeInfo struct {
+		Type string
+		Src  string
+		Dst  string
+	}
+
+	Container struct {
+		Endpoints map[string]string
+		ID        string
+		Name      string
+		Image     string
+		Process   *ProcessInfo
+		Volumes   []*VolumeInfo
+		outbounds []*Connection
+		listeners []*Connection
+	}
+)
 
 func (ct *Container) ConnectionsCount() int {
 	return len(ct.outbounds) + len(ct.listeners)

@@ -26,12 +26,14 @@ func TestNodeToJSON(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Node     *node.Node
-		Name     string
-		Image    string
-		PortsNum int
-		External bool
-		HasExtra bool
+		Node       *node.Node
+		Name       string
+		Image      string
+		PortsNum   int
+		Volumes    int
+		External   bool
+		HasMeta    bool
+		HasProcess bool
 	}{
 		{
 			Node: &node.Node{
@@ -86,7 +88,40 @@ func TestNodeToJSON(t *testing.T) {
 			Name:     "test-name",
 			Image:    "test-image",
 			PortsNum: 1,
-			HasExtra: true,
+			HasMeta:  true,
+		},
+		{
+			Node: &node.Node{
+				ID:    "test-id",
+				Name:  "test-name",
+				Image: "test-image",
+				Ports: []node.Port{
+					{Kind: "udp", Value: 53},
+				},
+				Process: &node.Process{
+					Cmd: []string{"foo"},
+					Env: []string{"A=B"},
+				},
+			},
+			Name:       "test-name",
+			Image:      "test-image",
+			PortsNum:   1,
+			HasProcess: true,
+		},
+		{
+			Node: &node.Node{
+				ID:    "test-id",
+				Name:  "test-name",
+				Image: "test-image",
+				Ports: []node.Port{},
+				Volumes: []*node.Volume{
+					{Type: "none"},
+					{Type: "bind"},
+				},
+			},
+			Name:    "test-name",
+			Image:   "test-image",
+			Volumes: 2,
 		},
 	}
 
@@ -105,8 +140,16 @@ func TestNodeToJSON(t *testing.T) {
 			t.Fatal("listen", tc)
 		}
 
-		if tc.HasExtra && j.Meta == nil {
+		if tc.HasMeta && j.Meta == nil {
 			t.Fatal("extra", tc)
+		}
+
+		if tc.HasProcess && j.Process == nil {
+			t.Fatal("process", tc)
+		}
+
+		if len(j.Volumes) != tc.Volumes {
+			t.Fatal("volumes", tc)
 		}
 
 		if tc.Image == "" {
