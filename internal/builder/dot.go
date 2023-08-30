@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
-	"strconv"
 	"strings"
 
 	"github.com/emicklei/dot"
@@ -77,7 +76,7 @@ func (d *DOT) AddNode(n *node.Node) error {
 		for i := 0; i < len(n.Ports); i++ {
 			p := &n.Ports[i]
 
-			rb.FieldWithId(p.Label(), strconv.Itoa(p.Value))
+			rb.FieldWithId(p.Label(), p.ID())
 		}
 	})
 
@@ -104,7 +103,7 @@ func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
 	)
 
 	d.g.
-		EdgeWithPorts(src, dst, outPort, port.String(), port.Label()).
+		EdgeWithPorts(src, dst, outPort, port.ID(), port.Label()).
 		Attr("color", color).
 		Attr("fontcolor", color)
 }

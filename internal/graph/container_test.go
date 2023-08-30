@@ -60,7 +60,7 @@ func TestContainerListeners(t *testing.T) {
 
 		c := graph.Container{}
 		c.SetConnections(tc.Conns)
-		c.ForEachListener(func(_ *graph.Connection) {
+		c.IterListeners(func(_ *graph.Connection) {
 			res++
 		})
 
@@ -80,7 +80,7 @@ func TestContainerOutbounds(t *testing.T) {
 
 		c := graph.Container{}
 		c.SetConnections(tc.Conns)
-		c.ForEachOutbound(func(_ *graph.Connection) {
+		c.IterOutbounds(func(_ *graph.Connection) {
 			res++
 		})
 

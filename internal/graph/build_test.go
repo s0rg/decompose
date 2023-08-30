@@ -129,23 +129,23 @@ func testClientWithEnv() graph.ContainerClient {
 
 	// node 1
 	cli.Data[0].SetConnections([]*graph.Connection{
-		{LocalPort: 1, Kind: graph.TCP},                                     // listen 1
-		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Kind: graph.TCP},    // connected to node2:2
-		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Kind: graph.TCP}, // connected to external:1
+		{LocalPort: 1, Proto: graph.TCP},                                     // listen 1
+		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP},    // connected to node2:2
+		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to external:1
 	})
 
 	// node 2
 	cli.Data[1].SetConnections([]*graph.Connection{
-		{LocalPort: 2, Kind: graph.TCP},                                     // listen 2
-		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Kind: graph.TCP},    // connected to node3:3
-		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Kind: graph.TCP}, // connected to external:2
+		{LocalPort: 2, Proto: graph.TCP},                                     // listen 2
+		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Proto: graph.TCP},    // connected to node3:3
+		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to external:2
 	})
 
 	// node 3
 	cli.Data[2].SetConnections([]*graph.Connection{
-		{LocalPort: 3, Kind: graph.TCP},                                     // listen 3
-		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Kind: graph.TCP},    // connected to node1:1
-		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Kind: graph.TCP}, // connected to external:3
+		{LocalPort: 3, Proto: graph.TCP},                                     // listen 3
+		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP},    // connected to node1:1
+		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Proto: graph.TCP}, // connected to external:3
 	})
 
 	return cli

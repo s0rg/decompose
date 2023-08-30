@@ -12,7 +12,7 @@ import (
 
 const (
 	space   = "  "
-	symNode = "┐ "
+	symRoot = ". "
 	symEdge = "├─"
 	symLine = "│ "
 	symEnd  = "└─"
@@ -41,7 +41,7 @@ func (t *Tree) AddEdge(srcID, dstID string, port node.Port) {
 }
 
 func (t *Tree) Write(w io.Writer) {
-	fmt.Fprintln(w, symNode)
+	fmt.Fprintln(w, symRoot)
 
 	t.j.Sorted(func(n *node.JSON, last bool) {
 		var next string
@@ -54,46 +54,39 @@ func (t *Tree) Write(w io.Writer) {
 			next = symLine
 		}
 
-		fmt.Fprint(w, symNode)
+		fmt.Fprint(w, " ")
 		fmt.Fprintln(w, n.Name)
 
-		fmt.Fprint(w, next)
-		fmt.Fprint(w, symLine)
+		fmt.Fprint(w, next, " ")
 		fmt.Fprintf(w, "external: %t\n", n.IsExternal)
 
 		if n.Image != nil {
-			fmt.Fprint(w, next)
-			fmt.Fprint(w, symLine)
+			fmt.Fprint(w, next, " ")
 			fmt.Fprintln(w, "image:", *n.Image)
 		}
 
 		if n.Meta != nil {
 			if len(n.Meta.Info) > 0 {
-				fmt.Fprint(w, next)
-				fmt.Fprint(w, symLine)
+				fmt.Fprint(w, next, " ")
 				fmt.Fprintln(w, "info:", n.Meta.Info)
 			}
 
 			if len(n.Meta.Tags) > 0 {
-				fmt.Fprint(w, next)
-				fmt.Fprint(w, symLine)
+				fmt.Fprint(w, next, " ")
 				fmt.Fprintln(w, "tags:", strings.Join(n.Meta.Tags, ", "))
 			}
 		}
 
 		if n.Process != nil {
-			fmt.Fprint(w, next)
-			fmt.Fprint(w, symLine)
+			fmt.Fprint(w, next, " ")
 			fmt.Fprintf(w, "cmd: '%s'\n", strings.Join(n.Process.Cmd, " "))
 		}
 
-		fmt.Fprint(w, next)
-		fmt.Fprint(w, symLine)
+		fmt.Fprint(w, next, " ")
 		fmt.Fprintln(w, "listen:", strings.Join(n.Listen, ", "))
 
 		if len(n.Networks) > 0 {
-			fmt.Fprint(w, next)
-			fmt.Fprint(w, symLine)
+			fmt.Fprint(w, next, " ")
 			fmt.Fprintln(w, "networks:", strings.Join(n.Networks, ", "))
 		}
 
@@ -102,8 +95,10 @@ func (t *Tree) Write(w io.Writer) {
 			lst = len(n.Connected) - 1
 		)
 
+		fmt.Fprint(w, next, " ", symLine, "\n")
+
 		for dst, ports := range n.Connected {
-			fmt.Fprint(w, next)
+			fmt.Fprint(w, next, " ")
 
 			if cur == lst {
 				fmt.Fprint(w, symEnd)
