@@ -52,10 +52,10 @@ tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED`
 	con := graph.Container{}
 
 	con.SetConnections(res)
-	con.ForEachListener(func(_ *graph.Connection) {
+	con.IterListeners(func(_ *graph.Connection) {
 		nlisten++
 	})
-	con.ForEachOutbound(func(_ *graph.Connection) {
+	con.IterOutbounds(func(_ *graph.Connection) {
 		noutbound++
 	})
 

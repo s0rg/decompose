@@ -18,8 +18,8 @@ func (p *Port) Label() string {
 	return strconv.Itoa(p.Value) + "/" + p.Kind
 }
 
-func (p *Port) String() string {
-	return strconv.Itoa(p.Value)
+func (p *Port) ID() string {
+	return p.Kind + strconv.Itoa(p.Value)
 }
 
 func (ps Ports) Dedup() (rv Ports) {

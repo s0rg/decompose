@@ -9,7 +9,7 @@ type Connection struct {
 	RemoteIP   net.IP
 	LocalPort  uint16
 	RemotePort uint16
-	Kind       NetProto
+	Proto      NetProto
 }
 
 func (cn *Connection) IsListener() bool {

@@ -58,7 +58,7 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 
 	conn = &Connection{}
 
-	if conn.Kind, ok = parseKind(parts[0], len(parts)); !ok {
+	if conn.Proto, ok = parseKind(parts[0], len(parts)); !ok {
 		return nil, false
 	}
 
@@ -74,7 +74,7 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		return nil, false
 	}
 
-	if conn.Kind == TCP {
+	if conn.Proto == TCP {
 		switch parts[5] {
 		case stateListen, stateEstablished:
 		default: // skip all other states

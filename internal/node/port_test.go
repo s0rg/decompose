@@ -7,17 +7,29 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
-func TestPortLabel(t *testing.T) {
+func TestPortLabelID(t *testing.T) {
 	t.Parallel()
+
+	const want = "100"
 
 	p := node.Port{Value: 100, Kind: "tcp"}
 	l := p.Label()
 
-	if !strings.HasPrefix(l, p.String()) {
+	if !strings.HasPrefix(l, want) {
 		t.Fail()
 	}
 
 	if !strings.HasSuffix(l, p.Kind) {
+		t.Fail()
+	}
+
+	id := p.ID()
+
+	if !strings.HasSuffix(id, want) {
+		t.Fail()
+	}
+
+	if !strings.HasPrefix(id, p.Kind) {
 		t.Fail()
 	}
 }
