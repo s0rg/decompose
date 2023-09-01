@@ -35,3 +35,12 @@ func Create(kind string) (b Builder, ok bool) {
 
 	return
 }
+
+func Names() (rv []string) {
+	return []string{
+		kindDOT,
+		kindJSON,
+		kindTREE,
+		kindStructurizr,
+	}
+}

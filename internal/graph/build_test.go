@@ -58,6 +58,10 @@ func (tb *testBuilder) AddEdge(_, _ string, _ node.Port) {
 	tb.Edges++
 }
 
+func (tb *testBuilder) Reset() {
+	tb.Nodes, tb.Edges = 0, 0
+}
+
 type testEnricher struct{}
 
 func (de *testEnricher) Enrich(_ *node.Node) {}
@@ -272,5 +276,57 @@ func TestBuildNoConnections(t *testing.T) {
 
 	if err := graph.Build(cfg, cli); err != nil {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestBuildLoops(t *testing.T) {
+	t.Parallel()
+
+	node1 := net.ParseIP("1.1.1.1")
+	node2 := net.ParseIP("1.1.1.2")
+
+	cli := &testClient{Data: []*graph.Container{
+		makeContainer("1", node1.String()),
+		makeContainer("2", node2.String()),
+	}}
+
+	cli.Data[0].SetConnections([]*graph.Connection{
+		{LocalPort: 1, Proto: graph.TCP},                                  // listen 1
+		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to node2:2
+		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to itself
+	})
+
+	cli.Data[1].SetConnections([]*graph.Connection{
+		{LocalPort: 2, Proto: graph.TCP},                                  // listen 2
+		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to node1:1
+	})
+
+	bld := &testBuilder{}
+	ext := &testEnricher{}
+	cfg := &graph.Config{
+		Builder:   bld,
+		Enricher:  ext,
+		Proto:     graph.ALL,
+		OnlyLocal: true,
+	}
+
+	if err := graph.Build(cfg, cli); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+
+	if bld.Nodes != 2 || bld.Edges != 3 {
+		t.Fail()
+	}
+
+	bld.Reset()
+
+	cfg.NoLoops = true
+
+	if err := graph.Build(cfg, cli); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+
+	if bld.Nodes != 2 || bld.Edges != 2 {
+		t.Fail()
 	}
 }

@@ -47,7 +47,7 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 	rv = &node.Node{
 		ID:       id,
 		Name:     n.Name,
-		Networks: n.Networks,
+		Networks: []string{},
 	}
 
 	if n.Image != nil {
@@ -58,6 +58,10 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 		rv.Meta = n.Meta
 	} else {
 		l.cfg.Enricher.Enrich(rv)
+	}
+
+	if len(n.Networks) > 0 {
+		rv.Networks = n.Networks
 	}
 
 	if !l.cfg.FullInfo {
@@ -103,6 +107,10 @@ func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string]node.Ports, s
 	skip = !l.cfg.MatchName(n.Name)
 
 	for k, p := range n.Connected {
+		if l.cfg.NoLoops && n.Name == k {
+			continue
+		}
+
 		prep := l.preparePorts(p)
 		if len(prep) == 0 {
 			continue
