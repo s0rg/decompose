@@ -18,7 +18,7 @@ Takes all network connections from your docker containers and exports them as:
 
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
-- ascii-tree
+- pseudographical tree
 - json stream of items:
 
 ```go
@@ -153,6 +153,8 @@ possible flags with default values:
         skip external hosts
   -meta string
         filename with json metadata for enrichment
+  -no-loops
+        remove connection loops (node to itself) from output
   -out string
         output: filename or "-" for stdout (default "-")
   -proto string
@@ -195,7 +197,7 @@ Save full json stream:
 decompose -full -format json > nodes-1.json
 ```
 
-Display as simple ascii-tree:
+Display tree:
 
 ```shell
 decompose -format tree

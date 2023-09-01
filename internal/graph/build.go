@@ -196,8 +196,14 @@ func createEdges(
 			port := node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
 			key := c.RemoteIP.String()
 
-			if ldst, ok := local[key]; ok && (cfg.MatchName(ldst.Name) || cfg.MatchName(con.Name)) {
-				cfg.Builder.AddEdge(src.ID, ldst.ID, port)
+			if ldst, ok := local[key]; ok {
+				if cfg.NoLoops && con.ID == ldst.ID {
+					return
+				}
+
+				if cfg.MatchName(ldst.Name) || cfg.MatchName(con.Name) {
+					cfg.Builder.AddEdge(src.ID, ldst.ID, port)
+				}
 
 				return
 			}

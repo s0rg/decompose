@@ -36,7 +36,7 @@ var (
 var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
-	fFull             bool
+	fFull, fNoLoops   bool
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta             string
@@ -74,6 +74,7 @@ func setupFlags() {
 	flag.BoolVar(&fHelp, "help", false, "show this help")
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
+	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
 
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
@@ -141,6 +142,7 @@ func prepareConfig(
 		Follow:    fFollow,
 		OnlyLocal: fLocal,
 		FullInfo:  fFull,
+		NoLoops:   fNoLoops,
 	}
 
 	return cfg, nil
@@ -149,7 +151,12 @@ func prepareConfig(
 func run() error {
 	bldr, ok := builder.Create(fFormat)
 	if !ok {
-		return fmt.Errorf("%w format: %s", ErrUnknown, fFormat)
+		return fmt.Errorf(
+			"%w format: %s known: %s",
+			ErrUnknown,
+			fFormat,
+			strings.Join(builder.Names(), ","),
+		)
 	}
 
 	cfg, err := prepareConfig(bldr, fProto, fMeta)

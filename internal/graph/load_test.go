@@ -459,3 +459,61 @@ func TestLoaderFull(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestLoaderLoops(t *testing.T) {
+	t.Parallel()
+
+	const rawJSON = `{
+    "name": "test1",
+    "listen": ["1/udp"],
+    "networks": ["foo"],
+    "connected": {"test2":["2/tcp"], "test1":["1/udp"]},
+    "volumes": [{"type": "bind", "src": "", "dst": ""}]
+    }
+    {
+    "name": "test2",
+    "listen": ["2/tcp"],
+    "is_external": true,
+    "connected": {"test1":["1/udp"]}
+    }`
+
+	bldr := &testBuilder{}
+	ext := &testEnricher{}
+
+	cfg := &graph.Config{
+		Builder:  bldr,
+		Enricher: ext,
+		Proto:    graph.ALL,
+	}
+
+	ldr := graph.NewLoader(cfg)
+
+	if err := ldr.LoadStream(bytes.NewBufferString(rawJSON)); err != nil {
+		t.Fatal("load err=", err)
+	}
+
+	if err := ldr.Build(); err != nil {
+		t.Fatal("build err=", err)
+	}
+
+	if bldr.Nodes != 2 || bldr.Edges != 3 {
+		t.Fail()
+	}
+
+	bldr.Reset()
+
+	cfg.NoLoops = true
+	ldr = graph.NewLoader(cfg)
+
+	if err := ldr.LoadStream(bytes.NewBufferString(rawJSON)); err != nil {
+		t.Fatal("load err=", err)
+	}
+
+	if err := ldr.Build(); err != nil {
+		t.Fatal("build err=", err)
+	}
+
+	if bldr.Nodes != 2 || bldr.Edges != 2 {
+		t.Fail()
+	}
+}
