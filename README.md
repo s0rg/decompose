@@ -1,6 +1,7 @@
 [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/s0rg/decompose/blob/master/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 
 <!-- ![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg) -->
 
@@ -235,3 +236,7 @@ in other terminal:
 ```shell
 decompose | dot -Tsvg > redis-cluster.svg
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_large)
