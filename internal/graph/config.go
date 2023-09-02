@@ -2,7 +2,8 @@ package graph
 
 type Config struct {
 	Builder   Builder
-	Enricher  Enricher
+	Meta      Enricher
+	Cluster   Assigner
 	Follow    string
 	Proto     NetProto
 	OnlyLocal bool

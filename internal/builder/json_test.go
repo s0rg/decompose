@@ -15,6 +15,10 @@ type testEnricher struct{}
 
 func (de *testEnricher) Enrich(_ *node.Node) {}
 
+type testAssigner struct{}
+
+func (ta *testAssigner) Assign(_ *node.Node) {}
+
 func TestJSON(t *testing.T) {
 	t.Parallel()
 
@@ -46,9 +50,10 @@ func TestJSON(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  bldr,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Cluster: &testAssigner{},
+		Builder: bldr,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)
@@ -101,9 +106,10 @@ func TestJSONAddEdge(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  bldr,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Cluster: &testAssigner{},
+		Builder: bldr,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)
@@ -159,9 +165,10 @@ func TestJSONAddBadEdges(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  tb,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Cluster: &testAssigner{},
+		Builder: tb,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)

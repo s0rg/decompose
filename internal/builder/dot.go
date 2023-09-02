@@ -28,7 +28,8 @@ var colors = []string{
 }
 
 type DOT struct {
-	g *dot.Graph
+	g        *dot.Graph
+	clusters map[string]*dot.Graph
 }
 
 func NewDOT() *DOT {
@@ -37,7 +38,10 @@ func NewDOT() *DOT {
 	g.Attr("splines", "spline")
 	g.Attr("concentrate", dot.Literal("true"))
 
-	return &DOT{g: g}
+	return &DOT{
+		g:        g,
+		clusters: make(map[string]*dot.Graph),
+	}
 }
 
 func (d *DOT) Name() string {
@@ -70,7 +74,20 @@ func (d *DOT) AddNode(n *node.Node) error {
 		}
 	}
 
-	rb := d.g.Node(n.ID).Attr("color", color).NewRecordBuilder()
+	g := d.g
+
+	if n.Cluster != "" {
+		sg, ok := d.clusters[n.Cluster]
+		if !ok {
+			sg = g.Subgraph(n.Cluster, dot.ClusterOption{})
+			d.clusters[n.Cluster] = sg
+		}
+
+		g = sg
+	}
+
+	rb := g.Node(n.ID).Attr("color", color).NewRecordBuilder()
+
 	rb.FieldWithId(label, outPort)
 	rb.Nesting(func() {
 		for i := 0; i < len(n.Ports); i++ {

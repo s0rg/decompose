@@ -6,6 +6,7 @@ type JSON struct {
 	Image      *string             `json:"image,omitempty"`
 	Meta       *Meta               `json:"meta,omitempty"`
 	Process    *Process            `json:"process,omitempty"`
+	Cluster    *string             `json:"cluster,omitempty"`
 	Listen     []string            `json:"listen"`
 	Networks   []string            `json:"networks"`
 	Volumes    []*Volume           `json:"volumes"`

@@ -39,7 +39,7 @@ var (
 	fFull, fNoLoops   bool
 	fProto, fFormat   string
 	fOut, fFollow     string
-	fMeta             string
+	fMeta, fCluster   string
 	fLoad             []string
 
 	ErrUnknown = errors.New("unknown")
@@ -80,7 +80,8 @@ func setupFlags() {
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fFormat, "format", defaultFormat, "output format: dot, json, tree or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
-	flag.StringVar(&fMeta, "meta", "", "filename with json metadata for enrichment")
+	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
+	flag.StringVar(&fCluster, "cluster", "", "json file with clusterization rules")
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
 		fLoad = append(fLoad, v)
@@ -110,9 +111,28 @@ func writeOut(name string, writer func(io.Writer)) error {
 	return nil
 }
 
+type FromReaderer interface {
+	FromReader(io.Reader) error
+}
+
+func feed(name string, dst FromReaderer) (err error) {
+	fd, err := os.Open(name)
+	if err != nil {
+		return fmt.Errorf("open '%s': %w", name, err)
+	}
+
+	defer fd.Close()
+
+	if err = dst.FromReader(fd); err != nil {
+		return fmt.Errorf("read '%s': %w", name, err)
+	}
+
+	return nil
+}
+
 func prepareConfig(
 	blder graph.Builder,
-	fproto, fmeta string,
+	fproto, fmeta, fcluster string,
 ) (cfg *graph.Config, err error) {
 	proto, ok := graph.ParseNetProto(fproto)
 	if !ok {
@@ -122,22 +142,23 @@ func prepareConfig(
 	meta := graph.NewMetaLoader()
 
 	if fmeta != "" {
-		fd, err := os.Open(fmeta)
-		if err != nil {
-			return nil, fmt.Errorf("meta open '%s': %w", fmeta, err)
+		if err = feed(fmeta, meta); err != nil {
+			return nil, fmt.Errorf("meta: %w", err)
 		}
+	}
 
-		err = meta.FromReader(fd)
-		fd.Close()
+	cluster := graph.NewClusterAssigner()
 
-		if err != nil {
-			return nil, fmt.Errorf("meta load '%s': %w", fmeta, err)
+	if fcluster != "" {
+		if err = feed(fcluster, cluster); err != nil {
+			return nil, fmt.Errorf("cluster: %w", err)
 		}
 	}
 
 	cfg = &graph.Config{
 		Builder:   blder,
-		Enricher:  meta,
+		Meta:      meta,
+		Cluster:   cluster,
 		Proto:     proto,
 		Follow:    fFollow,
 		OnlyLocal: fLocal,
@@ -159,7 +180,7 @@ func run() error {
 		)
 	}
 
-	cfg, err := prepareConfig(bldr, fProto, fMeta)
+	cfg, err := prepareConfig(bldr, fProto, fMeta, fCluster)
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
@@ -167,11 +188,11 @@ func run() error {
 	var act string
 
 	if len(fLoad) > 0 {
-		log.Printf("Loading %d file(s)...", len(fLoad))
+		log.Printf("Loading %d file(s)", len(fLoad))
 
 		act, err = "load", doLoad(cfg, fLoad)
 	} else {
-		log.Println("Building graph...")
+		log.Println("Building graph")
 
 		act, err = "build", doBuild(cfg)
 	}

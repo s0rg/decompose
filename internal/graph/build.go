@@ -29,11 +29,16 @@ type Enricher interface {
 	Enrich(*node.Node)
 }
 
+type Assigner interface {
+	Assign(*node.Node)
+	IsEmpty() bool
+}
+
 func Build(
 	cfg *Config,
 	cli ContainerClient,
 ) error {
-	log.Println("Gathering containers info...")
+	log.Println("Gathering containers info")
 
 	containers, err := cli.Containers(
 		context.Background(),
@@ -61,31 +66,34 @@ func Build(
 
 	neighbours := buildIPMap(containers)
 
-	log.Println("Building nodes...")
+	log.Println("Building nodes")
 
 	nodes := createNodes(cfg, containers, neighbours)
 
-	log.Printf("Found %d nodes", len(nodes))
+	log.Printf("Processing %d nodes", len(nodes))
 
 	if len(nodes) < minItems {
 		return fmt.Errorf("%w: nodes", ErrNotEnough)
 	}
 
-	log.Println("Processing nodes...")
-
 	for _, node := range nodes {
 		node.Ports = node.Ports.Dedup()
 
-		cfg.Enricher.Enrich(node)
+		cfg.Meta.Enrich(node)
+		cfg.Cluster.Assign(node)
 
 		if err = cfg.Builder.AddNode(node); err != nil {
 			return fmt.Errorf("node '%s': %w", node.Name, err)
 		}
 	}
 
-	log.Println("Building edges...")
+	log.Println("Building edges")
 
-	createEdges(cfg, containers, neighbours, nodes)
+	if cfg.Cluster.IsEmpty() {
+		directEdges(cfg, containers, neighbours, nodes)
+	} else {
+		clusterEdges(cfg, containers, neighbours, nodes)
+	}
 
 	return nil
 }
@@ -107,7 +115,10 @@ func createNodes(
 	cntrs []*Container,
 	neighbours map[string]*Container,
 ) (rv map[string]*node.Node) {
-	var skip bool
+	var (
+		skip   bool
+		notice bool
+	)
 
 	rv = make(map[string]*node.Node)
 
@@ -116,8 +127,10 @@ func createNodes(
 
 		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image, Volumes: []*node.Volume{}}
 
-		if con.ConnectionsCount() == 0 {
+		if con.ConnectionsCount() == 0 && !notice {
 			log.Printf("No connections for container: %s:%s, try run as root", con.ID, con.Name)
+
+			notice = true
 		}
 
 		con.IterOutbounds(func(c *Connection) {
@@ -180,7 +193,7 @@ func createNodes(
 	return rv
 }
 
-func createEdges(
+func directEdges(
 	cfg *Config,
 	cntrs []*Container,
 	local map[string]*Container,
@@ -219,6 +232,15 @@ func createEdges(
 			}
 		})
 	}
+}
+
+func clusterEdges(
+	cfg *Config,
+	cntrs []*Container,
+	local map[string]*Container,
+	nodes map[string]*node.Node,
+) {
+
 }
 
 func percentOf(a, b int) float64 {

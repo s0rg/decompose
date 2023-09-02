@@ -56,8 +56,6 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 
 	if n.Meta != nil {
 		rv.Meta = n.Meta
-	} else {
-		l.cfg.Enricher.Enrich(rv)
 	}
 
 	if len(n.Networks) > 0 {
@@ -74,6 +72,10 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 
 	if len(n.Volumes) > 0 {
 		rv.Volumes = n.Volumes
+	}
+
+	if n.Cluster != nil {
+		rv.Cluster = *n.Cluster
 	}
 
 	return rv
@@ -142,6 +144,9 @@ func (l *Loader) insert(n *node.JSON) {
 	if skip {
 		return
 	}
+
+	l.cfg.Meta.Enrich(nod)
+	l.cfg.Cluster.Assign(nod)
 
 	l.nodes[id] = nod
 	l.edges[id] = cons

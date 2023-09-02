@@ -4,6 +4,7 @@ type Node struct {
 	ID       string
 	Name     string
 	Image    string
+	Cluster  string
 	Networks []string
 	Meta     *Meta
 	Process  *Process
@@ -35,6 +36,10 @@ func (n *Node) ToJSON() (rv *JSON) {
 
 	if n.Image != "" {
 		rv.Image = &n.Image
+	}
+
+	if n.Cluster != "" {
+		rv.Cluster = &n.Cluster
 	}
 
 	for i := 0; i < len(n.Ports); i++ {

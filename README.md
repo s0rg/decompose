@@ -26,8 +26,9 @@ type Item struct {
     Name       string              `json:"name"`              // container name
     IsExternal bool                `json:"is_external"`       // this host is external
     Image      *string             `json:"image,omitempty"`   // docker image (if any)
-    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see below
+    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see 'metadata'
     Process    *Process            `json:"process,omitempty"` // process info
+	Cluster    *string             `json:"cluster,omitempty"` // assigned cluster, see 'clusterization rules'
     Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
     Networks   []string            `json:"networks"`          // network names
     Volumes    []*Volume           `json:"volumes"`           // volumes
@@ -113,6 +114,20 @@ one of provided keys, like `foo-1` or `bar1` for this example.
 
 See [csv2meta.py](script/csv2meta.py) for example how to create such `json` fom csv.
 
+# clusterization rules
+
+You can join your services into `clusters` by exposed ports, with clusterization rules, for example:
+
+```json
+[
+    {"name": "ingress", "ports": ["80/tcp", "443/tcp"]},
+    {"name": "backend", "ports": ["8080-8090/tcp"]},
+    {"name": "store", "ports": ["3306/tcp", "5432/tcp"]},
+    {"name": "redis", "ports": ["6379/tcp"]},
+    {"name": "queue", "ports": ["9092/tcp", "4222/tcp"]}
+]
+```
+
 # features
 
 - os-independent, it uses different strategies to get container connections:
@@ -139,6 +154,8 @@ decompose [flags]
 
 possible flags with default values:
 
+  -cluster string
+        json with clusterization rules
   -follow string
         follow only this container by name
   -format string
