@@ -9,7 +9,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1bc7c04689cf612a0f39/maintainability)](https://codeclimate.com/github/s0rg/decompose/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1bc7c04689cf612a0f39/test_coverage)](https://codeclimate.com/github/s0rg/decompose/test_coverage)
-[![libraries.io](https://img.shields.io/librariesio/github/s0rg/decompose)](https://libraries.io/github/s0rg/decompose)
 ![Issues](https://img.shields.io/github/issues/s0rg/decompose)
 
 # decompose
