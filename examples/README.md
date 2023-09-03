@@ -22,3 +22,7 @@ to metadata json for decomposer
 ```shell
 python3 csv2meta.py my_meta_utf8.csv > meta.json
 ```
+
+## snapshots.sh script
+
+example script for taking and merging snapshots, writes result to `merged.json`

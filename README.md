@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/s0rg/decompose/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 
 <!-- ![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg) -->
 
@@ -9,6 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1bc7c04689cf612a0f39/maintainability)](https://codeclimate.com/github/s0rg/decompose/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1bc7c04689cf612a0f39/test_coverage)](https://codeclimate.com/github/s0rg/decompose/test_coverage)
+[![libraries.io](https://img.shields.io/librariesio/github/s0rg/decompose)](https://libraries.io/github/s0rg/decompose)
 ![Issues](https://img.shields.io/github/issues/s0rg/decompose)
 
 # decompose
@@ -133,7 +134,8 @@ With clusterization rules, in `json`:
 ]
 ```
 
-Weight can be omitted, if not specified it equals 1.
+Weight can be omitted, if not specified it equals `1`.
+
 See: [cluster.json](examples/cluster.json) for detailed example.
 
 # features
@@ -144,12 +146,13 @@ See: [cluster.json](examples/cluster.json) for detailed example.
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - produces detailed connections graph **with ports**
-- fast, scans ~400 containers in around 5 seconds
+- save `json` stream once and process it later in any way you want
+- fast, scans ~400 containers in around 5 sec
 - 100% test-coverage
 
 # known limitations
 
-- only established and listen connections are listed
+- only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
 
 # installation
 
@@ -206,12 +209,6 @@ Get `dot` file:
 decompose > connections.dot
 ```
 
-Process json stream:
-
-```shell
-decompose -format json | jq '{name}'
-```
-
 Get only tcp connections as `dot`:
 
 ```shell
@@ -224,16 +221,10 @@ Save full json stream:
 decompose -full -format json > nodes-1.json
 ```
 
-Display tree:
-
-```shell
-decompose -format tree
-```
-
 Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:
 
 ```shell
-decompose -local -proto tcp -load nodes-1.json -load nodes-2.json > graph-merged.dot
+decompose -local -proto tcp -load "nodes-*.json" > graph-merged.dot
 ```
 
 Load json stream, enrich and save as `structurizr dsl`:
