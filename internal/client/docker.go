@@ -246,8 +246,10 @@ func extractProcessInfo(
 		return rv
 	}
 
+	const nparts = 2
+
 	for _, env := range c.Config.Env {
-		key := strings.SplitN(env, "=", 2)[0]
+		key := strings.SplitN(env, "=", nparts)[0]
 		if s.Has(key) {
 			continue
 		}

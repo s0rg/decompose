@@ -68,4 +68,5 @@ issues:
     - path: ._test\.go
       linters:
         - goerr113
+        - errcheck
         - funlen

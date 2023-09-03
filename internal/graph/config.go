@@ -1,10 +1,10 @@
 package graph
 
 type Config struct {
-	SkipEnv   []string
 	Builder   Builder
 	Meta      Enricher
 	Follow    string
+	SkipEnv   []string
 	Proto     NetProto
 	OnlyLocal bool
 	FullInfo  bool
