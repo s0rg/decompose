@@ -45,8 +45,9 @@ func (ps Ports) Dedup() (rv Ports) {
 	)
 
 	for k, s := range state {
-		total += s.Len()
 		keys = append(keys, k)
+
+		total += s.Len()
 	}
 
 	rv = make([]Port, 0, total)
