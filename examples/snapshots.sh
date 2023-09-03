@@ -22,7 +22,7 @@ done
 
 echo "Merging..."
 
-bin/decompose -load "${OUT}/*.json" -format json -out merged.json
+decompose -load "${OUT}/*.json" -format json -out merged.json
 
 echo "Cleaning-up..."
 
