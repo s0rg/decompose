@@ -1,6 +1,7 @@
 package node
 
 import (
+	"slices"
 	"sort"
 	"strconv"
 
@@ -38,15 +39,23 @@ func (ps Ports) Dedup() (rv Ports) {
 		s.Add(p.Value)
 	}
 
-	total := 0
+	var (
+		total int
+		keys  = make([]string, 0, len(state))
+	)
 
-	for _, s := range state {
+	for k, s := range state {
 		total += s.Len()
+		keys = append(keys, k)
 	}
 
 	rv = make([]Port, 0, total)
 
-	for k, s := range state {
+	slices.Sort(keys)
+
+	for _, k := range keys {
+		s := state[k]
+
 		ports := set.ToSlice(s)
 
 		if len(ports) > 1 {
