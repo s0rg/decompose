@@ -18,6 +18,10 @@ import (
 	"github.com/s0rg/decompose/internal/graph"
 )
 
+type FromReaderer interface {
+	FromReader(io.Reader) error
+}
+
 const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
@@ -111,11 +115,7 @@ func writeOut(name string, writer func(io.Writer)) error {
 	return nil
 }
 
-type FromReaderer interface {
-	FromReader(io.Reader) error
-}
-
-func feed(name string, dst FromReaderer) (err error) {
+func feed(name string, read func(io.Reader) error) (err error) {
 	fd, err := os.Open(name)
 	if err != nil {
 		return fmt.Errorf("open '%s': %w", name, err)
@@ -123,56 +123,21 @@ func feed(name string, dst FromReaderer) (err error) {
 
 	defer fd.Close()
 
-	if err = dst.FromReader(fd); err != nil {
+	if err = read(fd); err != nil {
 		return fmt.Errorf("read '%s': %w", name, err)
 	}
 
 	return nil
 }
 
-func prepareConfig(
-	blder graph.Builder,
-	fproto, fmeta, fcluster string,
-) (cfg *graph.Config, err error) {
-	proto, ok := graph.ParseNetProto(fproto)
+func prepareConfig() (
+	cfg *graph.Config,
+	nwr graph.NamedWriter,
+	err error,
+) {
+	bildr, ok := builder.Create(fFormat)
 	if !ok {
-		return nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fproto)
-	}
-
-	meta := graph.NewMetaLoader()
-
-	if fmeta != "" {
-		if err = feed(fmeta, meta); err != nil {
-			return nil, fmt.Errorf("meta: %w", err)
-		}
-	}
-
-	cluster := graph.NewClusterAssigner()
-
-	if fcluster != "" {
-		if err = feed(fcluster, cluster); err != nil {
-			return nil, fmt.Errorf("cluster: %w", err)
-		}
-	}
-
-	cfg = &graph.Config{
-		Builder:   blder,
-		Meta:      meta,
-		Cluster:   cluster,
-		Proto:     proto,
-		Follow:    fFollow,
-		OnlyLocal: fLocal,
-		FullInfo:  fFull,
-		NoLoops:   fNoLoops,
-	}
-
-	return cfg, nil
-}
-
-func run() error {
-	bldr, ok := builder.Create(fFormat)
-	if !ok {
-		return fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"%w format: %s known: %s",
 			ErrUnknown,
 			fFormat,
@@ -180,7 +145,50 @@ func run() error {
 		)
 	}
 
-	cfg, err := prepareConfig(bldr, fProto, fMeta, fCluster)
+	nwr = bildr
+
+	proto, ok := graph.ParseNetProto(fProto)
+	if !ok {
+		return nil, nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fProto)
+	}
+
+	meta := graph.NewMetaLoader()
+
+	if fMeta != "" {
+		if err = feed(fMeta, meta.FromReader); err != nil {
+			return nil, nil, fmt.Errorf("meta: %w", err)
+		}
+	}
+
+	if fCluster != "" {
+		if builder.SupportCluster(fFormat) {
+			cluster := graph.NewClusterBuilder(bildr)
+
+			if err = feed(fCluster, cluster.FromReader); err != nil {
+				return nil, nil, fmt.Errorf("cluster: %w", err)
+			}
+
+			bildr, nwr = cluster, cluster
+		} else {
+			log.Println(bildr.Name(), "cannot handle clusters - ignoring them")
+		}
+	}
+
+	cfg = &graph.Config{
+		Builder:   bildr,
+		Meta:      meta,
+		Proto:     proto,
+		Follow:    fFollow,
+		OnlyLocal: fLocal,
+		FullInfo:  fFull,
+		NoLoops:   fNoLoops,
+	}
+
+	return cfg, nwr, nil
+}
+
+func run() error {
+	cfg, nwr, err := prepareConfig()
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
@@ -201,9 +209,9 @@ func run() error {
 		return fmt.Errorf("%s: %w", act, err)
 	}
 
-	log.Println("Writing:", bldr.Name())
+	log.Println("Writing:", nwr.Name())
 
-	if err = writeOut(fOut, bldr.Write); err != nil {
+	if err = writeOut(fOut, nwr.Write); err != nil {
 		return fmt.Errorf("output: %w", err)
 	}
 

@@ -66,18 +66,13 @@ type testEnricher struct{}
 
 func (de *testEnricher) Enrich(_ *node.Node) {}
 
-type testAssigner struct{}
-
-func (ta *testAssigner) Assign(_ *node.Node) {}
-
 func TestBuildError(t *testing.T) {
 	t.Parallel()
 
 	myErr := errors.New("test error")
 	cli := &testClient{Err: myErr}
 	cfg := &graph.Config{
-		Proto:   graph.ALL,
-		Cluster: &testAssigner{},
+		Proto: graph.ALL,
 	}
 
 	err := graph.Build(cfg, cli)
@@ -98,8 +93,7 @@ func TestBuildOneConainer(t *testing.T) {
 	}}
 
 	cfg := &graph.Config{
-		Proto:   graph.ALL,
-		Cluster: &testAssigner{},
+		Proto: graph.ALL,
 	}
 
 	if err := graph.Build(cfg, cli); err == nil {
@@ -169,7 +163,6 @@ func TestBuildSimple(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder: bld,
-		Cluster: &testAssigner{},
 		Meta:    ext,
 		Proto:   graph.ALL,
 	}
@@ -191,7 +184,6 @@ func TestBuildFollow(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder: bld,
-		Cluster: &testAssigner{},
 		Meta:    ext,
 		Proto:   graph.ALL,
 		Follow:  "1",
@@ -214,7 +206,6 @@ func TestBuildLocal(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder:   bld,
-		Cluster:   &testAssigner{},
 		Meta:      ext,
 		Proto:     graph.ALL,
 		OnlyLocal: true,
@@ -234,9 +225,8 @@ func TestBuildNoNodes(t *testing.T) {
 
 	cli := testClientWithEnv()
 	cfg := &graph.Config{
-		Proto:   graph.ALL,
-		Cluster: &testAssigner{},
-		Follow:  "4",
+		Proto:  graph.ALL,
+		Follow: "4",
 	}
 
 	if err := graph.Build(cfg, cli); err == nil {
@@ -253,7 +243,6 @@ func TestBuildNodeError(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder: bld,
-		Cluster: &testAssigner{},
 		Meta:    ext,
 		Proto:   graph.ALL,
 	}
@@ -281,7 +270,6 @@ func TestBuildNoConnections(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder: bld,
-		Cluster: &testAssigner{},
 		Meta:    ext,
 		Proto:   graph.ALL,
 	}
@@ -316,7 +304,6 @@ func TestBuildLoops(t *testing.T) {
 	bld := &testBuilder{}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Cluster:   &testAssigner{},
 		Builder:   bld,
 		Meta:      ext,
 		Proto:     graph.ALL,

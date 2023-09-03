@@ -6,9 +6,58 @@ import (
 )
 
 type Workspace struct {
-	System      *System
-	Name        string
-	Description string
+	systems       map[string]*System
+	relationships map[string]map[string]*Relation
+	Name          string
+	Description   string
+}
+
+func NewWorkspace(name string) *Workspace {
+	return &Workspace{
+		Name:          name,
+		systems:       make(map[string]*System),
+		relationships: make(map[string]map[string]*Relation),
+	}
+}
+
+func (ws *Workspace) System(name string) (rv *System) {
+	id := safeID(name)
+
+	if sys, ok := ws.systems[id]; ok {
+		return sys
+	}
+
+	rv = NewSystem(name)
+
+	ws.systems[rv.ID] = rv
+
+	return rv
+}
+
+func (ws *Workspace) HasSystem(name string) (yes bool) {
+	_, yes = ws.systems[safeID(name)]
+
+	return
+}
+
+func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
+	srcID, dstID = safeID(srcID), safeID(dstID)
+
+	dmap, ok := ws.relationships[srcID]
+	if !ok {
+		dmap = make(map[string]*Relation)
+		ws.relationships[srcID] = dmap
+	}
+
+	if rv, ok = dmap[dstID]; ok {
+		return rv, ok
+	}
+
+	rv = &Relation{}
+
+	dmap[dstID] = rv
+
+	return rv, true
 }
 
 func (ws *Workspace) Write(w io.Writer) {
@@ -24,28 +73,65 @@ func (ws *Workspace) Write(w io.Writer) {
 	putHeader(w, level, headerModel)
 
 	level++
-	putBlock(w, level, blockSystem, ws.System.ID, ws.System.Name)
-	ws.System.WriteContainers(w, level)
-	putEnd(w, level)
+
+	for _, system := range ws.systems {
+		putBlock(w, level, blockSystem, system.ID, system.Name)
+		system.WriteContainers(w, level)
+		putEnd(w, level)
+	}
 
 	fmt.Fprintln(w, "")
-	ws.System.WriteRelations(w, level)
+
+	for _, system := range ws.systems {
+		system.WriteRelations(w, level)
+	}
+
+	ws.writeRelations(w, level)
 
 	level--
 	putEnd(w, level) // model
 
 	fmt.Fprintln(w, "")
+
+	ws.writeViews(w, level)
+
+	level--
+	putEnd(w, level) // workspace
+}
+
+func (ws *Workspace) writeRelations(w io.Writer, level int) {
+	for srcID, dest := range ws.relationships {
+		for dstID, rel := range dest {
+			putRelation(w, level, srcID, dstID)
+			rel.Write(w, level+1)
+			putEnd(w, level)
+		}
+	}
+}
+
+func (ws *Workspace) writeViews(w io.Writer, level int) {
 	putHeader(w, level, headerViews)
 	level++
 
-	putView(w, level, blockContainer, ws.System.ID)
-	level++
+	for _, system := range ws.systems {
+		putView(w, level, blockSystemCtx, system.ID)
+		level++
 
-	putRaw(w, level, "include *")
-	putRaw(w, level, "autoLayout")
+		putRaw(w, level, "include *")
+		putRaw(w, level, "autoLayout")
 
-	level--
-	putEnd(w, level) // container
+		level--
+		putEnd(w, level) // system context
+
+		putView(w, level, blockContainer, system.ID)
+		level++
+
+		putRaw(w, level, "include *")
+		putRaw(w, level, "autoLayout")
+
+		level--
+		putEnd(w, level) // container
+	}
 
 	fmt.Fprintln(w, "")
 	putHeader(w, level, "styles")
@@ -65,7 +151,4 @@ func (ws *Workspace) Write(w io.Writer) {
 
 	level--
 	putEnd(w, level) // views
-
-	level--
-	putEnd(w, level) // workspace
 }

@@ -11,17 +11,20 @@ import (
 	sdsl "github.com/s0rg/decompose/internal/structurizr"
 )
 
-const systemName = "de-composed system"
+const (
+	workspaceName = "de-composed system"
+	systemName    = "default"
+)
 
 var ErrDuplicate = errors.New("duplicate found")
 
 type Structurizr struct {
-	state *sdsl.System
+	ws *sdsl.Workspace
 }
 
 func NewStructurizr() *Structurizr {
 	return &Structurizr{
-		state: sdsl.NewSystem(systemName),
+		ws: sdsl.NewWorkspace(workspaceName),
 	}
 }
 
@@ -30,7 +33,14 @@ func (s *Structurizr) Name() string {
 }
 
 func (s *Structurizr) AddNode(n *node.Node) error {
-	cont, ok := s.state.AddContainer(n.ID, n.Name)
+	system := systemName
+	if n.Cluster != "" {
+		system = n.Cluster
+	}
+
+	state := s.ws.System(system)
+
+	cont, ok := state.AddContainer(n.ID, n.Name)
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrDuplicate, n.Name)
 	}
@@ -59,7 +69,17 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 }
 
 func (s *Structurizr) AddEdge(srcID, dstID string, port node.Port) {
-	rel, ok := s.state.AddRelation(srcID, dstID)
+	var (
+		rel *sdsl.Relation
+		ok  bool
+	)
+
+	if s.ws.HasSystem(srcID) {
+		rel, ok = s.ws.AddRelation(srcID, dstID)
+	} else {
+		rel, ok = s.ws.System(systemName).AddRelation(srcID, dstID)
+	}
+
 	if !ok {
 		return
 	}
@@ -68,9 +88,5 @@ func (s *Structurizr) AddEdge(srcID, dstID string, port node.Port) {
 }
 
 func (s *Structurizr) Write(w io.Writer) {
-	ws := sdsl.Workspace{
-		System: s.state,
-	}
-
-	ws.Write(w)
+	s.ws.Write(w)
 }

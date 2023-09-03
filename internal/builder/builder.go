@@ -3,8 +3,6 @@
 package builder
 
 import (
-	"io"
-
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -15,13 +13,7 @@ const (
 	kindStructurizr = "sdsl"
 )
 
-type Builder interface {
-	graph.Builder
-	Write(io.Writer)
-	Name() string
-}
-
-func Create(kind string) (b Builder, ok bool) {
+func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 	switch kind {
 	case kindDOT:
 		return NewDOT(), true
@@ -34,6 +26,10 @@ func Create(kind string) (b Builder, ok bool) {
 	}
 
 	return
+}
+
+func SupportCluster(n string) (yes bool) {
+	return n == kindDOT || n == kindStructurizr
 }
 
 func Names() (rv []string) {

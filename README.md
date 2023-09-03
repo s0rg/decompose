@@ -29,7 +29,6 @@ type Item struct {
     Image      *string             `json:"image,omitempty"`   // docker image (if any)
     Meta       *Meta               `json:"meta,omitempty"`    // metadata, see 'metadata'
     Process    *Process            `json:"process,omitempty"` // process info
-	Cluster    *string             `json:"cluster,omitempty"` // assigned cluster, see 'clusterization rules'
     Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
     Networks   []string            `json:"networks"`          // network names
     Volumes    []*Volume           `json:"volumes"`           // volumes
@@ -254,6 +253,6 @@ in other terminal:
 decompose | dot -Tsvg > redis-cluster.svg
 ```
 
+# license
 
-## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_large)

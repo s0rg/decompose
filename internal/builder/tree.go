@@ -95,7 +95,9 @@ func (t *Tree) Write(w io.Writer) {
 			lst = len(n.Connected) - 1
 		)
 
-		fmt.Fprint(w, next, " ", symLine, "\n")
+		if len(n.Connected) > 0 {
+			fmt.Fprint(w, next, " ", symLine, "\n")
+		}
 
 		for dst, ports := range n.Connected {
 			fmt.Fprint(w, next, " ")

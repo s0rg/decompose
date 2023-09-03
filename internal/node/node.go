@@ -38,10 +38,6 @@ func (n *Node) ToJSON() (rv *JSON) {
 		rv.Image = &n.Image
 	}
 
-	if n.Cluster != "" {
-		rv.Cluster = &n.Cluster
-	}
-
 	for i := 0; i < len(n.Ports); i++ {
 		rv.Listen[i] = n.Ports[i].Label()
 	}

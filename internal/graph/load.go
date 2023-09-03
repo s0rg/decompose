@@ -74,10 +74,6 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 		rv.Volumes = n.Volumes
 	}
 
-	if n.Cluster != nil {
-		rv.Cluster = *n.Cluster
-	}
-
 	return rv
 }
 
@@ -146,7 +142,6 @@ func (l *Loader) insert(n *node.JSON) {
 	}
 
 	l.cfg.Meta.Enrich(nod)
-	l.cfg.Cluster.Assign(nod)
 
 	l.nodes[id] = nod
 	l.edges[id] = cons

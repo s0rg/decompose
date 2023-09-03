@@ -25,22 +25,82 @@ type (
 		Ports []string `json:"ports"`
 	}
 
-	ClusterAssigner struct {
-		index map[string]map[int]string
+	ClusterBuilder struct {
+		builder NamedBuilderWriter
+		nodes   map[string]*node.Node
+		index   map[string]map[int]string
+		cluster map[string]map[string]node.Ports
 	}
 )
 
-func NewClusterAssigner() *ClusterAssigner {
-	return &ClusterAssigner{
-		index: make(map[string]map[int]string),
+func NewClusterBuilder(b NamedBuilderWriter) *ClusterBuilder {
+	return &ClusterBuilder{
+		builder: b,
+		nodes:   make(map[string]*node.Node),
+		index:   make(map[string]map[int]string),
+		cluster: make(map[string]map[string]node.Ports),
 	}
 }
 
-func (ca *ClusterAssigner) IsEmpty() bool {
-	return len(ca.index) == 0
+func (cb *ClusterBuilder) Name() string {
+	return cb.builder.Name() + " clustered"
 }
 
-func (ca *ClusterAssigner) FromReader(r io.Reader) (err error) {
+func (cb *ClusterBuilder) Write(w io.Writer) {
+	for src, dmap := range cb.cluster {
+		for dst, ports := range dmap {
+			for _, p := range ports.Dedup() {
+				cb.builder.AddEdge(src, dst, p)
+			}
+		}
+	}
+
+	cb.builder.Write(w)
+}
+
+func (cb *ClusterBuilder) AddNode(n *node.Node) error {
+	if cluster, ok := cb.Match(n); ok {
+		n.Cluster = cluster
+	}
+
+	cb.nodes[n.ID] = n
+
+	if err := cb.builder.AddNode(n); err != nil {
+		return fmt.Errorf("builder: %w", err)
+	}
+
+	return nil
+}
+
+func (cb *ClusterBuilder) AddEdge(src, dst string, port node.Port) {
+	nsrc, ok := cb.nodes[src]
+	if !ok {
+		return
+	}
+
+	ndst, ok := cb.nodes[dst]
+	if !ok {
+		return
+	}
+
+	if nsrc.Cluster != "" && ndst.Cluster != "" && nsrc.Cluster != ndst.Cluster {
+		if cluster, ok := cb.clusterFor(&port); ok && ndst.Cluster == cluster {
+			cdst, ok := cb.cluster[nsrc.Cluster]
+			if !ok {
+				cdst = make(map[string]node.Ports)
+			}
+
+			cdst[ndst.Cluster] = append(cdst[ndst.Cluster], port)
+			cb.cluster[nsrc.Cluster] = cdst
+
+			return
+		}
+	}
+
+	cb.builder.AddEdge(src, dst, port)
+}
+
+func (cb *ClusterBuilder) FromReader(r io.Reader) (err error) {
 	var rules []ruleJSON
 
 	dec := json.NewDecoder(r)
@@ -60,7 +120,7 @@ func (ca *ClusterAssigner) FromReader(r io.Reader) (err error) {
 				return fmt.Errorf("parse '%s': %w", rule.Ports[j], perr)
 			}
 
-			pmap, ok := ca.index[proto]
+			pmap, ok := cb.index[proto]
 			if !ok {
 				pmap = make(map[int]string)
 			}
@@ -75,22 +135,22 @@ func (ca *ClusterAssigner) FromReader(r io.Reader) (err error) {
 				pmap[port] = rule.Name
 			}
 
-			ca.index[proto] = pmap
+			cb.index[proto] = pmap
 		}
 	}
 
 	return nil
 }
 
-func (ca *ClusterAssigner) Match(n *node.Node) (cluster string, ok bool) {
-	if ca.IsEmpty() {
+func (cb *ClusterBuilder) Match(n *node.Node) (cluster string, ok bool) {
+	if len(cb.index) == 0 {
 		return "", false
 	}
 
 	matches := make(map[string]int)
 
 	for i := 0; i < len(n.Ports); i++ {
-		if cluster, ok = ca.clusterFor(&n.Ports[i]); !ok {
+		if cluster, ok = cb.clusterFor(&n.Ports[i]); !ok {
 			continue
 		}
 
@@ -128,32 +188,16 @@ func (ca *ClusterAssigner) Match(n *node.Node) (cluster string, ok bool) {
 	return smatches[len(smatches)-1].Name, true
 }
 
-func (ca *ClusterAssigner) RefineConns(
-	nodes map[string]*node.Node,
-) (rv map[string]node.Ports, ok bool) {
-	if ca.IsEmpty() {
-		return nil, false
-	}
-
-	return rv, true
-}
-
-func (ca *ClusterAssigner) clusterFor(p *node.Port) (cluster string, ok bool) {
+func (cb *ClusterBuilder) clusterFor(p *node.Port) (cluster string, ok bool) {
 	var pmap map[int]string
 
-	if pmap, ok = ca.index[p.Kind]; !ok {
+	if pmap, ok = cb.index[p.Kind]; !ok {
 		return
 	}
 
 	cluster, ok = pmap[p.Value]
 
 	return
-}
-
-func (ca *ClusterAssigner) Assign(n *node.Node) {
-	if cluster, ok := ca.Match(n); ok {
-		n.Cluster = cluster
-	}
 }
 
 func parseRulePorts(v string) (proto string, ports []int, err error) {
@@ -180,7 +224,7 @@ func parseRulePorts(v string) (proto string, ports []int, err error) {
 
 	val, cerr := strconv.Atoi(parts[0])
 	if cerr != nil {
-		return "", nil, fmt.Errorf("atoi: %w", cerr)
+		return "", nil, fmt.Errorf("port: %w", cerr)
 	}
 
 	return proto, []int{val}, nil
@@ -196,12 +240,12 @@ func parsePortsRange(v string) (ports []int, err error) {
 
 	start, err := strconv.Atoi(prange[0])
 	if err != nil {
-		return nil, fmt.Errorf("atoi start: %w", err)
+		return nil, fmt.Errorf("start: %w", err)
 	}
 
 	end, err := strconv.Atoi(prange[1])
 	if err != nil {
-		return nil, fmt.Errorf("atoi end: %w", err)
+		return nil, fmt.Errorf("end: %w", err)
 	}
 
 	switch {

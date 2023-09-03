@@ -27,6 +27,7 @@ linters:
     - varcheck
     - ifshort
     - ireturn
+    - gofumpt
     - golint
     - gci
 

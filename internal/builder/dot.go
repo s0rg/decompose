@@ -81,6 +81,7 @@ func (d *DOT) AddNode(n *node.Node) error {
 		if !ok {
 			sg = g.Subgraph(n.Cluster, dot.ClusterOption{})
 			d.clusters[n.Cluster] = sg
+			sg.Node(n.Cluster + "_" + outPort).Label(outPort)
 		}
 
 		g = sg
@@ -104,25 +105,66 @@ func (d *DOT) AddNode(n *node.Node) error {
 	return nil
 }
 
+func (d *DOT) getSrc(id string) (rv dot.Node, out string, ok bool) {
+	if rv, ok = d.g.FindNodeById(id); ok {
+		return rv, outPort, ok
+	}
+
+	sg, ok := d.clusters[id]
+	if !ok {
+		return
+	}
+
+	out = id + "_" + outPort
+
+	if rv, ok = sg.FindNodeById(out); ok {
+		return rv, out, ok
+	}
+
+	return
+}
+
+func (d *DOT) getDst(id string, port node.Port) (rv dot.Node, out string, ok bool) {
+	if rv, ok = d.g.FindNodeById(id); ok {
+		return rv, port.ID(), ok
+	}
+
+	sg, ok := d.clusters[id]
+	if !ok {
+		return
+	}
+
+	out = id + "_" + port.ID()
+
+	if rv, ok = sg.FindNodeById(out); ok {
+		return rv, out, ok
+	}
+
+	return sg.Node(out).Label(port.Label()), out, true
+}
+
 func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
-	src, ok := d.g.FindNodeById(srcID)
+	src, srcPort, ok := d.getSrc(srcID)
 	if !ok {
 		return
 	}
 
-	dst, ok := d.g.FindNodeById(dstID)
+	dst, dstPort, ok := d.getDst(dstID, port)
 	if !ok {
 		return
 	}
 
-	color := labelColor(
-		min(srcID, dstID) + max(srcID, dstID) + port.Label(),
-	)
+	color := labelColor(port.Label())
 
-	d.g.
-		EdgeWithPorts(src, dst, outPort, port.ID(), port.Label()).
-		Attr("color", color).
-		Attr("fontcolor", color)
+	var edge dot.Edge
+
+	if srcPort != outPort {
+		edge = d.g.Edge(src, dst, port.Label())
+	} else {
+		edge = d.g.EdgeWithPorts(src, dst, srcPort, dstPort, port.Label())
+	}
+
+	edge.Attr("color", color).Attr("fontcolor", color)
 }
 
 func (d *DOT) Write(w io.Writer) {

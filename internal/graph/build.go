@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 
 	"github.com/s0rg/decompose/internal/node"
@@ -22,16 +23,21 @@ type ContainerClient interface {
 
 type Builder interface {
 	AddNode(*node.Node) error
-	AddEdge(string, string, node.Port)
+	AddEdge(src, dst string, port node.Port)
+}
+
+type NamedWriter interface {
+	Name() string
+	Write(io.Writer)
+}
+
+type NamedBuilderWriter interface {
+	Builder
+	NamedWriter
 }
 
 type Enricher interface {
 	Enrich(*node.Node)
-}
-
-type Assigner interface {
-	Assign(*node.Node)
-	IsEmpty() bool
 }
 
 func Build(
@@ -80,7 +86,6 @@ func Build(
 		node.Ports = node.Ports.Dedup()
 
 		cfg.Meta.Enrich(node)
-		cfg.Cluster.Assign(node)
 
 		if err = cfg.Builder.AddNode(node); err != nil {
 			return fmt.Errorf("node '%s': %w", node.Name, err)
@@ -89,11 +94,7 @@ func Build(
 
 	log.Println("Building edges")
 
-	if cfg.Cluster.IsEmpty() {
-		directEdges(cfg, containers, neighbours, nodes)
-	} else {
-		clusterEdges(cfg, containers, neighbours, nodes)
-	}
+	buildEdges(cfg, containers, neighbours, nodes)
 
 	return nil
 }
@@ -193,7 +194,7 @@ func createNodes(
 	return rv
 }
 
-func directEdges(
+func buildEdges(
 	cfg *Config,
 	cntrs []*Container,
 	local map[string]*Container,
@@ -232,15 +233,6 @@ func directEdges(
 			}
 		})
 	}
-}
-
-func clusterEdges(
-	cfg *Config,
-	cntrs []*Container,
-	local map[string]*Container,
-	nodes map[string]*node.Node,
-) {
-
 }
 
 func percentOf(a, b int) float64 {

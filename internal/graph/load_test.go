@@ -13,9 +13,8 @@ func TestLoaderLoadError(t *testing.T) {
 
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
-		Proto:   graph.ALL,
-		Meta:    ext,
+		Proto: graph.ALL,
+		Meta:  ext,
 	}
 
 	ldr := graph.NewLoader(cfg)
@@ -34,7 +33,6 @@ func TestLoaderBuildError(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
@@ -71,7 +69,6 @@ func TestLoaderSingle(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
@@ -107,7 +104,6 @@ func TestLoaderBadPorts(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
@@ -142,7 +138,6 @@ func TestLoaderEdges(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
@@ -181,7 +176,6 @@ func TestLoaderSeveral(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
@@ -223,7 +217,6 @@ func TestLoaderEdgesProto(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.TCP,
@@ -264,7 +257,6 @@ func TestLoaderEdgesFollowNone(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Follow:  "foo",
@@ -320,7 +312,6 @@ func TestLoaderEdgesFollowOne(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Follow:  "test3",
@@ -363,7 +354,6 @@ func TestLoaderLocal(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster:   &testAssigner{},
 		Builder:   bldr,
 		Meta:      ext,
 		OnlyLocal: true,
@@ -407,7 +397,6 @@ func TestLoaderMeta(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster:   &testAssigner{},
 		Builder:   bldr,
 		Meta:      ext,
 		OnlyLocal: true,
@@ -452,7 +441,6 @@ func TestLoaderFull(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster:  &testAssigner{},
 		Builder:  bldr,
 		Meta:     ext,
 		FullInfo: true,
@@ -495,7 +483,6 @@ func TestLoaderLoops(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Cluster: &testAssigner{},
 		Builder: bldr,
 		Meta:    ext,
 		Proto:   graph.ALL,
