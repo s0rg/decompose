@@ -5,6 +5,5 @@ vendor/
 *.svg
 *.dot
 *.dsl
-*.json
 *.pprof
 *_profile.pdf

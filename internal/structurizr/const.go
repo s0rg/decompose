@@ -7,6 +7,7 @@ const (
 	keyName        = "name"
 
 	blockContainer = "container"
+	blockSystemCtx = "systemContext"
 	blockSystem    = "softwareSystem"
 
 	headerWorkspace = "workspace"

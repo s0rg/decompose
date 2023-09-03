@@ -27,7 +27,7 @@ type Item struct {
     Name       string              `json:"name"`              // container name
     IsExternal bool                `json:"is_external"`       // this host is external
     Image      *string             `json:"image,omitempty"`   // docker image (if any)
-    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see below
+    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see 'metadata'
     Process    *Process            `json:"process,omitempty"` // process info
     Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
     Networks   []string            `json:"networks"`          // network names
@@ -92,6 +92,8 @@ example with full info and metadata filled:
 }
 ```
 
+See [stream.json](examples/stream.json) for simple stream example.
+
 # metadata format
 
 To enrich output with detailed descriptions, you can provide additional `json` file, with metadata i.e.:
@@ -112,7 +114,24 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
 one of provided keys, like `foo-1` or `bar1` for this example.
 
-See [csv2meta.py](script/csv2meta.py) for example how to create such `json` fom csv.
+See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fom csv, and
+[meta.json](examples/meta.json) for metadata sample.
+
+# clusterization rules
+
+You can join your services into `clusters` by exposed ports, with clusterization rules, for example:
+
+```json
+[
+    {"name": "ingress", "ports": ["80/tcp", "443/tcp"]},
+    {"name": "backend", "ports": ["8080-8090/tcp"]},
+    {"name": "store", "ports": ["3306/tcp", "5432/tcp"]},
+    {"name": "redis", "ports": ["6379/tcp"]},
+    {"name": "queue", "ports": ["9092/tcp", "4222/tcp"]}
+]
+```
+
+Source: [cluster.json](examples/cluster.json)
 
 # features
 
@@ -122,7 +141,7 @@ See [csv2meta.py](script/csv2meta.py) for example how to create such `json` fom 
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - produces detailed connections graph **with ports**
-- fast, it scans ~400 containers in around 5 seconds
+- fast, scans ~400 containers in around 5 seconds
 - 100% test-coverage
 
 # known limitations
@@ -140,6 +159,8 @@ decompose [flags]
 
 possible flags with default values:
 
+  -cluster string
+        json file with clusterization rules
   -follow string
         follow only this container by name
   -format string
@@ -153,7 +174,7 @@ possible flags with default values:
   -local
         skip external hosts
   -meta string
-        filename with json metadata for enrichment
+        json file with metadata for enrichment
   -no-loops
         remove connection loops (node to itself) from output
   -out string
@@ -162,6 +183,8 @@ possible flags with default values:
         protocol to scan: tcp, udp or all (default "all")
   -silent
         suppress progress messages in stderr
+  -skip-env string
+        environment variables name(s) to skip from output, case-independent, comma-separated
   -version
         show version
 ```
@@ -237,6 +260,6 @@ in other terminal:
 decompose | dot -Tsvg > redis-cluster.svg
 ```
 
+# license
 
-## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_large)

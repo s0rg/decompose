@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/graph"
 )
@@ -87,11 +88,18 @@ func (d *Docker) Containers(
 	ctx context.Context,
 	proto graph.NetProto,
 	detailed bool,
+	skipkeys []string,
 	progress func(int, int),
 ) (rv []*graph.Container, err error) {
 	containers, err := d.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("list: %w", err)
+	}
+
+	skeys := make(set.Unordered[string])
+
+	for _, key := range skipkeys {
+		skeys.Add(strings.ToUpper(key))
 	}
 
 	rv = make([]*graph.Container, 0, len(containers))
@@ -118,7 +126,7 @@ func (d *Docker) Containers(
 			}
 
 			con.Volumes = extractVolumesInfo(doc)
-			con.Process = extractProcessInfo(&info)
+			con.Process = extractProcessInfo(&info, skeys)
 			pid = info.State.Pid
 		}
 
@@ -228,11 +236,28 @@ func netstatCmd(p graph.NetProto) []string {
 
 func extractProcessInfo(
 	c *types.ContainerJSON,
+	s set.Unordered[string],
 ) (rv *graph.ProcessInfo) {
-	return &graph.ProcessInfo{
-		Cmd: c.Config.Cmd,
-		Env: c.Config.Env,
+	rv = &graph.ProcessInfo{Cmd: c.Config.Cmd}
+
+	if s.Len() == 0 {
+		rv.Env = c.Config.Env
+
+		return rv
 	}
+
+	const nparts = 2
+
+	for _, env := range c.Config.Env {
+		key := strings.SplitN(env, "=", nparts)[0]
+		if s.Has(key) {
+			continue
+		}
+
+		rv.Env = append(rv.Env, env)
+	}
+
+	return rv
 }
 
 func extractEndpoints(

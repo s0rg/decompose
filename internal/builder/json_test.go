@@ -46,9 +46,9 @@ func TestJSON(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  bldr,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: bldr,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)
@@ -101,9 +101,9 @@ func TestJSONAddEdge(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  bldr,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: bldr,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)
@@ -159,9 +159,9 @@ func TestJSONAddBadEdges(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  tb,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: tb,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)

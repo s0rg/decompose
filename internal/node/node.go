@@ -4,6 +4,7 @@ type Node struct {
 	ID       string
 	Name     string
 	Image    string
+	Cluster  string
 	Networks []string
 	Meta     *Meta
 	Process  *Process

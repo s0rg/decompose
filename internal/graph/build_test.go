@@ -19,6 +19,7 @@ func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
 	_ bool,
+	_ []string,
 	fn func(int, int),
 ) ([]*graph.Container, error) {
 	if tc.Err != nil {
@@ -162,9 +163,9 @@ func TestBuildSimple(t *testing.T) {
 	bld := &testBuilder{}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Builder:  bld,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: bld,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	if err := graph.Build(cfg, cli); err != nil {
@@ -183,10 +184,10 @@ func TestBuildFollow(t *testing.T) {
 	bld := &testBuilder{}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Builder:  bld,
-		Enricher: ext,
-		Proto:    graph.ALL,
-		Follow:   "1",
+		Builder: bld,
+		Meta:    ext,
+		Proto:   graph.ALL,
+		Follow:  "1",
 	}
 
 	if err := graph.Build(cfg, cli); err != nil {
@@ -206,7 +207,7 @@ func TestBuildLocal(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder:   bld,
-		Enricher:  ext,
+		Meta:      ext,
 		Proto:     graph.ALL,
 		OnlyLocal: true,
 	}
@@ -242,9 +243,9 @@ func TestBuildNodeError(t *testing.T) {
 	bld := &testBuilder{Err: myErr}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Builder:  bld,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: bld,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	err := graph.Build(cfg, cli)
@@ -269,9 +270,9 @@ func TestBuildNoConnections(t *testing.T) {
 	bld := &testBuilder{}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
-		Builder:  bld,
-		Enricher: ext,
-		Proto:    graph.ALL,
+		Builder: bld,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	if err := graph.Build(cfg, cli); err != nil {
@@ -305,7 +306,7 @@ func TestBuildLoops(t *testing.T) {
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder:   bld,
-		Enricher:  ext,
+		Meta:      ext,
 		Proto:     graph.ALL,
 		OnlyLocal: true,
 	}

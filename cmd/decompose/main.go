@@ -18,6 +18,10 @@ import (
 	"github.com/s0rg/decompose/internal/graph"
 )
 
+type FromReaderer interface {
+	FromReader(io.Reader) error
+}
+
 const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
@@ -39,7 +43,8 @@ var (
 	fFull, fNoLoops   bool
 	fProto, fFormat   string
 	fOut, fFollow     string
-	fMeta             string
+	fMeta, fCluster   string
+	fSkipEnv          string
 	fLoad             []string
 
 	ErrUnknown = errors.New("unknown")
@@ -80,7 +85,14 @@ func setupFlags() {
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fFormat, "format", defaultFormat, "output format: dot, json, tree or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
-	flag.StringVar(&fMeta, "meta", "", "filename with json metadata for enrichment")
+	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
+	flag.StringVar(&fCluster, "cluster", "", "json file with clusterization rules")
+	flag.StringVar(
+		&fSkipEnv,
+		"skip-env",
+		"",
+		"environment variables name(s) to skip from output, case-independent, comma-separated",
+	)
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
 		fLoad = append(fLoad, v)
@@ -110,48 +122,29 @@ func writeOut(name string, writer func(io.Writer)) error {
 	return nil
 }
 
-func prepareConfig(
-	blder graph.Builder,
-	fproto, fmeta string,
-) (cfg *graph.Config, err error) {
-	proto, ok := graph.ParseNetProto(fproto)
-	if !ok {
-		return nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fproto)
+func feed(name string, read func(io.Reader) error) (err error) {
+	fd, err := os.Open(name)
+	if err != nil {
+		return fmt.Errorf("open '%s': %w", name, err)
 	}
 
-	meta := graph.NewMetaLoader()
+	defer fd.Close()
 
-	if fmeta != "" {
-		fd, err := os.Open(fmeta)
-		if err != nil {
-			return nil, fmt.Errorf("meta open '%s': %w", fmeta, err)
-		}
-
-		err = meta.FromReader(fd)
-		fd.Close()
-
-		if err != nil {
-			return nil, fmt.Errorf("meta load '%s': %w", fmeta, err)
-		}
+	if err = read(fd); err != nil {
+		return fmt.Errorf("read '%s': %w", name, err)
 	}
 
-	cfg = &graph.Config{
-		Builder:   blder,
-		Enricher:  meta,
-		Proto:     proto,
-		Follow:    fFollow,
-		OnlyLocal: fLocal,
-		FullInfo:  fFull,
-		NoLoops:   fNoLoops,
-	}
-
-	return cfg, nil
+	return nil
 }
 
-func run() error {
-	bldr, ok := builder.Create(fFormat)
+func prepareConfig() (
+	cfg *graph.Config,
+	nwr graph.NamedWriter,
+	err error,
+) {
+	bildr, ok := builder.Create(fFormat)
 	if !ok {
-		return fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"%w format: %s known: %s",
 			ErrUnknown,
 			fFormat,
@@ -159,7 +152,61 @@ func run() error {
 		)
 	}
 
-	cfg, err := prepareConfig(bldr, fProto, fMeta)
+	nwr = bildr
+
+	proto, ok := graph.ParseNetProto(fProto)
+	if !ok {
+		return nil, nil, fmt.Errorf("%w protocol: %s", ErrUnknown, fProto)
+	}
+
+	meta := graph.NewMetaLoader()
+
+	if fMeta != "" {
+		if err = feed(fMeta, meta.FromReader); err != nil {
+			return nil, nil, fmt.Errorf("meta: %w", err)
+		}
+	}
+
+	if fCluster != "" {
+		if builder.SupportCluster(fFormat) {
+			cluster := graph.NewClusterBuilder(bildr)
+
+			if err = feed(fCluster, cluster.FromReader); err != nil {
+				return nil, nil, fmt.Errorf("cluster: %w", err)
+			}
+
+			bildr, nwr = cluster, cluster
+		} else {
+			log.Println(bildr.Name(), "cannot handle clusters - ignoring")
+		}
+	}
+
+	skipKeys := []string{}
+
+	if fSkipEnv != "" {
+		if fFull {
+			skipKeys = strings.Split(fSkipEnv, ",")
+		} else {
+			log.Println("skip-env makes no sense without full info - ignoring")
+		}
+	}
+
+	cfg = &graph.Config{
+		Builder:   bildr,
+		Meta:      meta,
+		Proto:     proto,
+		Follow:    fFollow,
+		OnlyLocal: fLocal,
+		FullInfo:  fFull,
+		NoLoops:   fNoLoops,
+		SkipEnv:   skipKeys,
+	}
+
+	return cfg, nwr, nil
+}
+
+func run() error {
+	cfg, nwr, err := prepareConfig()
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
@@ -167,11 +214,11 @@ func run() error {
 	var act string
 
 	if len(fLoad) > 0 {
-		log.Printf("Loading %d file(s)...", len(fLoad))
+		log.Printf("Loading %d file(s)", len(fLoad))
 
 		act, err = "load", doLoad(cfg, fLoad)
 	} else {
-		log.Println("Building graph...")
+		log.Println("Building graph")
 
 		act, err = "build", doBuild(cfg)
 	}
@@ -180,9 +227,9 @@ func run() error {
 		return fmt.Errorf("%s: %w", act, err)
 	}
 
-	log.Println("Writing:", bldr.Name())
+	log.Println("Writing:", nwr.Name())
 
-	if err = writeOut(fOut, bldr.Write); err != nil {
+	if err = writeOut(fOut, nwr.Write); err != nil {
 		return fmt.Errorf("output: %w", err)
 	}
 

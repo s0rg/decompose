@@ -27,6 +27,7 @@ linters:
     - varcheck
     - ifshort
     - ireturn
+    - gofumpt
     - golint
     - gci
 
@@ -67,4 +68,5 @@ issues:
     - path: ._test\.go
       linters:
         - goerr113
+        - errcheck
         - funlen
