@@ -21,12 +21,14 @@ var (
 
 type (
 	ruleJSON struct {
-		Name  string   `json:"name"`
-		Ports []string `json:"ports"`
+		Name   string   `json:"name"`
+		Ports  []string `json:"ports"`
+		Weight int      `json:"weight"`
 	}
 
 	ClusterBuilder struct {
 		builder NamedBuilderWriter
+		weights map[string]int
 		nodes   map[string]*node.Node
 		index   map[string]map[int]string
 		cluster map[string]map[string]node.Ports
@@ -36,6 +38,7 @@ type (
 func NewClusterBuilder(b NamedBuilderWriter) *ClusterBuilder {
 	return &ClusterBuilder{
 		builder: b,
+		weights: make(map[string]int),
 		nodes:   make(map[string]*node.Node),
 		index:   make(map[string]map[int]string),
 		cluster: make(map[string]map[string]node.Ports),
@@ -114,6 +117,13 @@ func (cb *ClusterBuilder) FromReader(r io.Reader) (err error) {
 	for i := 0; i < len(rules); i++ {
 		rule := &rules[i]
 
+		weight := rule.Weight
+		if weight == 0 {
+			weight = 1
+		}
+
+		cb.weights[rule.Name] = weight
+
 		for j := 0; j < len(rule.Ports); j++ {
 			proto, ports, perr := parseRulePorts(rule.Ports[j])
 			if perr != nil {
@@ -165,7 +175,9 @@ func (cb *ClusterBuilder) Match(n *node.Node) (cluster string, ok bool) {
 	smatches := make([]*match, 0, len(matches))
 
 	for k, n := range matches {
-		smatches = append(smatches, &match{Name: k, Weight: n})
+		w := cb.weights[k]
+
+		smatches = append(smatches, &match{Name: k, Weight: n * w})
 	}
 
 	switch len(smatches) {

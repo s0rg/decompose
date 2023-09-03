@@ -135,6 +135,34 @@ func TestClusterMatch(t *testing.T) {
 	}
 }
 
+func TestClusterMatchWeight(t *testing.T) {
+	t.Parallel()
+
+	const clusterRulesWeight = `[{"name": "foo", "ports": ["80-80/tcp"]},
+{"name": "bar", "weight": 2, "ports": ["22/tcp", "443/tcp"]}]`
+
+	testNode := &node.Node{Ports: []node.Port{
+		{Kind: "tcp", Value: 22},
+		{Kind: "tcp", Value: 80},
+		{Kind: "tcp", Value: 8080},
+	}}
+
+	ca := graph.NewClusterBuilder(nil)
+
+	if err := ca.FromReader(bytes.NewBufferString(clusterRulesWeight)); err != nil {
+		t.Fatal(err)
+	}
+
+	m, ok := ca.Match(testNode)
+	if !ok {
+		t.Fail()
+	}
+
+	if m != "bar" {
+		t.Fail()
+	}
+}
+
 func TestClusterBuilder(t *testing.T) {
 	t.Parallel()
 

@@ -1,6 +1,6 @@
 [
     {"name": "ingress", "ports": ["80/tcp", "443/tcp"]},
-    {"name": "backend", "ports": ["8080-8090/tcp"]},
+    {"name": "backend", "weight": 2, "ports": ["8080-8090/tcp"]},
     {"name": "store", "ports": ["3306/tcp", "5432/tcp"]},
     {"name": "redis", "ports": ["6379/tcp"]},
     {"name": "queue", "ports": ["9092/tcp", "4222/tcp"]}
