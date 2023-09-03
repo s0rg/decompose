@@ -21,7 +21,7 @@ func TestJSON(t *testing.T) {
 	testNode := node.JSON{
 		Name:      "test1",
 		Networks:  []string{"test"},
-		Listen:    []string{"1/udp", "2/tcp"},
+		Listen:    []string{"2/tcp", "1/udp"},
 		Connected: make(map[string][]string),
 		Volumes:   []*node.Volume{},
 	}

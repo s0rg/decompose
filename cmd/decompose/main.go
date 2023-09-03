@@ -18,10 +18,6 @@ import (
 	"github.com/s0rg/decompose/internal/graph"
 )
 
-type FromReaderer interface {
-	FromReader(io.Reader) error
-}
-
 const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
@@ -95,7 +91,12 @@ func setupFlags() {
 	)
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
-		fLoad = append(fLoad, v)
+		res, err := filepath.Glob(v)
+		if err != nil {
+			return fmt.Errorf("glob '%s': %w", v, err)
+		}
+
+		fLoad = append(fLoad, res...)
 
 		return nil
 	})
