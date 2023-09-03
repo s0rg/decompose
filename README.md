@@ -119,19 +119,22 @@ See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fo
 
 # clusterization rules
 
-You can join your services into `clusters` by exposed ports, with clusterization rules, for example:
+You can join your services into `clusters` by exposed ports, in `dot` or `structurizr` output formats.
+With clusterization rules, in `json`:
 
 ```json
 [
-    {"name": "ingress", "ports": ["80/tcp", "443/tcp"]},
-    {"name": "backend", "ports": ["8080-8090/tcp"]},
-    {"name": "store", "ports": ["3306/tcp", "5432/tcp"]},
-    {"name": "redis", "ports": ["6379/tcp"]},
-    {"name": "queue", "ports": ["9092/tcp", "4222/tcp"]}
+    {
+        "name": "rule-name",
+        "weight": 1,
+        "ports": ["port/kind", "ports-range/kind"]
+    },
+    ...
 ]
 ```
 
-Source: [cluster.json](examples/cluster.json)
+Weight can be omitted, if not specified it equals 1.
+See: [cluster.json](examples/cluster.json) for detailed example.
 
 # features
 
