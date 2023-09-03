@@ -140,7 +140,7 @@ func (ws *Workspace) writeViews(w io.Writer, level int) {
 	putRaw(w, level, `element "Element" {`)
 	level++
 
-	putRaw(w, level, "metadata false")
+	putRaw(w, level, "metadata true")
 	putRaw(w, level, "description true")
 
 	level--
