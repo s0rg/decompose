@@ -19,6 +19,7 @@ func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
 	_ bool,
+	_ []string,
 	fn func(int, int),
 ) ([]*graph.Container, error) {
 	if tc.Err != nil {

@@ -92,6 +92,8 @@ example with full info and metadata filled:
 }
 ```
 
+See [stream.json](examples/stream.json) for simple stream example.
+
 # metadata format
 
 To enrich output with detailed descriptions, you can provide additional `json` file, with metadata i.e.:
@@ -112,7 +114,8 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 Using this file `decompose` can enrich output with info and additional tags, for every container that match by name with
 one of provided keys, like `foo-1` or `bar1` for this example.
 
-See [csv2meta.py](script/csv2meta.py) for example how to create such `json` fom csv.
+See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fom csv, and
+[meta.json](examples/meta.json) for metadata sample.
 
 # clusterization rules
 
@@ -127,6 +130,8 @@ You can join your services into `clusters` by exposed ports, with clusterization
     {"name": "queue", "ports": ["9092/tcp", "4222/tcp"]}
 ]
 ```
+
+Source: [cluster.json](examples/cluster.json)
 
 # features
 
@@ -155,7 +160,7 @@ decompose [flags]
 possible flags with default values:
 
   -cluster string
-        json with clusterization rules
+        json file with clusterization rules
   -follow string
         follow only this container by name
   -format string
@@ -169,7 +174,7 @@ possible flags with default values:
   -local
         skip external hosts
   -meta string
-        filename with json metadata for enrichment
+        json file with metadata for enrichment
   -no-loops
         remove connection loops (node to itself) from output
   -out string
@@ -178,6 +183,8 @@ possible flags with default values:
         protocol to scan: tcp, udp or all (default "all")
   -silent
         suppress progress messages in stderr
+  -skip-env string
+        environment variables name(s) to skip from output, case-independent, comma-separated
   -version
         show version
 ```

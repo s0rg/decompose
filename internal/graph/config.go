@@ -1,6 +1,7 @@
 package graph
 
 type Config struct {
+	SkipEnv   []string
 	Builder   Builder
 	Meta      Enricher
 	Follow    string

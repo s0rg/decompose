@@ -44,6 +44,7 @@ var (
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta, fCluster   string
+	fSkipEnv          string
 	fLoad             []string
 
 	ErrUnknown = errors.New("unknown")
@@ -86,6 +87,12 @@ func setupFlags() {
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fCluster, "cluster", "", "json file with clusterization rules")
+	flag.StringVar(
+		&fSkipEnv,
+		"skip-env",
+		"",
+		"environment variables name(s) to skip from output, case-independent, comma-separated",
+	)
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
 		fLoad = append(fLoad, v)
@@ -170,7 +177,17 @@ func prepareConfig() (
 
 			bildr, nwr = cluster, cluster
 		} else {
-			log.Println(bildr.Name(), "cannot handle clusters - ignoring them")
+			log.Println(bildr.Name(), "cannot handle clusters - ignoring")
+		}
+	}
+
+	skipKeys := []string{}
+
+	if fSkipEnv != "" {
+		if fFull {
+			skipKeys = strings.Split(fSkipEnv, ",")
+		} else {
+			log.Println("skip-env makes no sense without full info - ignoring")
 		}
 	}
 
@@ -182,6 +199,7 @@ func prepareConfig() (
 		OnlyLocal: fLocal,
 		FullInfo:  fFull,
 		NoLoops:   fNoLoops,
+		SkipEnv:   skipKeys,
 	}
 
 	return cfg, nwr, nil

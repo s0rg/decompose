@@ -1,0 +1,18 @@
+{
+    "nginx": {
+        "info": "nginx reverse-proxy",
+        "tags": ["http"]
+    },
+    "back": {
+        "info": "backend service",
+        "tags": ["app", "backend"]
+    },
+    "db": {
+        "info": "postgresql",
+        "tags": ["store", "sql"]
+    },
+    "foo": {
+        "info": "foo service",
+        "tags": ["legacy"]
+    }
+}

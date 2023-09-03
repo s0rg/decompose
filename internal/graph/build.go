@@ -18,7 +18,7 @@ const (
 var ErrNotEnough = errors.New("not enough items")
 
 type ContainerClient interface {
-	Containers(context.Context, NetProto, bool, func(int, int)) ([]*Container, error)
+	Containers(context.Context, NetProto, bool, []string, func(int, int)) ([]*Container, error)
 }
 
 type Builder interface {
@@ -50,6 +50,7 @@ func Build(
 		context.Background(),
 		cfg.Proto,
 		cfg.FullInfo,
+		cfg.SkipEnv,
 		func(cur, total int) {
 			switch {
 			case cur == 0:
