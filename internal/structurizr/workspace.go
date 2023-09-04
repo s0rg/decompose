@@ -10,11 +10,13 @@ type Workspace struct {
 	relationships map[string]map[string]*Relation
 	Name          string
 	Description   string
+	defaultSystem string
 }
 
-func NewWorkspace(name string) *Workspace {
+func NewWorkspace(name, defaultSystem string) *Workspace {
 	return &Workspace{
 		Name:          name,
+		defaultSystem: defaultSystem,
 		systems:       make(map[string]*System),
 		relationships: make(map[string]map[string]*Relation),
 	}
@@ -109,6 +111,16 @@ func (ws *Workspace) writeRelations(w io.Writer, level int) {
 	}
 }
 
+func (ws *Workspace) writeDefaultIncludes(w io.Writer, level int) {
+	for id := range ws.systems {
+		if id == ws.defaultSystem {
+			continue
+		}
+
+		putRaw(w, level, "include "+id)
+	}
+}
+
 func (ws *Workspace) writeViews(w io.Writer, level int) {
 	putHeader(w, level, headerViews)
 	level++
@@ -118,6 +130,11 @@ func (ws *Workspace) writeViews(w io.Writer, level int) {
 		level++
 
 		putRaw(w, level, "include *")
+
+		if system.Name == ws.defaultSystem {
+			ws.writeDefaultIncludes(w, level)
+		}
+
 		putRaw(w, level, "autoLayout")
 
 		level--

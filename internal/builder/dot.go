@@ -144,6 +144,10 @@ func (d *DOT) getDst(id string, port node.Port) (rv dot.Node, out string, ok boo
 }
 
 func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
+	if srcID == "" || dstID == "" { // fast exit, dot doesnt have default cluster
+		return
+	}
+
 	src, srcPort, ok := d.getSrc(srcID)
 	if !ok {
 		return
