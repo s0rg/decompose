@@ -178,7 +178,7 @@ func prepareConfig() (
 
 			bildr, nwr = cluster, cluster
 		} else {
-			log.Println(bildr.Name(), "cannot handle clusters - ignoring")
+			log.Println(bildr.Name(), "cannot handle graph clusters - ignoring")
 		}
 	}
 

@@ -205,13 +205,13 @@ func TestClusterBuilder(t *testing.T) {
 	ca.AddEdge("5", "1", node.Port{Kind: "tcp", Value: 80})
 	ca.AddEdge("1", "5", node.Port{Kind: "tcp", Value: 80})
 
-	if tb.edges != 2 || tb.nodes != 4 {
+	if tb.edges != 4 || tb.nodes != 4 {
 		t.Fail()
 	}
 
 	ca.Write(nil)
 
-	if tb.edges != 4 {
+	if tb.edges != 6 {
 		t.Fail()
 	}
 }

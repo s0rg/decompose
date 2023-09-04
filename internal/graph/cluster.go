@@ -86,7 +86,7 @@ func (cb *ClusterBuilder) AddEdge(src, dst string, port node.Port) {
 		return
 	}
 
-	if nsrc.Cluster != "" && ndst.Cluster != "" && nsrc.Cluster != ndst.Cluster {
+	if nsrc.Cluster != ndst.Cluster {
 		if cluster, ok := cb.clusterFor(&port); ok && ndst.Cluster == cluster {
 			cdst, ok := cb.cluster[nsrc.Cluster]
 			if !ok {
@@ -95,8 +95,6 @@ func (cb *ClusterBuilder) AddEdge(src, dst string, port node.Port) {
 
 			cdst[ndst.Cluster] = append(cdst[ndst.Cluster], port)
 			cb.cluster[nsrc.Cluster] = cdst
-
-			return
 		}
 	}
 

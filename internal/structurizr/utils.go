@@ -41,7 +41,7 @@ func putRaw(
 	raw string,
 ) {
 	fmt.Fprint(w, strings.Repeat(tab, level))
-	fmt.Fprintf(w, "%s\n", raw)
+	fmt.Fprintln(w, raw)
 }
 
 func putHeader(

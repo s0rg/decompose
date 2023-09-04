@@ -24,7 +24,7 @@ type Structurizr struct {
 
 func NewStructurizr() *Structurizr {
 	return &Structurizr{
-		ws: sdsl.NewWorkspace(workspaceName),
+		ws: sdsl.NewWorkspace(workspaceName, systemName),
 	}
 }
 
@@ -73,6 +73,13 @@ func (s *Structurizr) AddEdge(srcID, dstID string, port node.Port) {
 		rel *sdsl.Relation
 		ok  bool
 	)
+
+	switch {
+	case srcID == "":
+		srcID = systemName
+	case dstID == "":
+		dstID = systemName
+	}
 
 	if s.ws.HasSystem(srcID) {
 		rel, ok = s.ws.AddRelation(srcID, dstID)
