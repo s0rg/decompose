@@ -65,16 +65,9 @@ func (t *Tree) Write(w io.Writer) {
 			fmt.Fprintln(w, "image:", *n.Image)
 		}
 
-		if n.Meta != nil {
-			if len(n.Meta.Info) > 0 {
-				fmt.Fprint(w, next, " ")
-				fmt.Fprintln(w, "info:", n.Meta.Info)
-			}
-
-			if len(n.Meta.Tags) > 0 {
-				fmt.Fprint(w, next, " ")
-				fmt.Fprintln(w, "tags:", strings.Join(n.Meta.Tags, ", "))
-			}
+		if len(n.Tags) > 0 {
+			fmt.Fprint(w, next, " ")
+			fmt.Fprintln(w, "tags:", strings.Join(n.Tags, ", "))
 		}
 
 		if n.Process != nil {

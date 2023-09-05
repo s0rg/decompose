@@ -73,3 +73,35 @@ func (ps Ports) Dedup() (rv Ports) {
 
 	return rv
 }
+
+func (ps Ports) HasAny(label ...string) (yes bool) {
+	if len(ps) == 0 {
+		return
+	}
+
+	s := make(set.Unordered[string])
+	set.Load(s, label...)
+
+	for _, p := range ps {
+		if s.Has(p.Label()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (ps Ports) Has(label ...string) (yes bool) {
+	if len(ps) == 0 {
+		return
+	}
+
+	s := make(set.Unordered[string])
+	set.Load(s, label...)
+
+	for _, p := range ps {
+		s.Del(p.Label())
+	}
+
+	return s.Len() == 0
+}

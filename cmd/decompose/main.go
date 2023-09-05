@@ -170,11 +170,13 @@ func prepareConfig() (
 
 	if fCluster != "" {
 		if builder.SupportCluster(fFormat) {
-			cluster := graph.NewClusterBuilder(bildr)
+			cluster := graph.NewClusterBuilder(bildr, nil)
 
 			if err = feed(fCluster, cluster.FromReader); err != nil {
 				return nil, nil, fmt.Errorf("cluster: %w", err)
 			}
+
+			log.Printf("Cluster rules loaded: %d", cluster.CountRules())
 
 			bildr, nwr = cluster, cluster
 		} else {

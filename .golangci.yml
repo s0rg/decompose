@@ -70,3 +70,4 @@ issues:
         - goerr113
         - errcheck
         - funlen
+        - dupl

@@ -54,8 +54,10 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 		rv.Image = *n.Image
 	}
 
-	if n.Meta != nil {
-		rv.Meta = n.Meta
+	if len(n.Tags) > 0 {
+		rv.Meta = &node.Meta{
+			Tags: n.Tags,
+		}
 	}
 
 	if len(n.Networks) > 0 {
