@@ -383,7 +383,7 @@ func TestLoaderMeta(t *testing.T) {
     "listen": ["1/udp"],
     "networks": ["foo"],
     "connected": {"test2":["2/tcp"]},
-    "meta": {"info": "test-info", "tags": ["test"]}
+    "tags": ["test"]
     }
     {
     "name": "test2",

@@ -140,7 +140,7 @@ func TestNodeToJSON(t *testing.T) {
 			t.Fatal("listen", tc)
 		}
 
-		if tc.HasMeta && j.Meta == nil {
+		if tc.HasMeta && len(j.Tags) == 0 {
 			t.Fatal("extra", tc)
 		}
 
@@ -162,6 +162,107 @@ func TestNodeToJSON(t *testing.T) {
 
 		if *j.Image != tc.Image {
 			t.Fatal("image", tc)
+		}
+	}
+}
+
+func TestNodeToView(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Node  *node.Node
+		Cmd   string
+		Tags  int
+		Args  int
+		Local bool
+	}{
+		{
+			Node: &node.Node{
+				Name:  "test",
+				Image: "image",
+			},
+			Local: true,
+			Tags:  0,
+			Cmd:   "",
+			Args:  0,
+		},
+		{
+			Node: &node.Node{
+				Name:  "test",
+				Image: "image",
+				Meta: &node.Meta{
+					Info: "",
+				},
+			},
+			Local: true,
+			Tags:  0,
+			Cmd:   "",
+			Args:  0,
+		},
+		{
+			Node: &node.Node{
+				Name:  "test",
+				Image: "image",
+				Meta: &node.Meta{
+					Info: "",
+					Tags: []string{"a"},
+				},
+			},
+			Local: true,
+			Tags:  1,
+			Cmd:   "",
+			Args:  0,
+		},
+		{
+			Node: &node.Node{
+				ID:   "test",
+				Name: "test",
+			},
+			Local: false,
+			Tags:  0,
+			Cmd:   "",
+			Args:  0,
+		},
+		{
+			Node: &node.Node{
+				ID:   "test",
+				Name: "test",
+				Process: &node.Process{
+					Cmd: []string{"foo", "-arg"},
+				},
+			},
+			Local: false,
+			Tags:  0,
+			Cmd:   "foo",
+			Args:  1,
+		},
+	}
+
+	for _, tc := range testCases {
+		v := tc.Node.ToView()
+
+		if v.Name != tc.Node.Name {
+			t.Fail()
+		}
+
+		if v.Image != tc.Node.Image {
+			t.Fail()
+		}
+
+		if v.Local != tc.Local {
+			t.Fail()
+		}
+
+		if v.Cmd != tc.Cmd {
+			t.Fail()
+		}
+
+		if len(v.Tags) != tc.Tags {
+			t.Fail()
+		}
+
+		if len(v.Args) != tc.Args {
+			t.Fail()
 		}
 	}
 }

@@ -27,17 +27,12 @@ type Item struct {
     Name       string              `json:"name"`              // container name
     IsExternal bool                `json:"is_external"`       // this host is external
     Image      *string             `json:"image,omitempty"`   // docker image (if any)
-    Meta       *Meta               `json:"meta,omitempty"`    // metadata, see 'metadata'
     Process    *Process            `json:"process,omitempty"` // process info
     Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
     Networks   []string            `json:"networks"`          // network names
+    Tags       []string            `json:"tags"`              // tags, if meta presents
     Volumes    []*Volume           `json:"volumes"`           // volumes
     Connected  map[string][]string `json:"connected"`         // name -> ports slice
-}
-
-type Meta struct {
-    Info string   `json:"info"`
-    Tags []string `json:"tags"`
 }
 
 type Volume struct {
@@ -68,12 +63,9 @@ example with full info and metadata filled:
             "FOO=1"
         ]
     },
-    "meta": {
-        "info": "info for foo",
-        "tags": ["some"]
-    },
     "listen": ["80/tcp"],
     "networks": ["test-net"],
+    "tags": ["some"],
     "volumes": [
         {
             "type": "volume",
@@ -120,20 +112,35 @@ See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fo
 # clusterization rules
 
 You can join your services into `clusters` by exposed ports, in `dot` or `structurizr` output formats.
-With clusterization rules, in `json`:
+With clusterization rules, in `json` (order matters):
 
 ```json
 [
     {
         "name": "rule-name",
         "weight": 1,
-        "ports": ["port/kind", "ports-range/kind"]
+        "if": "<expression>"
     },
     ...
 ]
 ```
 
 Weight can be omitted, if not specified it equals `1`.
+
+Where `<expression>` is [expr dsl](https://expr.medv.io/docs/Language-Definition), having env object `node` with follownig
+fields:
+
+```go
+type Node struct {
+	Ports PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
+	Name  string       // container name
+	Image string       // container image
+	Cmd   string       // container cmd
+	Args  []string     // container args
+	Tags  []string     // tags, if meta present
+	Local bool         // node local or external
+}
+```
 
 See: [cluster.json](examples/cluster.json) for detailed example.
 

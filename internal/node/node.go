@@ -1,5 +1,23 @@
 package node
 
+import "path/filepath"
+
+type Process struct {
+	Cmd []string `json:"cmd"`
+	Env []string `json:"env"`
+}
+
+type Volume struct {
+	Type string `json:"type"`
+	Src  string `json:"src"`
+	Dst  string `json:"dst"`
+}
+
+type Meta struct {
+	Info string
+	Tags []string
+}
+
 type Node struct {
 	ID       string
 	Name     string
@@ -27,7 +45,7 @@ func (n *Node) ToJSON() (rv *JSON) {
 	}
 
 	if n.Meta != nil {
-		rv.Meta = n.Meta
+		rv.Tags = n.Meta.Tags
 	}
 
 	if n.Process != nil {
@@ -44,6 +62,26 @@ func (n *Node) ToJSON() (rv *JSON) {
 
 	if len(n.Volumes) > 0 {
 		rv.Volumes = n.Volumes
+	}
+
+	return rv
+}
+
+func (n *Node) ToView() (rv *View) {
+	rv = &View{
+		Name:  n.Name,
+		Image: n.Image,
+		Ports: n.Ports,
+		Local: !n.IsExternal(),
+	}
+
+	if n.Meta != nil && len(n.Meta.Tags) > 0 {
+		rv.Tags = n.Meta.Tags
+	}
+
+	if n.Process != nil && len(n.Process.Cmd) > 0 {
+		rv.Cmd = filepath.Base(n.Process.Cmd[0])
+		rv.Args = n.Process.Cmd[1:]
 	}
 
 	return rv

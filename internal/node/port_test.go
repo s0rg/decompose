@@ -51,3 +51,99 @@ func TestPortsDedup(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestPortsHas(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Ports  node.Ports
+		Labels []string
+		Want   bool
+	}{
+		{
+			Ports:  []node.Port{},
+			Labels: []string{},
+			Want:   false,
+		},
+		{
+			Ports:  []node.Port{},
+			Labels: []string{"80/tcp"},
+			Want:   false,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 80},
+			},
+			Labels: []string{"80/tcp"},
+			Want:   true,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 81},
+			},
+			Labels: []string{"80/tcp"},
+			Want:   false,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 80},
+			},
+			Labels: []string{"80/tcp", "443/tcp"},
+			Want:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		if tc.Ports.Has(tc.Labels...) != tc.Want {
+			t.Fail()
+		}
+	}
+}
+
+func TestPortsHasAny(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Ports  node.Ports
+		Labels []string
+		Want   bool
+	}{
+		{
+			Ports:  []node.Port{},
+			Labels: []string{},
+			Want:   false,
+		},
+		{
+			Ports:  []node.Port{},
+			Labels: []string{"80/tcp"},
+			Want:   false,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 80},
+			},
+			Labels: []string{"80/tcp"},
+			Want:   true,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 81},
+			},
+			Labels: []string{"80/tcp"},
+			Want:   false,
+		},
+		{
+			Ports: []node.Port{
+				{Kind: "tcp", Value: 80},
+			},
+			Labels: []string{"80/tcp", "443/tcp"},
+			Want:   true,
+		},
+	}
+
+	for _, tc := range testCases {
+		if tc.Ports.HasAny(tc.Labels...) != tc.Want {
+			t.Fail()
+		}
+	}
+}
