@@ -171,10 +171,10 @@ func TestNodeToView(t *testing.T) {
 
 	testCases := []struct {
 		Node  *node.Node
-		Local bool
-		Tags  int
 		Cmd   string
+		Tags  int
 		Args  int
+		Local bool
 	}{
 		{
 			Node: &node.Node{
