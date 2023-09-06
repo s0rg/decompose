@@ -94,7 +94,7 @@ func (cb *ClusterBuilder) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (cb *ClusterBuilder) AddEdge(src, dst string, port node.Port) {
+func (cb *ClusterBuilder) AddEdge(src, dst string, port *node.Port) {
 	nsrc, ok := cb.nodes[src]
 	if !ok {
 		return
@@ -133,22 +133,23 @@ func (cb *ClusterBuilder) FromReader(r io.Reader) (err error) {
 		}
 	}
 
+	opts := []expr.Option{
+		expr.Env(ruleENV{}),
+		expr.Optimize(true),
+		expr.AsBool(),
+	}
+
 	for i := 0; i < len(rules); i++ {
 		rule := &rules[i]
 
-		prog, cerr := expr.Compile(rule.Expr, expr.AsBool(), expr.Env(ruleENV{}))
+		prog, cerr := expr.Compile(rule.Expr, opts...)
 		if cerr != nil {
 			return fmt.Errorf("compile '%s': %w", rule.Expr, cerr)
 		}
 
-		weight := rule.Weight
-		if weight == 0 {
-			weight = 1
-		}
-
 		cb.rules = append(cb.rules, &rulePROG{
 			Name:   rule.Name,
-			Weight: weight,
+			Weight: max(rule.Weight, 1),
 			Prog:   prog,
 		})
 	}

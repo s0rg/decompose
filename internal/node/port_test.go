@@ -37,7 +37,7 @@ func TestPortLabelID(t *testing.T) {
 func TestPortsDedup(t *testing.T) {
 	t.Parallel()
 
-	ports := []node.Port{
+	ports := []*node.Port{
 		{Kind: "tcp", Value: 1},
 		{Kind: "udp", Value: 1},
 		{Kind: "tcp", Value: 1},
@@ -61,31 +61,31 @@ func TestPortsHas(t *testing.T) {
 		Want   bool
 	}{
 		{
-			Ports:  []node.Port{},
+			Ports:  []*node.Port{},
 			Labels: []string{},
 			Want:   false,
 		},
 		{
-			Ports:  []node.Port{},
+			Ports:  []*node.Port{},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 80},
 			},
 			Labels: []string{"80/tcp"},
 			Want:   true,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 81},
 			},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 80},
 			},
 			Labels: []string{"80/tcp", "443/tcp"},
@@ -109,31 +109,31 @@ func TestPortsHasAny(t *testing.T) {
 		Want   bool
 	}{
 		{
-			Ports:  []node.Port{},
+			Ports:  []*node.Port{},
 			Labels: []string{},
 			Want:   false,
 		},
 		{
-			Ports:  []node.Port{},
+			Ports:  []*node.Port{},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 80},
 			},
 			Labels: []string{"80/tcp"},
 			Want:   true,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 81},
 			},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []node.Port{
+			Ports: []*node.Port{
 				{Kind: "tcp", Value: 80},
 			},
 			Labels: []string{"80/tcp", "443/tcp"},

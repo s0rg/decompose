@@ -23,7 +23,7 @@ type ContainerClient interface {
 
 type Builder interface {
 	AddNode(*node.Node) error
-	AddEdge(src, dst string, port node.Port)
+	AddEdge(src, dst string, port *node.Port)
 }
 
 type NamedWriter interface {
@@ -137,7 +137,7 @@ func createNodes(
 
 		con.IterOutbounds(func(c *Connection) {
 			rip := c.RemoteIP.String()
-			rport := node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
+			rport := &node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
 
 			if lc, ok := neighbours[rip]; ok {
 				if skip && cfg.MatchName(lc.Name) {
@@ -171,7 +171,7 @@ func createNodes(
 		}
 
 		con.IterListeners(func(c *Connection) {
-			port := node.Port{Kind: c.Proto.String(), Value: int(c.LocalPort)}
+			port := &node.Port{Kind: c.Proto.String(), Value: int(c.LocalPort)}
 
 			n.Ports = append(n.Ports, port)
 		})
@@ -208,7 +208,7 @@ func buildEdges(
 		}
 
 		con.IterOutbounds(func(c *Connection) {
-			port := node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
+			port := &node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
 			key := c.RemoteIP.String()
 
 			if ldst, ok := local[key]; ok {

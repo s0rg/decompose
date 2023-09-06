@@ -77,12 +77,17 @@ func setupFlags() {
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
 
-	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
-	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
-	flag.StringVar(&fFormat, "format", defaultFormat, "output format: dot, json, tree or sdsl for structurizr dsl")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
+	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
+	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
 	flag.StringVar(&fCluster, "cluster", "", "json file with clusterization rules")
+	flag.StringVar(
+		&fFormat,
+		"format",
+		defaultFormat,
+		"output format: dot, json, yaml, tree or sdsl for structurizr dsl",
+	)
 	flag.StringVar(
 		&fSkipEnv,
 		"skip-env",
@@ -104,7 +109,7 @@ func setupFlags() {
 	flag.Usage = usage
 }
 
-func writeOut(name string, writer func(io.Writer)) error {
+func write(name string, writer func(io.Writer)) error {
 	var out io.Writer = os.Stdout
 
 	if name != defaultOutput {
@@ -232,7 +237,7 @@ func run() error {
 
 	log.Println("Writing:", nwr.Name())
 
-	if err = writeOut(fOut, nwr.Write); err != nil {
+	if err = write(fOut, nwr.Write); err != nil {
 		return fmt.Errorf("output: %w", err)
 	}
 

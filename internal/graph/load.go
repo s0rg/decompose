@@ -126,7 +126,7 @@ func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string]node.Ports, s
 
 		ports, ok := rv[k]
 		if !ok {
-			ports = []node.Port{}
+			ports = []*node.Port{}
 		}
 
 		rv[k] = append(ports, prep...)
@@ -202,8 +202,8 @@ func (l *Loader) processPorts(srcID string, dmap map[string]node.Ports) {
 	}
 }
 
-func (l *Loader) preparePorts(lst []string) (rv []node.Port) {
-	rv = make([]node.Port, 0, len(lst))
+func (l *Loader) preparePorts(lst []string) (rv []*node.Port) {
+	rv = make([]*node.Port, 0, len(lst))
 
 	for _, v := range lst {
 		if p, ok := parsePort(v); ok && l.cfg.MatchProto(p.Kind) {
@@ -214,7 +214,7 @@ func (l *Loader) preparePorts(lst []string) (rv []node.Port) {
 	return slices.Clip(rv)
 }
 
-func parsePort(v string) (p node.Port, ok bool) {
+func parsePort(v string) (p *node.Port, ok bool) {
 	const (
 		nparts = 2
 		sep    = "/"
@@ -230,8 +230,10 @@ func parsePort(v string) (p node.Port, ok bool) {
 		return
 	}
 
-	p.Value = iport
-	p.Kind = parts[1]
+	p = &node.Port{
+		Kind:  parts[1],
+		Value: iport,
+	}
 
 	return p, true
 }

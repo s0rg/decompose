@@ -69,10 +69,10 @@ func (n *Node) ToJSON() (rv *JSON) {
 
 func (n *Node) ToView() (rv *View) {
 	rv = &View{
-		Name:  n.Name,
-		Image: n.Image,
-		Ports: n.Ports,
-		Local: !n.IsExternal(),
+		Name:       n.Name,
+		Image:      n.Image,
+		Ports:      n.Ports,
+		IsExternal: n.IsExternal(),
 	}
 
 	if n.Meta != nil && len(n.Meta.Tags) > 0 {

@@ -63,8 +63,13 @@ issues:
       linters:
         - errchkjson
     - path: internal/node/json\.go
+      text: "fieldalignment"
       linters:
         - govet # fieldalignment issue, ignored for json readability
+    - path: internal/builder/yaml\.go
+      text: "fieldalignment"
+      linters:
+        - govet # fieldalignment issue, ignored for yaml readability
     - path: ._test\.go
       linters:
         - goerr113

@@ -6,11 +6,11 @@ type PortMatcher interface {
 }
 
 type View struct {
-	Ports PortMatcher
-	Name  string
-	Image string
-	Cmd   string
-	Args  []string
-	Tags  []string
-	Local bool
+	Ports      PortMatcher
+	Name       string
+	Image      string
+	Cmd        string
+	Args       []string
+	Tags       []string
+	IsExternal bool
 }

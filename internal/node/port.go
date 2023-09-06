@@ -13,7 +13,7 @@ type Port struct {
 	Value int    `json:"value"`
 }
 
-type Ports []Port
+type Ports []*Port
 
 func (p *Port) Label() string {
 	return strconv.Itoa(p.Value) + "/" + p.Kind
@@ -27,7 +27,7 @@ func (ps Ports) Dedup() (rv Ports) {
 	state := make(map[string]set.Set[int])
 
 	for i := 0; i < len(ps); i++ {
-		p := &ps[i]
+		p := ps[i]
 
 		s, ok := state[p.Kind]
 		if !ok {
@@ -50,7 +50,7 @@ func (ps Ports) Dedup() (rv Ports) {
 		total += s.Len()
 	}
 
-	rv = make([]Port, 0, total)
+	rv = make([]*Port, 0, total)
 
 	slices.Sort(keys)
 
@@ -64,7 +64,7 @@ func (ps Ports) Dedup() (rv Ports) {
 		}
 
 		for _, p := range ports {
-			rv = append(rv, Port{
+			rv = append(rv, &Port{
 				Kind:  k,
 				Value: p,
 			})

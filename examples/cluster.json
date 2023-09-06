@@ -1,23 +1,28 @@
 [
-    {
-      "name": "ingress",
-      "if": "node.Ports.HasAny('80/tcp', '443/tcp')"
-    },
-    {
-      "name": "backend",
-      "weight": 2,
-      "if": "node.Name startsWith 'back' && node.Ports.Has('8080/tcp', '8081/tcp')"
-    },
-    {
-      "name": "store",
-      "if": "node.Ports.HasAny('3306/tcp', '5432/tcp')"
-    },
-    {
-      "name": "redis",
-      "if": "node.Ports.Has('6379/tcp')"
-    },
-    {
-      "name": "queue",
-      "if": "node.Ports.HasAny('9092/tcp', '4222/tcp')"
-    }
+  {
+    "name": "external",
+    "if": "node.IsExternal",
+    "weight": 3
+  },
+  {
+    "name": "ingress",
+    "if": "node.Ports.HasAny('80/tcp', '443/tcp')"
+  },
+  {
+    "name": "backend",
+    "if": "node.Name startsWith 'back' && node.Ports.Has('8080/tcp', '8081/tcp')",
+    "weight": 2
+  },
+  {
+    "name": "store",
+    "if": "node.Ports.HasAny('3306/tcp', '5432/tcp')"
+  },
+  {
+    "name": "redis",
+    "if": "node.Ports.Has('6379/tcp')"
+  },
+  {
+    "name": "queue",
+    "if": "node.Ports.HasAny('9092/tcp', '4222/tcp')"
+  }
 ]

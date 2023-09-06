@@ -55,7 +55,7 @@ func (tb *testBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(_, _ string, _ node.Port) {
+func (tb *testBuilder) AddEdge(_, _ string, _ *node.Port) {
 	tb.Edges++
 }
 
