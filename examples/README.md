@@ -9,7 +9,7 @@
 usage:
 
 ```shell
-decompose -cluster cluster.json -meta meta.json -load stream.json | dot -Tsvg > example.svg
+decompose -cluster cluster.json -meta meta.json -load stream.json -format dot | dot -Tsvg > example.svg
 ```
 
 ## csv2meta script

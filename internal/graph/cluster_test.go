@@ -14,8 +14,8 @@ import (
 
 const (
 	testBuilderName = "testbuilder"
-	clusterRules    = `[{"name": "foo", "if": "node.Ports.Has('80/tcp')"},
-{"name": "bar", "if": "node.Ports.HasAny('22/tcp', '443/tcp')"}]`
+	clusterRules    = `[{"name": "foo", "if": "node.Listen.Has('80/tcp')"},
+{"name": "bar", "if": "node.Listen.HasAny('22/tcp', '443/tcp')"}]`
 )
 
 type testNamedBuilder struct {
@@ -140,8 +140,8 @@ func TestClusterMatch(t *testing.T) {
 func TestClusterMatchWeight(t *testing.T) {
 	t.Parallel()
 
-	const clusterRulesWeight = `[{"name": "foo", "weight": 2, "if": "node.Ports.Has('80/tcp')"},
-{"name": "bar", "if": "node.Ports.HasAny('22/tcp', '443/tcp')"}]`
+	const clusterRulesWeight = `[{"name": "foo", "weight": 2, "if": "node.Listen.Has('80/tcp')"},
+{"name": "bar", "if": "node.Listen.HasAny('22/tcp', '443/tcp')"}]`
 
 	testNode := &node.Node{Ports: []*node.Port{
 		{Kind: "tcp", Value: 22},

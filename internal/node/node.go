@@ -71,7 +71,7 @@ func (n *Node) ToView() (rv *View) {
 	rv = &View{
 		Name:       n.Name,
 		Image:      n.Image,
-		Ports:      n.Ports,
+		Listen:     n.Ports,
 		IsExternal: n.IsExternal(),
 	}
 

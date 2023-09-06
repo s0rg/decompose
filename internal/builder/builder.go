@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	kindDOT         = "dot"
-	kindJSON        = "json"
-	kindTREE        = "tree"
-	kindYAML        = "yaml"
-	kindSTAT        = "stat"
-	kindStructurizr = "sdsl"
+	KindDOT         = "dot"
+	KindJSON        = "json"
+	KindTREE        = "tree"
+	KindYAML        = "yaml"
+	KindSTAT        = "stat"
+	KindStructurizr = "sdsl"
 )
 
 func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 	switch kind {
-	case kindDOT:
+	case KindDOT:
 		return NewDOT(), true
-	case kindJSON:
+	case KindJSON:
 		return NewJSON(), true
-	case kindStructurizr:
+	case KindStructurizr:
 		return NewStructurizr(), true
-	case kindTREE:
+	case KindTREE:
 		return NewTree(), true
-	case kindYAML:
+	case KindYAML:
 		return NewYAML(), true
-	case kindSTAT:
+	case KindSTAT:
 		return NewStat(), true
 	}
 
@@ -35,16 +35,16 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 }
 
 func SupportCluster(n string) (yes bool) {
-	return n == kindDOT || n == kindStructurizr
+	return n == KindDOT || n == KindStructurizr
 }
 
 func Names() (rv []string) {
 	return []string{
-		kindDOT,
-		kindJSON,
-		kindTREE,
-		kindYAML,
-		kindSTAT,
-		kindStructurizr,
+		KindDOT,
+		KindJSON,
+		KindTREE,
+		KindYAML,
+		KindSTAT,
+		KindStructurizr,
 	}
 }
