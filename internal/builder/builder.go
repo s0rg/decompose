@@ -11,6 +11,7 @@ const (
 	kindJSON        = "json"
 	kindTREE        = "tree"
 	kindYAML        = "yaml"
+	kindSTAT        = "stat"
 	kindStructurizr = "sdsl"
 )
 
@@ -26,6 +27,8 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 		return NewTree(), true
 	case kindYAML:
 		return NewYAML(), true
+	case kindSTAT:
+		return NewStat(), true
 	}
 
 	return
@@ -41,6 +44,7 @@ func Names() (rv []string) {
 		kindJSON,
 		kindTREE,
 		kindYAML,
+		kindSTAT,
 		kindStructurizr,
 	}
 }

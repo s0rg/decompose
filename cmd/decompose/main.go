@@ -86,7 +86,7 @@ func setupFlags() {
 		&fFormat,
 		"format",
 		defaultFormat,
-		"output format: dot, json, yaml, tree or sdsl for structurizr dsl",
+		"output format: dot, json, yaml, stat, tree or sdsl for structurizr dsl",
 	)
 	flag.StringVar(
 		&fSkipEnv,
