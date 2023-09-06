@@ -21,7 +21,74 @@ Takes all network connections from your docker containers and exports them as:
 - [structurizr dsl](https://github.com/structurizr/dsl)
 - [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
 - pseudographical tree
-- json stream of items:
+- json stream
+
+# features
+
+- os-independent, it uses different strategies to get container connections:
+  - running on **linux as root** is the fastest way and it will work with all types of containers (even
+    `scratch`-based)
+  - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
+    (i.e. for missing `netstat` binary), no connections for such container will be gathered
+- produces detailed connections graph **with ports**
+- save `json` stream once and process it later in any way you want
+- fast, scans ~400 containers in around 5 sec
+- 100% test-coverage
+
+# known limitations
+
+- only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
+- `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
+  or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
+
+# installation
+
+- [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
+
+# usage
+
+```
+decompose [flags]
+
+possible flags with default values:
+
+  -cluster string
+        json file with clusterization rules
+  -follow string
+        follow only this container by name
+  -format string
+        output format: dot, json, yaml, tree or sdsl for structurizr dsl (default "dot")
+  -full
+        extract full process info: (cmd, args, env) and volumes info
+  -help
+        show this help
+  -load value
+        load json stream, can be used multiple times
+  -local
+        skip external hosts
+  -meta string
+        json file with metadata for enrichment
+  -no-loops
+        remove connection loops (node to itself) from output
+  -out string
+        output: filename or "-" for stdout (default "-")
+  -proto string
+        protocol to scan: tcp, udp or all (default "all")
+  -silent
+        suppress progress messages in stderr
+  -skip-env string
+        environment variables name(s) to skip from output, case-independent, comma-separated
+  -version
+        show version
+```
+
+## environment variables:
+
+- `DOCKER_HOST` - connection uri
+- `DOCKER_CERT_PATH` - directory path containing key.pem, cert.pm and ca.pem
+- `DOCKER_TLS_VERIFY` - enable client TLS verification
+
+# json stream format
 
 ```go
 type Item struct {
@@ -144,71 +211,6 @@ type Node struct {
 ```
 
 See: [cluster.json](examples/cluster.json) for detailed example.
-
-# features
-
-- os-independent, it uses different strategies to get container connections:
-  - running on **linux as root** is the fastest way and it will work with all types of containers (even
-    `scratch`-based)
-  - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
-    (i.e. for missing `netstat` binary), no connections for such container will be gathered
-- produces detailed connections graph **with ports**
-- save `json` stream once and process it later in any way you want
-- fast, scans ~400 containers in around 5 sec
-- 100% test-coverage
-
-# known limitations
-
-- only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
-- `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
-or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
-
-# installation
-
-- [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
-
-# usage
-
-```
-decompose [flags]
-
-possible flags with default values:
-
-  -cluster string
-        json file with clusterization rules
-  -follow string
-        follow only this container by name
-  -format string
-        output format: dot, json, yaml, tree or sdsl for structurizr dsl (default "dot")
-  -full
-        extract full process info: (cmd, args, env) and volumes info
-  -help
-        show this help
-  -load value
-        load json stream, can be used multiple times
-  -local
-        skip external hosts
-  -meta string
-        json file with metadata for enrichment
-  -no-loops
-        remove connection loops (node to itself) from output
-  -out string
-        output: filename or "-" for stdout (default "-")
-  -proto string
-        protocol to scan: tcp, udp or all (default "all")
-  -silent
-        suppress progress messages in stderr
-  -skip-env string
-        environment variables name(s) to skip from output, case-independent, comma-separated
-  -version
-        show version
-```
-
-## environment variables:
-
-- `DOCKER_HOST` - connection uri
-- `DOCKER_CERT_PATH` - directory path containing key.pem, cert.pm and ca.pem
-- `DOCKER_TLS_VERIFY` - enable client TLS verification
 
 # examples
 
