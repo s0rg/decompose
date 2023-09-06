@@ -92,7 +92,7 @@ func (d *DOT) AddNode(n *node.Node) error {
 	rb.FieldWithId(label, outPort)
 	rb.Nesting(func() {
 		for i := 0; i < len(n.Ports); i++ {
-			p := &n.Ports[i]
+			p := n.Ports[i]
 
 			rb.FieldWithId(p.Label(), p.ID())
 		}
@@ -124,7 +124,7 @@ func (d *DOT) getSrc(id string) (rv dot.Node, out string, ok bool) {
 	return
 }
 
-func (d *DOT) getDst(id string, port node.Port) (rv dot.Node, out string, ok bool) {
+func (d *DOT) getDst(id string, port *node.Port) (rv dot.Node, out string, ok bool) {
 	if rv, ok = d.g.FindNodeById(id); ok {
 		return rv, port.ID(), ok
 	}
@@ -143,7 +143,7 @@ func (d *DOT) getDst(id string, port node.Port) (rv dot.Node, out string, ok boo
 	return sg.Node(out).Label(port.Label()), out, true
 }
 
-func (d *DOT) AddEdge(srcID, dstID string, port node.Port) {
+func (d *DOT) AddEdge(srcID, dstID string, port *node.Port) {
 	if srcID == "" || dstID == "" { // fast exit, dot doesnt have default cluster
 		return
 	}

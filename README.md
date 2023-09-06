@@ -19,6 +19,7 @@ Takes all network connections from your docker containers and exports them as:
 
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
+- [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
 - pseudographical tree
 - json stream of items:
 
@@ -117,7 +118,7 @@ With clusterization rules, in `json` (order matters):
 ```json
 [
     {
-        "name": "rule-name",
+        "name": "cluster-name",
         "weight": 1,
         "if": "<expression>"
     },
@@ -132,13 +133,13 @@ fields:
 
 ```go
 type Node struct {
-	Ports PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
-	Name  string       // container name
-	Image string       // container image
-	Cmd   string       // container cmd
-	Args  []string     // container args
-	Tags  []string     // tags, if meta present
-	Local bool         // node local or external
+	Ports      PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
+	Name       string       // container name
+	Image      string       // container image
+	Cmd        string       // container cmd
+	Args       []string     // container args
+	Tags       []string     // tags, if meta present
+	IsExternal bool         // external flag
 }
 ```
 
@@ -159,6 +160,8 @@ See: [cluster.json](examples/cluster.json) for detailed example.
 # known limitations
 
 - only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
+- `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
+or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
 
 # installation
 
@@ -176,7 +179,7 @@ possible flags with default values:
   -follow string
         follow only this container by name
   -format string
-        output format: dot, json, tree or sdsl for structurizr dsl (default "dot")
+        output format: dot, json, yaml, tree or sdsl for structurizr dsl (default "dot")
   -full
         extract full process info: (cmd, args, env) and volumes info
   -help

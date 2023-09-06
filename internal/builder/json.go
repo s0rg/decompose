@@ -28,7 +28,7 @@ func (j *JSON) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (j *JSON) AddEdge(srcID, dstID string, port node.Port) {
+func (j *JSON) AddEdge(srcID, dstID string, port *node.Port) {
 	src, ok := j.state[srcID]
 	if !ok {
 		return

@@ -34,7 +34,7 @@ func (tb *testNamedBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testNamedBuilder) AddEdge(_, _ string, _ node.Port) {
+func (tb *testNamedBuilder) AddEdge(_, _ string, _ *node.Port) {
 	tb.edges++
 }
 
@@ -70,19 +70,19 @@ func TestClusterMatch(t *testing.T) {
 		Want string
 	}{
 		{
-			Node: &node.Node{Ports: []node.Port{{Kind: "tcp", Value: 80}}},
+			Node: &node.Node{Ports: []*node.Port{{Kind: "tcp", Value: 80}}},
 			Want: "foo",
 		},
 		{
-			Node: &node.Node{Ports: []node.Port{{Kind: "tcp", Value: 22}}},
+			Node: &node.Node{Ports: []*node.Port{{Kind: "tcp", Value: 22}}},
 			Want: "bar",
 		},
 		{
-			Node: &node.Node{Ports: []node.Port{{Kind: "tcp", Value: 443}}},
+			Node: &node.Node{Ports: []*node.Port{{Kind: "tcp", Value: 443}}},
 			Want: "bar",
 		},
 		{
-			Node: &node.Node{Ports: []node.Port{
+			Node: &node.Node{Ports: []*node.Port{
 				{Kind: "tcp", Value: 22},
 				{Kind: "tcp", Value: 80},
 				{Kind: "tcp", Value: 443},
@@ -90,7 +90,7 @@ func TestClusterMatch(t *testing.T) {
 			Want: "bar",
 		},
 		{
-			Node: &node.Node{Ports: []node.Port{
+			Node: &node.Node{Ports: []*node.Port{
 				{Kind: "tcp", Value: 22},
 				{Kind: "tcp", Value: 80},
 				{Kind: "tcp", Value: 8080},
@@ -98,7 +98,7 @@ func TestClusterMatch(t *testing.T) {
 			Want: "bar",
 		},
 		{
-			Node: &node.Node{Ports: []node.Port{
+			Node: &node.Node{Ports: []*node.Port{
 				{Kind: "sstp", Value: 5000},
 			}},
 			Want: "",
@@ -143,7 +143,7 @@ func TestClusterMatchWeight(t *testing.T) {
 	const clusterRulesWeight = `[{"name": "foo", "weight": 2, "if": "node.Ports.Has('80/tcp')"},
 {"name": "bar", "if": "node.Ports.HasAny('22/tcp', '443/tcp')"}]`
 
-	testNode := &node.Node{Ports: []node.Port{
+	testNode := &node.Node{Ports: []*node.Port{
 		{Kind: "tcp", Value: 22},
 		{Kind: "tcp", Value: 80},
 		{Kind: "tcp", Value: 8080},
@@ -177,35 +177,35 @@ func TestClusterBuilder(t *testing.T) {
 
 	ca.AddNode(&node.Node{
 		ID: "1",
-		Ports: []node.Port{
+		Ports: []*node.Port{
 			{Kind: "tcp", Value: 80},
 		}})
 
 	ca.AddNode(&node.Node{
 		ID: "2",
-		Ports: []node.Port{
+		Ports: []*node.Port{
 			{Kind: "tcp", Value: 22},
 		}})
 
 	ca.AddNode(&node.Node{
 		ID: "3",
-		Ports: []node.Port{
+		Ports: []*node.Port{
 			{Kind: "tcp", Value: 443},
 			{Kind: "tcp", Value: 8080},
 		}})
 
 	ca.AddNode(&node.Node{
 		ID: "4",
-		Ports: []node.Port{
+		Ports: []*node.Port{
 			{Kind: "tcp", Value: 8080},
 		}})
 
-	ca.AddEdge("1", "3", node.Port{Kind: "tcp", Value: 443})
-	ca.AddEdge("2", "3", node.Port{Kind: "tcp", Value: 8080})
-	ca.AddEdge("3", "1", node.Port{Kind: "tcp", Value: 80})
-	ca.AddEdge("1", "4", node.Port{Kind: "tcp", Value: 8080})
-	ca.AddEdge("5", "1", node.Port{Kind: "tcp", Value: 80})
-	ca.AddEdge("1", "5", node.Port{Kind: "tcp", Value: 80})
+	ca.AddEdge("1", "3", &node.Port{Kind: "tcp", Value: 443})
+	ca.AddEdge("2", "3", &node.Port{Kind: "tcp", Value: 8080})
+	ca.AddEdge("3", "1", &node.Port{Kind: "tcp", Value: 80})
+	ca.AddEdge("1", "4", &node.Port{Kind: "tcp", Value: 8080})
+	ca.AddEdge("5", "1", &node.Port{Kind: "tcp", Value: 80})
+	ca.AddEdge("1", "5", &node.Port{Kind: "tcp", Value: 80})
 
 	if tb.edges != 4 || tb.nodes != 4 {
 		t.Fail()
@@ -251,7 +251,7 @@ func TestClusterBuilderAddError(t *testing.T) {
 
 	err := ca.AddNode(&node.Node{
 		ID: "1",
-		Ports: []node.Port{
+		Ports: []*node.Port{
 			{Kind: "tcp", Value: 80},
 		}})
 	if !errors.Is(err, myError) {

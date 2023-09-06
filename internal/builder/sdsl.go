@@ -68,7 +68,7 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (s *Structurizr) AddEdge(srcID, dstID string, port node.Port) {
+func (s *Structurizr) AddEdge(srcID, dstID string, port *node.Port) {
 	var (
 		rel *sdsl.Relation
 		ok  bool

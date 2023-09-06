@@ -36,7 +36,7 @@ func (t *Tree) AddNode(n *node.Node) error {
 	return t.j.AddNode(n)
 }
 
-func (t *Tree) AddEdge(srcID, dstID string, port node.Port) {
+func (t *Tree) AddEdge(srcID, dstID string, port *node.Port) {
 	t.j.AddEdge(srcID, dstID, port)
 }
 

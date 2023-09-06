@@ -136,7 +136,7 @@ func (tb *testBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(_, _ string, _ node.Port) {
+func (tb *testBuilder) AddEdge(_, _ string, _ *node.Port) {
 	tb.Edges++
 }
 
@@ -148,8 +148,8 @@ func TestJSONAddBadEdges(t *testing.T) {
 	_ = bld.AddNode(&node.Node{ID: "1", Name: "1"})
 	_ = bld.AddNode(&node.Node{ID: "2", Name: "2"})
 
-	bld.AddEdge("3", "1", node.Port{})
-	bld.AddEdge("1", "3", node.Port{})
+	bld.AddEdge("3", "1", &node.Port{})
+	bld.AddEdge("1", "3", &node.Port{})
 
 	var buf bytes.Buffer
 

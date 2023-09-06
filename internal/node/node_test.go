@@ -39,7 +39,7 @@ func TestNodeToJSON(t *testing.T) {
 			Node: &node.Node{
 				ID:   "test-id",
 				Name: "test-name",
-				Ports: []node.Port{
+				Ports: []*node.Port{
 					{Kind: "tcp", Value: 80},
 					{Kind: "udp", Value: 53},
 				},
@@ -51,7 +51,7 @@ func TestNodeToJSON(t *testing.T) {
 			Node: &node.Node{
 				ID:   "test-id",
 				Name: "test-id",
-				Ports: []node.Port{
+				Ports: []*node.Port{
 					{Kind: "tcp", Value: 80},
 				},
 			},
@@ -64,7 +64,7 @@ func TestNodeToJSON(t *testing.T) {
 				ID:    "test-id",
 				Name:  "test-name",
 				Image: "test-image",
-				Ports: []node.Port{
+				Ports: []*node.Port{
 					{Kind: "udp", Value: 53},
 				},
 			},
@@ -77,7 +77,7 @@ func TestNodeToJSON(t *testing.T) {
 				ID:    "test-id",
 				Name:  "test-name",
 				Image: "test-image",
-				Ports: []node.Port{
+				Ports: []*node.Port{
 					{Kind: "udp", Value: 53},
 				},
 				Meta: &node.Meta{
@@ -95,7 +95,7 @@ func TestNodeToJSON(t *testing.T) {
 				ID:    "test-id",
 				Name:  "test-name",
 				Image: "test-image",
-				Ports: []node.Port{
+				Ports: []*node.Port{
 					{Kind: "udp", Value: 53},
 				},
 				Process: &node.Process{
@@ -113,7 +113,7 @@ func TestNodeToJSON(t *testing.T) {
 				ID:    "test-id",
 				Name:  "test-name",
 				Image: "test-image",
-				Ports: []node.Port{},
+				Ports: []*node.Port{},
 				Volumes: []*node.Volume{
 					{Type: "none"},
 					{Type: "bind"},
@@ -170,21 +170,21 @@ func TestNodeToView(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Node  *node.Node
-		Cmd   string
-		Tags  int
-		Args  int
-		Local bool
+		Node     *node.Node
+		Cmd      string
+		Tags     int
+		Args     int
+		External bool
 	}{
 		{
 			Node: &node.Node{
 				Name:  "test",
 				Image: "image",
 			},
-			Local: true,
-			Tags:  0,
-			Cmd:   "",
-			Args:  0,
+			External: false,
+			Tags:     0,
+			Cmd:      "",
+			Args:     0,
 		},
 		{
 			Node: &node.Node{
@@ -194,10 +194,10 @@ func TestNodeToView(t *testing.T) {
 					Info: "",
 				},
 			},
-			Local: true,
-			Tags:  0,
-			Cmd:   "",
-			Args:  0,
+			External: false,
+			Tags:     0,
+			Cmd:      "",
+			Args:     0,
 		},
 		{
 			Node: &node.Node{
@@ -208,20 +208,20 @@ func TestNodeToView(t *testing.T) {
 					Tags: []string{"a"},
 				},
 			},
-			Local: true,
-			Tags:  1,
-			Cmd:   "",
-			Args:  0,
+			External: false,
+			Tags:     1,
+			Cmd:      "",
+			Args:     0,
 		},
 		{
 			Node: &node.Node{
 				ID:   "test",
 				Name: "test",
 			},
-			Local: false,
-			Tags:  0,
-			Cmd:   "",
-			Args:  0,
+			External: true,
+			Tags:     0,
+			Cmd:      "",
+			Args:     0,
 		},
 		{
 			Node: &node.Node{
@@ -231,10 +231,10 @@ func TestNodeToView(t *testing.T) {
 					Cmd: []string{"foo", "-arg"},
 				},
 			},
-			Local: false,
-			Tags:  0,
-			Cmd:   "foo",
-			Args:  1,
+			External: true,
+			Tags:     0,
+			Cmd:      "foo",
+			Args:     1,
 		},
 	}
 
@@ -249,7 +249,7 @@ func TestNodeToView(t *testing.T) {
 			t.Fail()
 		}
 
-		if v.Local != tc.Local {
+		if v.IsExternal != tc.External {
 			t.Fail()
 		}
 
