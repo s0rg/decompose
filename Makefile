@@ -15,28 +15,33 @@ LDFLAGS=-w -s -X main.gitHash=${GIT_HASH} -X main.buildDate=${BUILD_AT} -X main.
 export CGO_ENABLED=0
 
 .PHONY: build
-
 build: vet
 	@go build -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
 
+.PHONY: vet
 vet:
 	@go vet "${ALL}"
 
+.PHONY: test
 test: vet
 	@CGO_ENABLED=1 go test -v -race -count 1 -tags=test \
 				-cover -coverpkg="${ALL}" -coverprofile="${COP}" \
 				"${ALL}"
 
+.PHONY: test-cover
 test-cover: test
 	@go tool cover -func="${COP}"
 
+.PHONY: lint
 lint: vet
 	@golangci-lint run
 
+.PHONY: markdown-fix
 markdown-fix:
 	# https://github.com/executablebooks/mdformat
 	mdformat .
 
+.PHONY: clean
 clean:
 	[ -f "${BIN}" ] && rm "${BIN}"
 	[ -f "${COP}" ] && rm "${COP}"
