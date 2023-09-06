@@ -12,7 +12,7 @@ mkdir -p "${OUT}"
 for i in $(seq 1 ${COUNT}); do
 	echo "Taking snapshot ${i}..."
 
-	decompose -format json -out "${OUT}/snapshot_${i}.json"
+	decompose -out "${OUT}/snapshot_${i}.json"
 
 	if [[ "${i}" -ne "${COUNT}" ]]; then
 		echo "Sleeping for ${WAIT} seconds..."
@@ -22,7 +22,7 @@ done
 
 echo "Merging..."
 
-decompose -load "${OUT}/*.json" -format json -out merged.json
+decompose -load "${OUT}/*.json" -out merged.json
 
 echo "Cleaning-up..."
 

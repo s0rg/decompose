@@ -6,7 +6,7 @@ type PortMatcher interface {
 }
 
 type View struct {
-	Ports      PortMatcher
+	Listen     PortMatcher
 	Name       string
 	Image      string
 	Cmd        string

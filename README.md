@@ -58,7 +58,7 @@ possible flags with default values:
   -follow string
         follow only this container by name
   -format string
-        output format: dot, json, yaml, tree or sdsl for structurizr dsl (default "dot")
+        output format: json, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
   -full
         extract full process info: (cmd, args, env) and volumes info
   -help
@@ -201,7 +201,7 @@ fields:
 
 ```go
 type Node struct {
-	Ports      PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
+	Listen     PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
 	Name       string       // container name
 	Image      string       // container image
 	Cmd        string       // container cmd
@@ -215,28 +215,28 @@ See: [cluster.json](examples/cluster.json) for detailed example.
 
 # examples
 
+Save full json stream:
+
+```shell
+decompose -full > nodes-1.json
+```
+
 Get `dot` file:
 
 ```shell
-decompose > connections.dot
+decompose -format dot > connections.dot
 ```
 
 Get only tcp connections as `dot`:
 
 ```shell
-decompose -proto tcp > tcp.dot
-```
-
-Save full json stream:
-
-```shell
-decompose -full -format json > nodes-1.json
+decompose -proto tcp -format dot > tcp.dot
 ```
 
 Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:
 
 ```shell
-decompose -local -proto tcp -load "nodes-*.json" > graph-merged.dot
+decompose -local -proto tcp -load "nodes-*.json" -format dot > graph-merged.dot
 ```
 
 Load json stream, enrich and save as `structurizr dsl`:
@@ -263,7 +263,7 @@ docker compose up
 in other terminal:
 
 ```shell
-decompose | dot -Tsvg > redis-cluster.svg
+decompose -format dot | dot -Tsvg > redis-cluster.svg
 ```
 
 # license

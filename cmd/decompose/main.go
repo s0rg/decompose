@@ -22,7 +22,6 @@ const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
 	defaultProto  = "all"
-	defaultFormat = "dot"
 	defaultOutput = "-"
 )
 
@@ -85,8 +84,8 @@ func setupFlags() {
 	flag.StringVar(
 		&fFormat,
 		"format",
-		defaultFormat,
-		"output format: dot, json, yaml, stat, tree or sdsl for structurizr dsl",
+		builder.KindJSON,
+		"output format: json, dot, yaml, stat, tree or sdsl for structurizr dsl",
 	)
 	flag.StringVar(
 		&fSkipEnv,
