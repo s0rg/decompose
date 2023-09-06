@@ -55,17 +55,26 @@ func (s *Stat) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (s *Stat) AddEdge(src, dst string, _ *node.Port) {
-	if _, ok := s.conns[dst]; !ok {
-		return
-	}
-
-	conn, ok := s.conns[src]
+func (s *Stat) isSuitable(srcID, dstID string) (yes bool) {
+	sc, ok := s.conns[srcID]
 	if !ok {
 		return
 	}
 
-	if conn.Has(dst) {
+	dc, ok := s.conns[dstID]
+	if !ok {
+		return
+	}
+
+	if sc.Has(dstID) || dc.Has(srcID) {
+		return
+	}
+
+	return true
+}
+
+func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
+	if !s.isSuitable(srcID, dstID) {
 		return
 	}
 
