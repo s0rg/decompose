@@ -22,6 +22,7 @@ Takes all network connections from your docker containers and exports them as:
 - [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
 - pseudographical tree
 - json stream
+- statistics (nodes, edges and listen ports)
 
 # features
 
