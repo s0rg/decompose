@@ -3,8 +3,8 @@ module github.com/s0rg/decompose
 go 1.21.0
 
 require (
-	github.com/antonmedv/expr v1.15.0
-	github.com/docker/docker v24.0.5+incompatible
+	github.com/antonmedv/expr v1.15.1
+	github.com/docker/docker v24.0.6+incompatible
 	github.com/emicklei/dot v1.6.0
 	github.com/s0rg/set v1.2.0
 	gopkg.in/yaml.v3 v3.0.1
