@@ -1,5 +1,3 @@
-//go:build !test
-
 package builder
 
 import (
@@ -13,23 +11,29 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
-type portStat struct {
-	Port  string
+const minClusters = 2
+const defaultName = "default"
+
+type stat struct {
+	Name  string
 	Count int
 }
 
 type Stat struct {
-	conns map[string]set.Unordered[string]
-	ports map[string]int
-	nodes int
-	edges int
-	exts  int
+	conns      map[string]set.Unordered[string]
+	ports      map[string]int
+	clusters   map[string]int
+	nodes      int
+	edgesUniq  int
+	edgesTotal int
+	externals  int
 }
 
 func NewStat() *Stat {
 	return &Stat{
-		ports: make(map[string]int),
-		conns: make(map[string]set.Unordered[string]),
+		ports:    make(map[string]int),
+		clusters: make(map[string]int),
+		conns:    make(map[string]set.Unordered[string]),
 	}
 }
 
@@ -39,7 +43,7 @@ func (s *Stat) Name() string {
 
 func (s *Stat) AddNode(n *node.Node) error {
 	if n.IsExternal() {
-		s.exts++
+		s.externals++
 
 		return nil
 	}
@@ -52,10 +56,17 @@ func (s *Stat) AddNode(n *node.Node) error {
 
 	s.conns[n.ID] = make(set.Unordered[string])
 
+	cluster := n.Cluster
+	if cluster == "" {
+		cluster = defaultName
+	}
+
+	s.clusters[cluster]++
+
 	return nil
 }
 
-func (s *Stat) isSuitable(srcID, dstID string) (yes bool) {
+func (s *Stat) isSuitable(srcID, dstID string) (uniq, yes bool) {
 	sc, ok := s.conns[srcID]
 	if !ok {
 		return
@@ -66,44 +77,81 @@ func (s *Stat) isSuitable(srcID, dstID string) (yes bool) {
 		return
 	}
 
-	if sc.Has(dstID) || dc.Has(srcID) {
-		return
-	}
+	uniq = !(sc.Has(dstID) || dc.Has(srcID))
 
-	return true
+	sc.Add(dstID)
+
+	return uniq, true
 }
 
 func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
-	if !s.isSuitable(srcID, dstID) {
+	uniq, ok := s.isSuitable(srcID, dstID)
+	if !ok {
 		return
 	}
 
-	s.edges++
+	if uniq {
+		s.edgesUniq++
+	}
+
+	s.edgesTotal++
 }
 
 func (s *Stat) Write(w io.Writer) {
-	ports := make([]*portStat, 0, len(s.ports))
+	fmt.Fprintf(w, "Nodes: %d\n", s.nodes)
+	fmt.Fprintf(w, "Edges total: %d uniq: %d\n", s.edgesTotal, s.edgesUniq)
 
-	for k, c := range s.ports {
-		ports = append(ports, &portStat{Port: k, Count: c})
+	if s.externals > 0 {
+		fmt.Fprintf(w, "Externals: %d\n", s.externals)
 	}
-
-	slices.SortStableFunc(ports, func(a, b *portStat) int {
-		return cmp.Compare(a.Count, b.Count)
-	})
-
-	slices.Reverse(ports)
-
-	fmt.Fprintln(w, "Total:")
-	fmt.Fprintf(w, "\tNodes:\t%d\n", s.nodes)
-	fmt.Fprintf(w, "\tEdges:\t%d\n", s.edges)
-	fmt.Fprintf(w, "\tExternals:\t%d\n", s.exts)
 
 	fmt.Fprintln(w, "")
 
-	fmt.Fprintln(w, "Ports:")
+	ports, clusters := s.calcStats()
 
-	for _, p := range ports {
-		fmt.Fprintf(w, "\t%s:\t%d\n", p.Port, p.Count)
+	if len(clusters) > 0 {
+		fmt.Fprintln(w, "Clusters:")
+		writeStats(w, clusters)
 	}
+
+	fmt.Fprintln(w, "Ports:")
+	writeStats(w, ports)
+}
+
+func (s *Stat) calcStats() (ports, clusters []*stat) {
+	ports = make([]*stat, 0, len(s.ports))
+
+	for k, c := range s.ports {
+		ports = append(ports, &stat{Name: k, Count: c})
+	}
+
+	slices.SortStableFunc(ports, byCount)
+	slices.Reverse(ports)
+
+	if len(s.clusters) < minClusters {
+		return ports, clusters
+	}
+
+	clusters = make([]*stat, 0, len(s.clusters))
+
+	for k, c := range s.clusters {
+		clusters = append(clusters, &stat{Name: k, Count: c})
+	}
+
+	slices.SortStableFunc(clusters, byCount)
+	slices.Reverse(clusters)
+
+	return ports, clusters
+}
+
+func byCount(a, b *stat) int {
+	return cmp.Compare(a.Count, b.Count)
+}
+
+func writeStats(w io.Writer, s []*stat) {
+	for _, v := range s {
+		fmt.Fprintf(w, "\t%s: %d\n", v.Name, v.Count)
+	}
+
+	fmt.Fprintln(w, "")
 }

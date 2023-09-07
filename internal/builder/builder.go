@@ -35,7 +35,12 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 }
 
 func SupportCluster(n string) (yes bool) {
-	return n == KindDOT || n == KindStructurizr
+	switch n {
+	case KindDOT, KindStructurizr, KindSTAT:
+		return true
+	}
+
+	return false
 }
 
 func Names() (rv []string) {
