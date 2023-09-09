@@ -27,7 +27,7 @@ func NewLoader(cfg *Config) *Loader {
 	}
 }
 
-func (l *Loader) LoadStream(r io.Reader) error {
+func (l *Loader) FromReader(r io.Reader) error {
 	jr := json.NewDecoder(r)
 
 	for jr.More() {

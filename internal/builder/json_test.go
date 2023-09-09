@@ -53,7 +53,7 @@ func TestJSON(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(bytes.NewBuffer(jnode)); err != nil {
+	if err := ldr.FromReader(bytes.NewBuffer(jnode)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -108,7 +108,7 @@ func TestJSONAddEdge(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(bytes.NewBufferString(raw)); err != nil {
+	if err := ldr.FromReader(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -166,7 +166,7 @@ func TestJSONAddBadEdges(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(&buf); err != nil {
+	if err := ldr.FromReader(&buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 

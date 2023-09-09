@@ -21,6 +21,7 @@ import (
 const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
+	linuxOS       = "linux"
 	defaultProto  = "all"
 	defaultOutput = "-"
 )
@@ -250,15 +251,7 @@ func doLoad(
 	ldr := graph.NewLoader(cfg)
 
 	for _, fn := range files {
-		fd, err := os.Open(fn)
-		if err != nil {
-			return fmt.Errorf("open %s: %w", fn, err)
-		}
-
-		err = ldr.LoadStream(fd)
-		fd.Close()
-
-		if err != nil {
+		if err := feed(fn, ldr.FromReader); err != nil {
 			return fmt.Errorf("load %s: %w", fn, err)
 		}
 	}
@@ -273,14 +266,25 @@ func doLoad(
 func doBuild(
 	cfg *graph.Config,
 ) error {
-	cli, err := client.NewDocker()
+	opts := []client.Option{
+		client.WithClientCreator(client.Default),
+	}
+
+	mode := client.InContainer
+
+	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
+		opts = append(opts, client.WithNsEnter(client.Nsenter))
+		mode = client.LinuxNsenter
+	}
+
+	cli, err := client.NewDocker(append(opts, client.WithMode(mode))...)
 	if err != nil {
-		return fmt.Errorf("docker: %w", err)
+		return fmt.Errorf("client: %w", err)
 	}
 
 	defer cli.Close()
 
-	log.Println("Starting with method:", cli.Kind())
+	log.Println("Starting with method:", cli.Mode())
 
 	if err = graph.Build(cfg, cli); err != nil {
 		return fmt.Errorf("graph: %w", err)

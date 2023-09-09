@@ -51,7 +51,7 @@ func TestStat(t *testing.T) {
         }
         `
 
-	if err := ldr.LoadStream(bytes.NewBufferString(raw)); err != nil {
+	if err := ldr.FromReader(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -137,7 +137,7 @@ func TestStatCluster(t *testing.T) {
         }
         `
 
-	if err := ldr.LoadStream(bytes.NewBufferString(raw)); err != nil {
+	if err := ldr.FromReader(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)
 	}
 

@@ -24,7 +24,22 @@ Takes all network connections from your docker containers and exports them as:
 - json stream
 - statistics (nodes, edges and listen ports)
 
-# features
+## rationale
+
+I was in need for a tool to visualize and inspect big (more than 470 containers) dockerized legacy system without any schemes and having a bare minimum of documentation.
+
+## analogs
+
+Closest analogs, i can find, that not suit my needs very well:
+
+- [Red5d/docker-autocompose](https://github.com/Red5d/docker-autocompose) - produces only `compose yaml`
+- [justone/dockviz](https://github.com/justone/dockviz) - produces only `dot`, links and ports are taken
+  from compose configuration (`links` and `ports` sections) directly, therefore can miss some of them
+- [LeoVerto/docker-network-graph](https://github.com/LeoVerto/docker-network-graph) - very same as above, build in
+  python
+- [weaveworks/scope](https://github.com/weaveworks/scope) - deprecated, no cli
+
+## features
 
 - os-independent, it uses different strategies to get container connections:
   - running on **linux as root** is the fastest way and it will work with all types of containers (even
@@ -33,20 +48,20 @@ Takes all network connections from your docker containers and exports them as:
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - produces detailed connections graph **with ports**
 - save `json` stream once and process it later in any way you want
-- fast, scans ~400 containers in around 5 sec
+- fast, scans ~470 containers in around 5 sec
 - 100% test-coverage
 
-# known limitations
+## known limitations
 
 - only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
 - `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
   or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
 
-# installation
+## installation
 
 - [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
 
-# usage
+## usage
 
 ```
 decompose [flags]
@@ -83,13 +98,13 @@ possible flags with default values:
         show version
 ```
 
-## environment variables:
+### environment variables:
 
 - `DOCKER_HOST` - connection uri
 - `DOCKER_CERT_PATH` - directory path containing key.pem, cert.pm and ca.pem
 - `DOCKER_TLS_VERIFY` - enable client TLS verification
 
-# json stream format
+## json stream format
 
 ```go
 type Item struct {
@@ -155,7 +170,7 @@ example with full info and metadata filled:
 
 See [stream.json](examples/stream.json) for simple stream example.
 
-# metadata format
+## metadata format
 
 To enrich output with detailed descriptions, you can provide additional `json` file, with metadata i.e.:
 
@@ -178,10 +193,10 @@ one of provided keys, like `foo-1` or `bar1` for this example.
 See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fom csv, and
 [meta.json](examples/meta.json) for metadata sample.
 
-# clusterization rules
+## clusterization rules
 
-You can join your services into `clusters` by exposed ports, in `dot` or `structurizr` output formats.
-With clusterization rules, in `json` (order matters):
+You can join your services into `clusters` by flexible rules, in `dot`, `structurizr` and `stat` output formats.
+Example `json` (order matters):
 
 ```json
 [
@@ -213,7 +228,7 @@ type Node struct {
 
 See: [cluster.json](examples/cluster.json) for detailed example.
 
-# examples
+## examples
 
 Save full json stream:
 
@@ -245,7 +260,7 @@ Load json stream, enrich and save as `structurizr dsl`:
 decompose -load nodes-1.json -meta metadata.json -format sdsl > workspace.dsl
 ```
 
-# example result
+## example result
 
 Scheme taken from [redis-cluster](https://github.com/s0rg/redis-cluster-compose):
 
@@ -266,6 +281,6 @@ in other terminal:
 decompose -format dot | dot -Tsvg > redis-cluster.svg
 ```
 
-# license
+## license
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_large)

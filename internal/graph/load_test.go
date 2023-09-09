@@ -20,7 +20,7 @@ func TestLoaderLoadError(t *testing.T) {
 	ldr := graph.NewLoader(cfg)
 	buf := bytes.NewBufferString(`{`)
 
-	if err := ldr.LoadStream(buf); err == nil {
+	if err := ldr.FromReader(buf); err == nil {
 		t.Fail()
 	}
 }
@@ -48,7 +48,7 @@ func TestLoaderBuildError(t *testing.T) {
     "connected": null
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("err=", err)
 	}
 
@@ -84,7 +84,7 @@ func TestLoaderSingle(t *testing.T) {
     "connected": null
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -118,7 +118,7 @@ func TestLoaderBadPorts(t *testing.T) {
     "connected": null
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -156,7 +156,7 @@ func TestLoaderEdges(t *testing.T) {
     "connected": {"test1":["1/tcp"]}
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -183,7 +183,7 @@ func TestLoaderSeveral(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(bytes.NewBufferString(`{
+	if err := ldr.FromReader(bytes.NewBufferString(`{
     "name": "test1",
     "listen": ["1/tcp"],
     "networks": ["foo"],
@@ -192,7 +192,7 @@ func TestLoaderSeveral(t *testing.T) {
 		t.Fatal("load1 err=", err)
 	}
 
-	if err := ldr.LoadStream(bytes.NewBufferString(`{
+	if err := ldr.FromReader(bytes.NewBufferString(`{
     "name": "test2",
     "listen": ["2/tcp"],
     "networks": ["foo"],
@@ -237,7 +237,7 @@ func TestLoaderEdgesProto(t *testing.T) {
     "connected": {"test1":["1/udp"]}
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -276,7 +276,7 @@ func TestLoaderEdgesFollowNone(t *testing.T) {
     "connected": {"test1":["1/udp"]}
     }`)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -320,7 +320,7 @@ func TestLoaderEdgesFollowOne(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -362,7 +362,7 @@ func TestLoaderLocal(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -405,7 +405,7 @@ func TestLoaderMeta(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -449,7 +449,7 @@ func TestLoaderFull(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(buf); err != nil {
+	if err := ldr.FromReader(buf); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -490,7 +490,7 @@ func TestLoaderLoops(t *testing.T) {
 
 	ldr := graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(bytes.NewBufferString(rawJSON)); err != nil {
+	if err := ldr.FromReader(bytes.NewBufferString(rawJSON)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
@@ -507,7 +507,7 @@ func TestLoaderLoops(t *testing.T) {
 	cfg.NoLoops = true
 	ldr = graph.NewLoader(cfg)
 
-	if err := ldr.LoadStream(bytes.NewBufferString(rawJSON)); err != nil {
+	if err := ldr.FromReader(bytes.NewBufferString(rawJSON)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
