@@ -99,7 +99,7 @@ func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
 
 func (s *Stat) Write(w io.Writer) {
 	fmt.Fprintf(w, "Nodes: %d\n", s.nodes)
-	fmt.Fprintf(w, "Edges total: %d uniq: %d\n", s.edgesTotal, s.edgesUniq)
+	fmt.Fprintf(w, "Connections total: %d uniq: %d\n", s.edgesTotal, s.edgesUniq)
 
 	if s.externals > 0 {
 		fmt.Fprintf(w, "Externals: %d\n", s.externals)

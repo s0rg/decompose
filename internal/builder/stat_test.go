@@ -72,7 +72,7 @@ func TestStat(t *testing.T) {
 		t.Fail()
 	}
 
-	if !strings.Contains(res, "Edges total: 2 uniq: 1") {
+	if !strings.Contains(res, "total: 2 uniq: 1") {
 		t.Fail()
 	}
 
