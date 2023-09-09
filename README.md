@@ -46,6 +46,7 @@ Closest analogs, i can find, that not suit my needs very well:
     `scratch`-based)
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
+- single-binary, static-compiled unix-way `cli` (all output goes to stdout, progress information to stderr)
 - produces detailed connections graph **with ports**
 - save `json` stream once and process it later in any way you want
 - fast, scans ~470 containers in around 5 sec
@@ -108,30 +109,26 @@ possible flags with default values:
 
 ```go
 type Item struct {
-    Name       string              `json:"name"`              // container name
-    IsExternal bool                `json:"is_external"`       // this host is external
-    Image      *string             `json:"image,omitempty"`   // docker image (if any)
-    Process    *Process            `json:"process,omitempty"` // process info
-    Listen     []string            `json:"listen"`            // ports description i.e. '443/tcp'
-    Networks   []string            `json:"networks"`          // network names
-    Tags       []string            `json:"tags"`              // tags, if meta presents
-    Volumes    []*Volume           `json:"volumes"`           // volumes
-    Connected  map[string][]string `json:"connected"`         // name -> ports slice
-}
-
-type Volume struct {
-    Type string `json:"type"`
-    Src  string `json:"src"`
-    Dst  string `json:"dst"`
-}
-
-type Process struct {
-    Cmd []string `json:"cmd"`
-    Env []string `json:"env"`
+    Name       string              `json:"name"` // container name
+    IsExternal bool                `json:"is_external"` // this host is external
+    Image      *string             `json:"image,omitempty"` // docker image (if any)
+    Process    *struct{
+        Cmd []string `json:"cmd"`
+        Env []string `json:"env"`
+    } `json:"process,omitempty"` // process info, only when '-full'
+    Listen     []string            `json:"listen"` // ports description i.e. '443/tcp'
+    Networks   []string            `json:"networks"` // network names
+    Tags       []string            `json:"tags"` // tags, if meta presents
+    Volumes    []*struct{
+        Type string `json:"type"`
+        Src  string `json:"src"`
+        Dst  string `json:"dst"`
+    } `json:"volumes"`           // volumes info, only when '-full'
+    Connected  map[string][]string `json:"connected"` // name -> ports slice
 }
 ```
 
-example with full info and metadata filled:
+Single node example with full info and metadata filled:
 
 ```json
 {
@@ -272,10 +269,10 @@ Steps to reproduce:
 ```shell
 git clone https://github.com/s0rg/redis-cluster-compose.git
 cd redis-cluster-compose
-docker compose up
+docker compose up -d
 ```
 
-in other terminal:
+then:
 
 ```shell
 decompose -format dot | dot -Tsvg > redis-cluster.svg
