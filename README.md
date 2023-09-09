@@ -22,11 +22,12 @@ Takes all network connections from your docker containers and exports them as:
 - [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
 - pseudographical tree
 - json stream
-- statistics (nodes, edges and listen ports)
+- statistics - nodes, connections and listen ports counts
 
 ## rationale
 
-I was in need for a tool to visualize and inspect big (more than 470 containers) dockerized legacy system without any schemes and having a bare minimum of documentation.
+I was in need for a tool to visualize and inspect big (more than 470 containers) dockerized legacy system without any
+schemes and having a bare minimum of documentation
 
 ## analogs
 
@@ -35,8 +36,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - [Red5d/docker-autocompose](https://github.com/Red5d/docker-autocompose) - produces only `compose yaml`
 - [justone/dockviz](https://github.com/justone/dockviz) - produces only `dot`, links and ports are taken
   from compose configuration (`links` and `ports` sections) directly, therefore can miss some of them
-- [LeoVerto/docker-network-graph](https://github.com/LeoVerto/docker-network-graph) - very same as above, build in
-  python
+- [LeoVerto/docker-network-graph](https://github.com/LeoVerto/docker-network-graph) - very same as above, in python
 - [weaveworks/scope](https://github.com/weaveworks/scope) - deprecated, no cli
 
 ## features
