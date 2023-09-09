@@ -73,6 +73,7 @@ issues:
     - path: ._test\.go
       linters:
         - goerr113
+        - gocritic
         - errcheck
         - funlen
         - dupl

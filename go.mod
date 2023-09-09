@@ -1,6 +1,6 @@
 module github.com/s0rg/decompose
 
-go 1.21.0
+go 1.21.1
 
 require (
 	github.com/antonmedv/expr v1.15.1

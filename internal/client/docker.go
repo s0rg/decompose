@@ -1,53 +1,61 @@
-//go:build !test
-
 package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"runtime"
+	"io"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
 	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/graph"
 )
 
 const (
-	linuxOS      = "linux"
 	stateRunning = "running"
 	nsenterCmd   = "nsenter"
+	netstatCmd   = "netstat"
 	pingTimeout  = time.Second
 )
 
-type connExtactor func(context.Context, int, string, graph.NetProto) ([]*graph.Connection, error)
+var ErrModeNone = errors.New("mode not set")
 
-type Docker struct {
-	cli         *client.Client
-	connections connExtactor
-	cmd         string
-	kind        string
+type createClient func() (DockerClient, error)
+type nsEnter func(context.Context, int, graph.NetProto, func(io.Reader) error) error
+
+type DockerClient interface {
+	ContainerList(context.Context, types.ContainerListOptions) ([]types.Container, error)
+	ContainerInspect(context.Context, string) (types.ContainerJSON, error)
+	ContainerExecCreate(context.Context, string, types.ExecConfig) (types.IDResponse, error)
+	ContainerExecAttach(context.Context, string, types.ExecStartCheck) (types.HijackedResponse, error)
+	Ping(context.Context) (types.Ping, error)
+	Close() error
 }
 
-func NewDocker() (rv *Docker, err error) {
-	rv = &Docker{}
+type Docker struct {
+	opt *options
+	cli DockerClient
+}
 
-	if err = rv.init(); err != nil {
-		return nil, fmt.Errorf("init: %w", err)
+func NewDocker(opts ...Option) (rv *Docker, err error) {
+	rv = &Docker{
+		opt: &options{},
 	}
 
-	if rv.cli, err = client.NewClientWithOpts(
-		client.FromEnv,
-		client.WithAPIVersionNegotiation(),
-	); err != nil {
+	for _, op := range opts {
+		op(rv.opt)
+	}
+
+	if rv.opt.Mode == None {
+		return nil, fmt.Errorf("options: %w", ErrModeNone)
+	}
+
+	if rv.cli, err = rv.opt.Create(); err != nil {
 		return nil, fmt.Errorf("client: %w", err)
 	}
 
@@ -61,27 +69,8 @@ func NewDocker() (rv *Docker, err error) {
 	return rv, nil
 }
 
-func (d *Docker) init() (err error) {
-	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
-		if d.cmd, err = exec.LookPath(nsenterCmd); err != nil {
-			return fmt.Errorf("looking for %s: %w", nsenterCmd, err)
-		}
-
-		d.kind = "netns"
-		d.connections = d.conectionsNetns
-
-		return nil
-	}
-
-	// non-linux or non-root
-	d.kind = "in-container"
-	d.connections = d.conectionsContainer
-
-	return nil
-}
-
-func (d *Docker) Kind() string {
-	return d.kind
+func (d *Docker) Mode() string {
+	return d.opt.Mode.String()
 }
 
 func (d *Docker) Containers(
@@ -125,7 +114,7 @@ func (d *Docker) Containers(
 				return nil, fmt.Errorf("inspect: %w", err)
 			}
 
-			con.Volumes = extractVolumesInfo(doc)
+			con.Volumes = extractVolumesInfo(info.Mounts)
 			con.Process = extractProcessInfo(&info, skeys)
 			pid = info.State.Pid
 		}
@@ -157,88 +146,88 @@ func (d *Docker) Close() (err error) {
 	return nil
 }
 
-func (d *Docker) conectionsNetns(
+func (d *Docker) connections(
 	ctx context.Context,
 	pid int,
-	containerID string,
+	cid string,
 	proto graph.NetProto,
-) (
-	rv []*graph.Connection,
-	err error,
-) {
-	if pid == 0 {
-		info, ierr := d.cli.ContainerInspect(ctx, containerID)
-		if ierr != nil {
-			return nil, fmt.Errorf("inspect: %w", ierr)
+) (rv []*graph.Connection, err error) {
+	parse := func(r io.Reader) (err error) {
+		if rv, err = graph.ParseNetstat(r); err != nil {
+			return fmt.Errorf("parse: %w", err)
 		}
 
-		pid = info.State.Pid
+		return nil
 	}
 
-	arg := append([]string{"-t", strconv.Itoa(pid), "-n"}, netstatCmd(proto)...)
-	cmd := exec.CommandContext(ctx, d.cmd, arg...)
+	switch d.opt.Mode {
+	case InContainer:
+		err = d.connectionsContainer(ctx, cid, proto, parse)
+	case LinuxNsenter:
+		if pid == 0 {
+			info, ierr := d.cli.ContainerInspect(ctx, cid)
+			if ierr != nil {
+				return nil, fmt.Errorf("inspect: %w", ierr)
+			}
 
-	pipe, err := cmd.StdoutPipe()
+			pid = info.State.Pid
+		}
+
+		err = d.opt.Nsenter(ctx, pid, proto, parse)
+	case None:
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("pipe: %w", err)
-	}
-
-	defer pipe.Close()
-
-	if err = cmd.Start(); err != nil {
-		return nil, fmt.Errorf("exec: %w", err)
-	}
-
-	if rv, err = graph.ParseNetstat(pipe); err != nil {
-		return nil, fmt.Errorf("parse: %w", err)
+		return nil, fmt.Errorf("%s: %w", d.opt.Mode, err)
 	}
 
 	return rv, nil
 }
 
-func (d *Docker) conectionsContainer(
+func (d *Docker) connectionsContainer(
 	ctx context.Context,
-	_ int,
 	containerID string,
 	proto graph.NetProto,
+	parse func(io.Reader) error,
 ) (
-	rv []*graph.Connection,
 	err error,
 ) {
 	exe, err := d.cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
 		Tty:          true,
 		AttachStdout: true,
-		Cmd:          netstatCmd(proto),
+		Cmd:          netstat(proto),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("exec-create: %w", err)
+		return fmt.Errorf("exec-create: %w", err)
 	}
 
 	resp, err := d.cli.ContainerExecAttach(ctx, exe.ID, types.ExecStartCheck{
 		Tty: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("exec-attach: %w", err)
+		return fmt.Errorf("exec-attach: %w", err)
 	}
 
 	defer resp.Close()
 
-	if rv, err = graph.ParseNetstat(resp.Reader); err != nil {
-		return nil, fmt.Errorf("parse: %w", err)
+	if err = parse(resp.Reader); err != nil {
+		return fmt.Errorf("parse: %w", err)
 	}
 
-	return rv, nil
+	return nil
 }
 
-func netstatCmd(p graph.NetProto) []string {
-	return []string{"netstat", "-an" + p.Flag()}
+func netstat(p graph.NetProto) []string {
+	return []string{netstatCmd, "-an" + p.Flag()}
 }
 
 func extractProcessInfo(
 	c *types.ContainerJSON,
 	s set.Unordered[string],
 ) (rv *graph.ProcessInfo) {
-	rv = &graph.ProcessInfo{Cmd: c.Config.Cmd}
+	rv = &graph.ProcessInfo{
+		Cmd: c.Config.Cmd,
+	}
 
 	if s.Len() == 0 {
 		rv.Env = c.Config.Env
@@ -277,11 +266,11 @@ func extractEndpoints(
 }
 
 func extractVolumesInfo(
-	c *types.Container,
+	mounts []types.MountPoint,
 ) (rv []*graph.VolumeInfo) {
-	rv = make([]*graph.VolumeInfo, len(c.Mounts))
+	rv = make([]*graph.VolumeInfo, len(mounts))
 
-	for i, m := range c.Mounts {
+	for i, m := range mounts {
 		rv[i] = &graph.VolumeInfo{
 			Type: string(m.Type),
 			Src:  m.Source,

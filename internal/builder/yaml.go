@@ -1,5 +1,7 @@
 //go:build !test
 
+// i/o here, nothing to test
+
 package builder
 
 import (
