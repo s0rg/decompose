@@ -68,7 +68,7 @@ func (cb *ClusterBuilder) Name() string {
 	return cb.builder.Name() + " clustered"
 }
 
-func (cb *ClusterBuilder) Write(w io.Writer) {
+func (cb *ClusterBuilder) Write(w io.Writer) error {
 	for src, dmap := range cb.cluster {
 		for dst, ports := range dmap {
 			for _, p := range ports.Dedup() {
@@ -77,7 +77,8 @@ func (cb *ClusterBuilder) Write(w io.Writer) {
 		}
 	}
 
-	cb.builder.Write(w)
+	// this makes `wrapcheck` happy
+	return fmt.Errorf("%w", cb.builder.Write(w))
 }
 
 func (cb *ClusterBuilder) AddNode(n *node.Node) error {

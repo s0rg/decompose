@@ -5,6 +5,7 @@
 package builder
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -148,7 +149,7 @@ func (y *YAML) AddEdge(srcID, dstID string, _ *node.Port) {
 	svc.Links = append(svc.Links, name)
 }
 
-func (y *YAML) Write(w io.Writer) {
+func (y *YAML) Write(w io.Writer) error {
 	enc := yaml.NewEncoder(w)
 	defer enc.Close()
 
@@ -161,5 +162,9 @@ func (y *YAML) Write(w io.Writer) {
 		s.Clear()
 	}
 
-	_ = enc.Encode(y.state)
+	if err := enc.Encode(y.state); err != nil {
+		return fmt.Errorf("encode: %w", err)
+	}
+
+	return nil
 }

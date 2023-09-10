@@ -174,7 +174,6 @@ func (d *Docker) connections(
 		}
 
 		err = d.opt.Nsenter(ctx, pid, proto, parse)
-	case None:
 	}
 
 	if err != nil {

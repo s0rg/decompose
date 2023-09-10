@@ -40,7 +40,7 @@ func (t *Tree) AddEdge(srcID, dstID string, port *node.Port) {
 	t.j.AddEdge(srcID, dstID, port)
 }
 
-func (t *Tree) Write(w io.Writer) {
+func (t *Tree) Write(w io.Writer) error {
 	fmt.Fprintln(w, symRoot)
 
 	t.j.Sorted(func(n *node.JSON, last bool) {
@@ -110,4 +110,6 @@ func (t *Tree) Write(w io.Writer) {
 			fmt.Fprintln(w, next)
 		}
 	})
+
+	return nil
 }

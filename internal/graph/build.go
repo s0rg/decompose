@@ -28,7 +28,7 @@ type Builder interface {
 
 type NamedWriter interface {
 	Name() string
-	Write(io.Writer)
+	Write(io.Writer) error
 }
 
 type NamedBuilderWriter interface {

@@ -2,6 +2,7 @@ package builder
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"sort"
 
@@ -63,11 +64,17 @@ func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
 	}
 }
 
-func (j *JSON) Write(w io.Writer) {
+func (j *JSON) Write(w io.Writer) (err error) {
 	jw := json.NewEncoder(w)
 	jw.SetIndent("", "  ")
 
 	j.Sorted(func(n *node.JSON, _ bool) {
-		_ = jw.Encode(n)
+		err = jw.Encode(n)
 	})
+
+	if err != nil {
+		return fmt.Errorf("encode: %w", err)
+	}
+
+	return nil
 }
