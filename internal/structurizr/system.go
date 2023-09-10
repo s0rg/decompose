@@ -1,7 +1,9 @@
 package srtructurizr
 
 import (
+	"cmp"
 	"io"
+	"slices"
 )
 
 type System struct {
@@ -96,7 +98,17 @@ func (s *System) WriteContainers(w io.Writer, level int) {
 
 	next := level + 1
 
-	for _, cont := range s.containers {
+	contOrder := make([]string, 0, len(s.containers))
+
+	for cID := range s.containers {
+		contOrder = append(contOrder, cID)
+	}
+
+	slices.SortStableFunc(contOrder, cmp.Compare)
+
+	for _, cID := range contOrder {
+		cont := s.containers[cID]
+
 		putBlock(w, next, blockContainer, cont.ID, cont.Name)
 		cont.Write(w, next+1)
 		putEnd(w, next)

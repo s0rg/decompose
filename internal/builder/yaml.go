@@ -1,7 +1,3 @@
-//go:build !test
-
-// i/o here, nothing to test
-
 package builder
 
 import (
@@ -132,17 +128,10 @@ func (y *YAML) AddEdge(srcID, dstID string, _ *node.Port) {
 		return
 	}
 
-	svc, ok := y.state.Services[name]
-	if !ok {
-		return
-	}
+	svc := y.state.Services[name]
 
 	name, ok = y.idmap[dstID]
 	if !ok {
-		return
-	}
-
-	if _, ok = y.state.Services[name]; !ok {
 		return
 	}
 

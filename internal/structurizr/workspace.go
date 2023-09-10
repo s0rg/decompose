@@ -1,22 +1,26 @@
 package srtructurizr
 
 import (
+	"cmp"
 	"fmt"
 	"io"
+	"slices"
 )
 
 type Workspace struct {
-	systems       map[string]*System
 	relationships map[string]map[string]*Relation
+	systems       map[string]*System
 	Name          string
 	Description   string
 	defaultSystem string
+	systemsOrder  []string
 }
 
 func NewWorkspace(name, defaultSystem string) *Workspace {
 	return &Workspace{
 		Name:          name,
 		defaultSystem: defaultSystem,
+		systemsOrder:  []string{safeID(defaultSystem)},
 		systems:       make(map[string]*System),
 		relationships: make(map[string]map[string]*Relation),
 	}
@@ -33,6 +37,10 @@ func (ws *Workspace) System(name string) (rv *System) {
 
 	ws.systems[rv.ID] = rv
 
+	if rv.ID != ws.defaultSystem {
+		ws.systemsOrder = append(ws.systemsOrder, rv.ID)
+	}
+
 	return rv
 }
 
@@ -44,6 +52,10 @@ func (ws *Workspace) HasSystem(name string) (yes bool) {
 
 func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 	srcID, dstID = safeID(srcID), safeID(dstID)
+
+	if !ws.HasSystem(srcID) || !ws.HasSystem(dstID) {
+		return
+	}
 
 	dmap, ok := ws.relationships[srcID]
 	if !ok {
@@ -65,6 +77,8 @@ func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 func (ws *Workspace) Write(w io.Writer) {
 	var level int
 
+	slices.SortStableFunc(ws.systemsOrder[1:], cmp.Compare)
+
 	putHeader(w, level, headerWorkspace)
 
 	level++
@@ -76,7 +90,9 @@ func (ws *Workspace) Write(w io.Writer) {
 
 	level++
 
-	for _, system := range ws.systems {
+	for _, key := range ws.systemsOrder {
+		system := ws.systems[key]
+
 		putBlock(w, level, blockSystem, system.ID, system.Name)
 		system.WriteContainers(w, level)
 		putEnd(w, level)
@@ -84,7 +100,9 @@ func (ws *Workspace) Write(w io.Writer) {
 
 	fmt.Fprintln(w, "")
 
-	for _, system := range ws.systems {
+	for _, key := range ws.systemsOrder {
+		system := ws.systems[key]
+
 		system.WriteRelations(w, level)
 	}
 
@@ -102,8 +120,28 @@ func (ws *Workspace) Write(w io.Writer) {
 }
 
 func (ws *Workspace) writeRelations(w io.Writer, level int) {
-	for srcID, dest := range ws.relationships {
-		for dstID, rel := range dest {
+	relOrder := make([]string, 0, len(ws.relationships))
+
+	for srcID := range ws.relationships {
+		relOrder = append(relOrder, srcID)
+	}
+
+	slices.SortStableFunc(relOrder, cmp.Compare)
+
+	for _, srcID := range relOrder {
+		dest := ws.relationships[srcID]
+
+		dstOrder := make([]string, 0, len(dest))
+
+		for dstID := range dest {
+			dstOrder = append(dstOrder, dstID)
+		}
+
+		slices.SortStableFunc(dstOrder, cmp.Compare)
+
+		for _, dstID := range dstOrder {
+			rel := dest[dstID]
+
 			putRelation(w, level, srcID, dstID)
 			rel.Write(w, level+1)
 			putEnd(w, level)
@@ -112,7 +150,7 @@ func (ws *Workspace) writeRelations(w io.Writer, level int) {
 }
 
 func (ws *Workspace) writeDefaultIncludes(w io.Writer, level int) {
-	for id := range ws.systems {
+	for _, id := range ws.systemsOrder {
 		if id == ws.defaultSystem {
 			continue
 		}
@@ -125,7 +163,9 @@ func (ws *Workspace) writeViews(w io.Writer, level int) {
 	putHeader(w, level, headerViews)
 	level++
 
-	for _, system := range ws.systems {
+	for _, key := range ws.systemsOrder {
+		system := ws.systems[key]
+
 		putView(w, level, blockSystemCtx, system.ID)
 		level++
 

@@ -1,0 +1,76 @@
+workspace {
+	name "de-composed system"
+
+	model {
+		default = softwareSystem "default" {
+			3 = container "3" {
+				description "info 3"
+				technology "node-image"
+				tags "3,listen:1/tcp,listen:2/tcp,net:test-net"
+			}
+		}
+		c1 = softwareSystem "c1" {
+			1 = container "1" {
+				description "info 1"
+				technology "node-image"
+				tags "1,listen:1/tcp,listen:2/tcp,net:test-net"
+			}
+			2 = container "2" {
+				description "info 2"
+				technology "node-image"
+				tags "2,listen:1/tcp,listen:2/tcp,net:test-net"
+			}
+		}
+		c2 = softwareSystem "c2" {
+			ext2 = container "ext2" {
+				tags "external,listen:2/tcp"
+			}
+		}
+
+		c1 -> c2 {
+			tags "0/"
+		}
+		c1 -> default {
+			tags "0/"
+		}
+		default -> c2 {
+			tags "0/"
+		}
+	}
+
+	views {
+		systemContext default "systemContext_default" {
+			include *
+			include c1
+			include c2
+			autoLayout
+		}
+		container default "container_default" {
+			include *
+			autoLayout
+		}
+		systemContext c1 "systemContext_c1" {
+			include *
+			autoLayout
+		}
+		container c1 "container_c1" {
+			include *
+			autoLayout
+		}
+		systemContext c2 "systemContext_c2" {
+			include *
+			autoLayout
+		}
+		container c2 "container_c2" {
+			include *
+			autoLayout
+		}
+
+		styles {
+			element "Element" {
+				metadata true
+				description true
+			}
+		}
+	}
+}

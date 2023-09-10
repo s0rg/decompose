@@ -31,6 +31,13 @@ test: vet
 				-cover -coverpkg="${ALL}" -coverprofile="${COP}" \
 				"${ALL}"
 
+.PHONY: test-update
+test-update:
+	@echo "clean-up..."
+	@find . -name "*.golden" -delete
+	@echo "update"
+	@go test -tags=test "./internal/builder" -update
+
 .PHONY: test-cover
 test-cover: test
 	@go tool cover -func="${COP}"
