@@ -519,6 +519,16 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 					Source:      "src",
 					Destination: "dst",
 				},
+				{
+					Type:        "bind",
+					Source:      "src1",
+					Destination: "dst1",
+				},
+				{
+					Type:        "mount",
+					Source:      "src2",
+					Destination: "dst2",
+				},
 			}
 
 			return rv
@@ -563,7 +573,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 		t.Fail()
 	}
 
-	if len(rv[0].Volumes) != 1 {
+	if len(rv[0].Volumes) != 3 {
 		t.Fail()
 	}
 }

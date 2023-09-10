@@ -1,6 +1,7 @@
 package client
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -276,6 +277,15 @@ func extractVolumesInfo(
 			Dst:  m.Destination,
 		}
 	}
+
+	slices.SortStableFunc(rv, func(a, b *graph.VolumeInfo) int {
+		switch rv := cmp.Compare(a.Type, b.Type); rv {
+		case 0:
+			return cmp.Compare(a.Src, b.Src)
+		default:
+			return rv
+		}
+	})
 
 	return rv
 }

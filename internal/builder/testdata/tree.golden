@@ -1,0 +1,28 @@
+. 
+├─ 1
+│  external: false
+│  image: node-image
+│  tags: 1
+│  cmd: 'echo 'test 1''
+│  listen: 1/tcp, 2/tcp
+│  networks: test-net
+│  │ 
+│  ├─ 2: 2/tcp
+│  └─ 3: 3/tcp
+│ 
+├─ 2
+│  external: false
+│  tags: 2
+│  cmd: 'echo 'test 2''
+│  listen: 2/tcp
+│  networks: test-net
+│  │ 
+│  ├─ 1: 1/tcp, 2/tcp, 3/tcp
+│  └─ 3: 3/tcp
+│ 
+└─ 3
+   external: false
+   tags: 3
+   cmd: 'echo 'test 3''
+   listen: 3/tcp
+   networks: test-net

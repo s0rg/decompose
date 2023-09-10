@@ -1,0 +1,39 @@
+services:
+    "1":
+        image: node-image
+        expose:
+            - "1/tcp"
+            - "2/tcp"
+        links:
+            - "2"
+        volumes:
+            - 1_data:dst
+        networks:
+            - test-net
+        environment:
+            - "FOO=1"
+        command:
+            - echo
+            - '''test 1'''
+    "2":
+        image: node-image
+        expose:
+            - "1/tcp"
+            - "2/tcp"
+        links:
+            - "1"
+        volumes:
+            - 2_data:dst2
+        networks:
+            - test-net
+        environment:
+            - "FOO=2"
+        command:
+            - echo
+            - '''test 2'''
+networks:
+    test-net:
+        external: true
+volumes:
+    1_data: null
+    2_data: null
