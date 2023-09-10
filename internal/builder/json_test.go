@@ -3,6 +3,7 @@ package builder_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -14,6 +15,12 @@ import (
 type testEnricher struct{}
 
 func (de *testEnricher) Enrich(_ *node.Node) {}
+
+type errWriter struct {
+	Err error
+}
+
+func (ew *errWriter) Write(_ []byte) (n int, err error) { return 0, ew.Err }
 
 func TestJSON(t *testing.T) {
 	t.Parallel()
@@ -175,6 +182,20 @@ func TestJSONAddBadEdges(t *testing.T) {
 	}
 
 	if tb.Nodes != 2 || tb.Edges != 0 {
+		t.Fail()
+	}
+}
+
+func TestJSONWriteError(t *testing.T) {
+	t.Parallel()
+
+	bldr := builder.NewJSON()
+	testErr := errors.New("test-error")
+	errW := &errWriter{Err: testErr}
+
+	_ = bldr.AddNode(&node.Node{ID: "1", Name: "1"})
+
+	if err := bldr.Write(errW); !errors.Is(err, testErr) {
 		t.Fail()
 	}
 }

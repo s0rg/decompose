@@ -96,6 +96,8 @@ func (s *Structurizr) AddEdge(srcID, dstID string, port *node.Port) {
 	rel.Tags = append(rel.Tags, port.Label())
 }
 
-func (s *Structurizr) Write(w io.Writer) {
+func (s *Structurizr) Write(w io.Writer) error {
 	s.ws.Write(w)
+
+	return nil
 }

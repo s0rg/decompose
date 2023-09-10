@@ -38,11 +38,8 @@ func (tb *testNamedBuilder) AddEdge(_, _ string, _ *node.Port) {
 	tb.edges++
 }
 
-func (tb *testNamedBuilder) Name() string {
-	return testBuilderName
-}
-
-func (tb *testNamedBuilder) Write(_ io.Writer) {}
+func (tb *testNamedBuilder) Name() string            { return testBuilderName }
+func (tb *testNamedBuilder) Write(_ io.Writer) error { return nil }
 
 func TestClusterError(t *testing.T) {
 	t.Parallel()

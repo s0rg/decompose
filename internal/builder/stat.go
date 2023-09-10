@@ -97,7 +97,7 @@ func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
 	s.edgesTotal++
 }
 
-func (s *Stat) Write(w io.Writer) {
+func (s *Stat) Write(w io.Writer) error {
 	fmt.Fprintf(w, "Nodes: %d\n", s.nodes)
 	fmt.Fprintf(w, "Connections total: %d uniq: %d\n", s.edgesTotal, s.edgesUniq)
 
@@ -116,6 +116,8 @@ func (s *Stat) Write(w io.Writer) {
 
 	fmt.Fprintln(w, "Ports:")
 	writeStats(w, ports)
+
+	return nil
 }
 
 func (s *Stat) calcStats() (ports, clusters []*stat) {

@@ -59,6 +59,9 @@ issues:
       text: "G204" # G204: Subprocess launched with a potential tainted input
       linters:
         - gosec
+    - path: internal/client/docker\.go
+      linters:
+        - exhaustive # None mode, impossible
     - path: internal/builder/json\.go
       linters:
         - errchkjson

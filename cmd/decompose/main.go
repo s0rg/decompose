@@ -109,7 +109,7 @@ func setupFlags() {
 	flag.Usage = usage
 }
 
-func write(name string, writer func(io.Writer)) error {
+func write(name string, writer func(io.Writer) error) error {
 	var out io.Writer = os.Stdout
 
 	if name != defaultOutput {
@@ -123,7 +123,9 @@ func write(name string, writer func(io.Writer)) error {
 		out = fd
 	}
 
-	writer(out)
+	if err := writer(out); err != nil {
+		return fmt.Errorf("write '%s': %w", name, err)
+	}
 
 	return nil
 }

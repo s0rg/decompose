@@ -173,8 +173,10 @@ func (d *DOT) AddEdge(srcID, dstID string, port *node.Port) {
 	edge.Attr("color", color).Attr("fontcolor", color)
 }
 
-func (d *DOT) Write(w io.Writer) {
+func (d *DOT) Write(w io.Writer) error {
 	d.g.Write(w)
+
+	return nil
 }
 
 func labelColor(label string) (rv string) {
