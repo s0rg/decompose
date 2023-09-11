@@ -1,18 +1,26 @@
 {
     "nginx": {
         "info": "nginx reverse-proxy",
+        "doc": "https://nginx.org/en/docs/",
+        "src": "https://trac.nginx.org/nginx",
         "tags": ["http"]
     },
     "back": {
         "info": "backend service",
-        "tags": ["app", "backend"]
+        "doc": "https://acme.corp/internal/docs/api",
+        "src": "https://git.acme.corp/backend/api",
+        "tags": ["api", "backend"]
     },
     "db": {
         "info": "postgresql",
+        "doc": "https://www.postgresql.org/docs/15/index.html",
+        "src": "https://git.postgresql.org/gitweb/?p=postgresql.git;a=summary",
         "tags": ["store", "sql"]
     },
     "foo": {
         "info": "foo service",
+        "doc": "https://acme.corp/internal/docs/foo",
+        "src": "https://git.acme.corp/backend-legacy/foo",
         "tags": ["legacy"]
     }
 }

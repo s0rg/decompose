@@ -14,8 +14,10 @@ type Volume struct {
 }
 
 type Meta struct {
-	Info string
-	Tags []string
+	Info string   `json:"info"`
+	Doc  string   `json:"doc"`
+	Src  string   `json:"src"`
+	Tags []string `json:"tags"`
 }
 
 type Node struct {

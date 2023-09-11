@@ -79,19 +79,19 @@ func TestDOTGolden(t *testing.T) {
 	bld.AddEdge("node-1", "3", &node.Port{Kind: "tcp", Value: 3})
 	bld.AddEdge("3", "node-1", &node.Port{Kind: "tcp", Value: 3})
 
-	bld.AddEdge("c1", "c2", &node.Port{Kind: "tcp", Value: 1})
+	bld.AddEdge("c1", "c2", &node.Port{Kind: "tcp", Value: 2})
 	bld.AddEdge("c1", "c2", &node.Port{Kind: "tcp", Value: 2})
 
 	bld.AddEdge("c2", "c1", &node.Port{Kind: "tcp", Value: 1})
-	bld.AddEdge("c2", "c1", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge("c2", "c1", &node.Port{Kind: "tcp", Value: 1})
 
 	bld.AddEdge("c1", "", &node.Port{})
 	bld.AddEdge("", "c2", &node.Port{})
 
 	bld.AddEdge("node-1", "node-2", &node.Port{Kind: "tcp", Value: 1})
-	bld.AddEdge("node-1", "node-2", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge("node-1", "node-2", &node.Port{Kind: "tcp", Value: 1})
 
-	bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 1})
+	bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 2})
 	bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 2})
 
 	var buf bytes.Buffer

@@ -175,6 +175,8 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 {
     "foo": {
         "info": "info for foo",
+        "doc": "https://acme.corp/docs/foo",
+        "src": "https://git.acme.corp/foo",
         "tags": ["some"]
     },
     "bar": {

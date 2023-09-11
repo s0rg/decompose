@@ -115,11 +115,9 @@ func (d *DOT) getSrc(id string) (rv dot.Node, out string, ok bool) {
 
 	out = id + "_" + outPort
 
-	if rv, ok = sg.FindNodeById(out); ok {
-		return rv, out, ok
-	}
+	rv, ok = sg.FindNodeById(out)
 
-	return
+	return rv, out, ok
 }
 
 func (d *DOT) getDst(id string, port *node.Port) (rv dot.Node, out string, ok bool) {
