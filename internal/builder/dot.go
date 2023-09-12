@@ -63,8 +63,8 @@ func (d *DOT) AddNode(n *node.Node) error {
 	}
 
 	if n.Meta != nil {
-		if len(n.Meta.Info) > 0 {
-			label += "&#92;ninfo: " + n.Meta.Info
+		if lines, ok := n.FormatMeta(); ok {
+			label += "&#92;ninfo:&#92;n" + strings.Join(lines, "&#92;n")
 		}
 
 		if len(n.Meta.Tags) > 0 {

@@ -3,8 +3,8 @@ digraph  {
 		label="c1";
 		n2[label="out"];
 		n12[label="1/tcp"];
-		n3[color="black",label="<out> 1&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 1&#92;ntags: 1|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
-		n4[color="black",label="<out> 2&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 2&#92;ntags: 2|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n3[color="black",label="<out> 1&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 1&#92;ndocs-url&#92;nrepo-url&#92;ntags: 1|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n4[color="black",label="<out> 2&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 2&#92;ntags: 2|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
 		
 	}
 	subgraph cluster_s8 {
@@ -17,7 +17,7 @@ digraph  {
 	subgraph cluster_s5 {
 		label="c3";
 		n6[label="out"];
-		n7[color="black",label="<out> 3&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 3&#92;ntags: 3|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n7[color="black",label="<out> 3&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 3&#92;ntags: 3|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
 		
 	}
 	concentrate=true;splines="spline";

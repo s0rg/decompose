@@ -11,7 +11,9 @@ workspace {
 		}
 		c1 = softwareSystem "c1" {
 			1 = container "1" {
-				description "info 1"
+				description "info 1 \
+docs-url \
+repo-url"
 				technology "node-image"
 				tags "1,listen:1/tcp,listen:2/tcp,net:test-net"
 			}

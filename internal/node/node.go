@@ -1,6 +1,9 @@
 package node
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"slices"
+)
 
 type Process struct {
 	Cmd []string `json:"cmd"`
@@ -15,8 +18,8 @@ type Volume struct {
 
 type Meta struct {
 	Info string   `json:"info"`
-	Doc  string   `json:"doc"`
-	Src  string   `json:"src"`
+	Docs string   `json:"docs"`
+	Repo string   `json:"repo"`
 	Tags []string `json:"tags"`
 }
 
@@ -87,4 +90,28 @@ func (n *Node) ToView() (rv *View) {
 	}
 
 	return rv
+}
+
+func (n *Node) FormatMeta() (rv []string, ok bool) {
+	if n.Meta == nil {
+		return
+	}
+
+	const maxMeta = 3
+
+	rv = make([]string, 0, maxMeta)
+
+	if n.Meta.Info != "" {
+		rv = append(rv, n.Meta.Info)
+	}
+
+	if n.Meta.Docs != "" {
+		rv = append(rv, n.Meta.Docs)
+	}
+
+	if n.Meta.Repo != "" {
+		rv = append(rv, n.Meta.Repo)
+	}
+
+	return slices.Clip(rv), true
 }
