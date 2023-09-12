@@ -77,8 +77,11 @@ func (cb *ClusterBuilder) Write(w io.Writer) error {
 		}
 	}
 
-	// this makes `wrapcheck` happy
-	return fmt.Errorf("%w", cb.builder.Write(w))
+	if err := cb.builder.Write(w); err != nil {
+		return fmt.Errorf("%w", cb.builder.Write(w))
+	}
+
+	return nil
 }
 
 func (cb *ClusterBuilder) AddNode(n *node.Node) error {
