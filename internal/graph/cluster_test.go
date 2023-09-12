@@ -39,7 +39,7 @@ func (tb *testNamedBuilder) AddEdge(_, _ string, _ *node.Port) {
 }
 
 func (tb *testNamedBuilder) Name() string            { return testBuilderName }
-func (tb *testNamedBuilder) Write(_ io.Writer) error { return nil }
+func (tb *testNamedBuilder) Write(_ io.Writer) error { return tb.Err }
 
 func TestClusterError(t *testing.T) {
 	t.Parallel()
@@ -265,6 +265,29 @@ func TestClusterBuilderName(t *testing.T) {
 	name := ca.Name()
 
 	if !strings.HasPrefix(name, testBuilderName) {
+		t.Fail()
+	}
+}
+
+func TestClusterBuilderWriteError(t *testing.T) {
+	t.Parallel()
+
+	tb := &testNamedBuilder{}
+	ca := graph.NewClusterBuilder(tb, nil)
+
+	if err := ca.FromReader(bytes.NewBufferString(clusterRules)); err != nil {
+		t.Fatal(err)
+	}
+
+	ca.AddNode(&node.Node{
+		ID: "1",
+		Ports: []*node.Port{
+			{Kind: "tcp", Value: 80},
+		}})
+
+	tb.Err = errors.New("test-error")
+
+	if err := ca.Write(nil); !errors.Is(err, tb.Err) {
 		t.Fail()
 	}
 }
