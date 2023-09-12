@@ -14,7 +14,7 @@ decompose -cluster cluster.json -meta meta.json -load stream.json -format dot | 
 
 ## csv2meta script
 
-example script to convert any compatible csv - at least 3 columns, with `id, info, tags` order and comma as delimeter
+example script to convert any compatible csv - at least 3 columns, with `id, info, docs, repo, tags` order and comma as delimeter
 to metadata json for decomposer
 
 ## usage

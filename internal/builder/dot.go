@@ -63,8 +63,8 @@ func (d *DOT) AddNode(n *node.Node) error {
 	}
 
 	if n.Meta != nil {
-		if len(n.Meta.Info) > 0 {
-			label += "&#92;ninfo: " + n.Meta.Info
+		if lines, ok := n.FormatMeta(); ok {
+			label += "&#92;ninfo:&#92;n" + strings.Join(lines, "&#92;n")
 		}
 
 		if len(n.Meta.Tags) > 0 {
@@ -115,11 +115,9 @@ func (d *DOT) getSrc(id string) (rv dot.Node, out string, ok bool) {
 
 	out = id + "_" + outPort
 
-	if rv, ok = sg.FindNodeById(out); ok {
-		return rv, out, ok
-	}
+	rv, ok = sg.FindNodeById(out)
 
-	return
+	return rv, out, ok
 }
 
 func (d *DOT) getDst(id string, port *node.Port) (rv dot.Node, out string, ok bool) {

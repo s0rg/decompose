@@ -2,39 +2,37 @@ digraph  {
 	subgraph cluster_s1 {
 		label="c1";
 		n2[label="out"];
-		n13[label="1/tcp"];
-		n14[label="2/tcp"];
-		n3[color="black",label="<out> 1&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 1&#92;ntags: 1|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
-		n4[color="black",label="<out> 2&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 2&#92;ntags: 2|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n12[label="1/tcp"];
+		n3[color="black",label="<out> 1&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 1&#92;ndocs-url&#92;nrepo-url&#92;ntags: 1|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n4[color="black",label="<out> 2&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 2&#92;ntags: 2|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
 		
 	}
 	subgraph cluster_s8 {
 		label="c2";
 		n10[color="red",label="<out> external: 2|{<tcp2> 2/tcp}",shape="record"];
 		n9[label="out"];
-		n11[label="1/tcp"];
-		n12[label="2/tcp"];
+		n11[label="2/tcp"];
 		
 	}
 	subgraph cluster_s5 {
 		label="c3";
 		n6[label="out"];
-		n7[color="black",label="<out> 3&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo: info 3&#92;ntags: 3|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
+		n7[color="black",label="<out> 3&#92;nimage: node-image&#92;nnet: test-net&#92;ninfo:&#92;ninfo 3&#92;ntags: 3|{<tcp1> 1/tcp|<tcp2> 2/tcp}",shape="record"];
 		
 	}
 	concentrate=true;splines="spline";
 	n10:out->n3:tcp1[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
 	n10:out->n3:tcp2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
 	n10:out->n3:tcp3[color="#7570b3",fontcolor="#7570b3",label="3/tcp"];
-	n2->n11[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n2->n12[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n9->n13[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n9->n14[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
+	n2->n11[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
+	n2->n11[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
+	n9->n12[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
+	n9->n12[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
 	n3:out->n10:tcp2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
 	n3:out->n10:tcp3[color="#7570b3",fontcolor="#7570b3",label="3/tcp"];
 	n3:out->n4:tcp1[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n3:out->n4:tcp2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n4:out->n3:tcp1[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
+	n3:out->n4:tcp1[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
+	n4:out->n3:tcp2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
 	n4:out->n3:tcp2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
 	
 }

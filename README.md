@@ -49,7 +49,8 @@ Closest analogs, i can find, that not suit my needs very well:
 - single-binary, static-compiled unix-way `cli` (all output goes to stdout, progress information to stderr)
 - produces detailed connections graph **with ports**
 - save `json` stream once and process it later in any way you want
-- fast, scans ~470 containers in around 5 sec
+- all output formats are sorted, thus can be placed to any `vcs` to observe changes
+- fast, scans ~470 containers with ~4000 connections in around 5 sec
 - 100% test-coverage
 
 ## known limitations
@@ -175,6 +176,8 @@ To enrich output with detailed descriptions, you can provide additional `json` f
 {
     "foo": {
         "info": "info for foo",
+        "docs": "https://acme.corp/docs/foo",
+        "repo": "https://git.acme.corp/foo",
         "tags": ["some"]
     },
     "bar": {

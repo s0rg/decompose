@@ -25,6 +25,8 @@ func TestSDSLGolden(t *testing.T) {
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
 			Info: "info 1",
+			Docs: "docs-url",
+			Repo: "repo-url",
 			Tags: []string{"1"},
 		},
 	})

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
 	sdsl "github.com/s0rg/decompose/internal/structurizr"
@@ -58,8 +59,9 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 		cont.Tags = append(cont.Tags, "external")
 	}
 
-	if n.Meta != nil {
-		cont.Description = n.Meta.Info
+	if lines, ok := n.FormatMeta(); ok {
+		cont.Description = strings.Join(lines, " \\\n")
+
 		cont.Tags = append(cont.Tags, n.Meta.Tags...)
 	}
 
