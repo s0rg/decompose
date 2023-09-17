@@ -1,4 +1,4 @@
-package graph_test
+package cluster_test
 
 import (
 	"bytes"
@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/antonmedv/expr/vm"
-	"github.com/s0rg/decompose/internal/graph"
+
+	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/node"
 )
 
@@ -50,7 +51,7 @@ func TestClusterError(t *testing.T) {
 		`[{"name": "foo", "if": "#"}]`,
 	}
 
-	ca := graph.NewClusterBuilder(nil, nil)
+	ca := cluster.NewRules(nil, nil)
 
 	for _, tc := range testCases {
 		if err := ca.FromReader(bytes.NewBufferString(tc)); err == nil {
@@ -59,7 +60,7 @@ func TestClusterError(t *testing.T) {
 	}
 }
 
-func TestClusterMatch(t *testing.T) {
+func TestRulesMatch(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -84,7 +85,7 @@ func TestClusterMatch(t *testing.T) {
 				{Kind: "tcp", Value: 80},
 				{Kind: "tcp", Value: 443},
 			}},
-			Want: "bar",
+			Want: "foo",
 		},
 		{
 			Node: &node.Node{Ports: []*node.Port{
@@ -92,7 +93,7 @@ func TestClusterMatch(t *testing.T) {
 				{Kind: "tcp", Value: 80},
 				{Kind: "tcp", Value: 8080},
 			}},
-			Want: "bar",
+			Want: "foo",
 		},
 		{
 			Node: &node.Node{Ports: []*node.Port{
@@ -102,7 +103,7 @@ func TestClusterMatch(t *testing.T) {
 		},
 	}
 
-	ca := graph.NewClusterBuilder(nil, nil)
+	ca := cluster.NewRules(nil, nil)
 
 	n := testCases[0].Node
 
@@ -134,7 +135,7 @@ func TestClusterMatch(t *testing.T) {
 	}
 }
 
-func TestClusterMatchWeight(t *testing.T) {
+func TestRulesMatchWeight(t *testing.T) {
 	t.Parallel()
 
 	const clusterRulesWeight = `[{"name": "foo", "weight": 2, "if": "node.Listen.Has('80/tcp')"},
@@ -146,7 +147,7 @@ func TestClusterMatchWeight(t *testing.T) {
 		{Kind: "tcp", Value: 8080},
 	}}
 
-	ca := graph.NewClusterBuilder(nil, nil)
+	ca := cluster.NewRules(nil, nil)
 
 	if err := ca.FromReader(bytes.NewBufferString(clusterRulesWeight)); err != nil {
 		t.Fatal(err)
@@ -162,11 +163,11 @@ func TestClusterMatchWeight(t *testing.T) {
 	}
 }
 
-func TestClusterBuilder(t *testing.T) {
+func TestRules(t *testing.T) {
 	t.Parallel()
 
 	tb := &testNamedBuilder{}
-	ca := graph.NewClusterBuilder(tb, nil)
+	ca := cluster.NewRules(tb, nil)
 
 	if err := ca.FromReader(bytes.NewBufferString(clusterRules)); err != nil {
 		t.Fatal(err)
@@ -215,13 +216,13 @@ func TestClusterBuilder(t *testing.T) {
 	}
 }
 
-func TestClusterBuilderMatchError(t *testing.T) {
+func TestRulesMatchError(t *testing.T) {
 	t.Parallel()
 
 	myError := errors.New("test-error")
 
 	tb := &testNamedBuilder{}
-	ca := graph.NewClusterBuilder(tb, func(_ *vm.Program, _ any) (any, error) {
+	ca := cluster.NewRules(tb, func(_ *vm.Program, _ any) (any, error) {
 		return nil, myError
 	})
 
@@ -234,13 +235,13 @@ func TestClusterBuilderMatchError(t *testing.T) {
 	}
 }
 
-func TestClusterBuilderAddError(t *testing.T) {
+func TestRulesBuilderAddError(t *testing.T) {
 	t.Parallel()
 
 	myError := errors.New("test-error")
 
 	tb := &testNamedBuilder{Err: myError}
-	ca := graph.NewClusterBuilder(tb, nil)
+	ca := cluster.NewRules(tb, nil)
 
 	if err := ca.FromReader(bytes.NewBufferString(clusterRules)); err != nil {
 		t.Fatal(err)
@@ -256,11 +257,11 @@ func TestClusterBuilderAddError(t *testing.T) {
 	}
 }
 
-func TestClusterBuilderName(t *testing.T) {
+func TestRulesBuilderName(t *testing.T) {
 	t.Parallel()
 
 	tb := &testNamedBuilder{}
-	ca := graph.NewClusterBuilder(tb, nil)
+	ca := cluster.NewRules(tb, nil)
 
 	name := ca.Name()
 
@@ -269,11 +270,11 @@ func TestClusterBuilderName(t *testing.T) {
 	}
 }
 
-func TestClusterBuilderWriteError(t *testing.T) {
+func TestRulesBuilderWriteError(t *testing.T) {
 	t.Parallel()
 
 	tb := &testNamedBuilder{}
-	ca := graph.NewClusterBuilder(tb, nil)
+	ca := cluster.NewRules(tb, nil)
 
 	if err := ca.FromReader(bytes.NewBufferString(clusterRules)); err != nil {
 		t.Fatal(err)

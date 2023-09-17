@@ -46,6 +46,7 @@ func (n *Node) ToJSON() (rv *JSON) {
 		Networks:   n.Networks,
 		Listen:     make([]string, len(n.Ports)),
 		Volumes:    []*Volume{},
+		Tags:       []string{},
 		Connected:  make(map[string][]string),
 	}
 

@@ -1,4 +1,4 @@
-package graph
+package cluster
 
 import (
 	"cmp"
@@ -11,6 +11,7 @@ import (
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 
+	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"
 )
 
@@ -39,8 +40,8 @@ type (
 
 	exprRUN func(*vm.Program, any) (any, error)
 
-	ClusterBuilder struct {
-		builder NamedBuilderWriter
+	Rules struct {
+		builder graph.NamedBuilderWriter
 		runner  exprRUN
 		nodes   map[string]*node.Node
 		cluster map[string]map[string]node.Ports
@@ -48,15 +49,15 @@ type (
 	}
 )
 
-func NewClusterBuilder(
-	b NamedBuilderWriter,
+func NewRules(
+	b graph.NamedBuilderWriter,
 	r exprRUN,
-) *ClusterBuilder {
+) *Rules {
 	if r == nil {
 		r = expr.Run
 	}
 
-	return &ClusterBuilder{
+	return &Rules{
 		builder: b,
 		runner:  r,
 		nodes:   make(map[string]*node.Node),
@@ -64,11 +65,11 @@ func NewClusterBuilder(
 	}
 }
 
-func (cb *ClusterBuilder) Name() string {
+func (cb *Rules) Name() string {
 	return cb.builder.Name() + " clustered"
 }
 
-func (cb *ClusterBuilder) Write(w io.Writer) error {
+func (cb *Rules) Write(w io.Writer) error {
 	for src, dmap := range cb.cluster {
 		for dst, ports := range dmap {
 			for _, p := range ports.Dedup() {
@@ -84,7 +85,7 @@ func (cb *ClusterBuilder) Write(w io.Writer) error {
 	return nil
 }
 
-func (cb *ClusterBuilder) AddNode(n *node.Node) error {
+func (cb *Rules) AddNode(n *node.Node) error {
 	if cluster, ok := cb.Match(n); ok {
 		n.Cluster = cluster
 	}
@@ -98,7 +99,7 @@ func (cb *ClusterBuilder) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (cb *ClusterBuilder) AddEdge(src, dst string, port *node.Port) {
+func (cb *Rules) AddEdge(src, dst string, port *node.Port) {
 	nsrc, ok := cb.nodes[src]
 	if !ok {
 		return
@@ -122,11 +123,11 @@ func (cb *ClusterBuilder) AddEdge(src, dst string, port *node.Port) {
 	cb.builder.AddEdge(src, dst, port)
 }
 
-func (cb *ClusterBuilder) CountRules() int {
+func (cb *Rules) CountRules() int {
 	return len(cb.rules)
 }
 
-func (cb *ClusterBuilder) FromReader(r io.Reader) (err error) {
+func (cb *Rules) FromReader(r io.Reader) (err error) {
 	var rules []ruleJSON
 
 	dec := json.NewDecoder(r)
@@ -159,15 +160,13 @@ func (cb *ClusterBuilder) FromReader(r io.Reader) (err error) {
 	}
 
 	slices.SortStableFunc(cb.rules, func(a, b *rulePROG) int {
-		return cmp.Compare(a.Weight, b.Weight)
+		return cmp.Compare(b.Weight, a.Weight)
 	})
-
-	slices.Reverse(cb.rules)
 
 	return nil
 }
 
-func (cb *ClusterBuilder) Match(n *node.Node) (cluster string, ok bool) {
+func (cb *Rules) Match(n *node.Node) (cluster string, ok bool) {
 	if len(cb.rules) == 0 {
 		return "", false
 	}

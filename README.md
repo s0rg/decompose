@@ -2,8 +2,7 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
-
-<!-- ![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg) -->
+![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg)
 
 [![CI](https://github.com/s0rg/decompose/workflows/ci/badge.svg)](https://github.com/s0rg/decompose/actions?query=workflow%3Aci)
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
@@ -42,8 +41,8 @@ Closest analogs, i can find, that not suit my needs very well:
 ## features
 
 - os-independent, it uses different strategies to get container connections:
-  - running on **linux as root** is the fastest way and it will work with all types of containers (even
-    `scratch`-based)
+  - running on **linux as root** is the fastest way and it will work with all types of containers (even `scratch`-based)
+    as it use `nsenter`
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - single-binary, static-compiled unix-way `cli` (all output goes to stdout, progress information to stderr)

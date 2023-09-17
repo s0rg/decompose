@@ -15,6 +15,7 @@ import (
 
 	"github.com/s0rg/decompose/internal/builder"
 	"github.com/s0rg/decompose/internal/client"
+	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -177,15 +178,15 @@ func prepareConfig() (
 
 	if fCluster != "" {
 		if builder.SupportCluster(fFormat) {
-			cluster := graph.NewClusterBuilder(bildr, nil)
+			cb := cluster.NewRules(bildr, nil)
 
-			if err = feed(fCluster, cluster.FromReader); err != nil {
+			if err = feed(fCluster, cb.FromReader); err != nil {
 				return nil, nil, fmt.Errorf("cluster: %w", err)
 			}
 
-			log.Printf("Cluster rules loaded: %d", cluster.CountRules())
+			log.Printf("Cluster rules loaded: %d", cb.CountRules())
 
-			bildr, nwr = cluster, cluster
+			bildr, nwr = cb, cb
 		} else {
 			log.Println(bildr.Name(), "cannot handle graph clusters - ignoring")
 		}
