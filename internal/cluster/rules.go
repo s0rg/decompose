@@ -66,7 +66,7 @@ func NewRules(
 }
 
 func (cb *Rules) Name() string {
-	return cb.builder.Name() + " clustered"
+	return cb.builder.Name() + " rules-clustered"
 }
 
 func (cb *Rules) Write(w io.Writer) error {
