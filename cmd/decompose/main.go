@@ -88,7 +88,8 @@ func setupFlags() {
 		&fCluster,
 		"cluster",
 		"",
-		"json file with clusterization rules, or auto:<factor> for auto-clustering, factor is similarity in (0.0, 1.0] range",
+		"json file with clusterization rules, or auto:<similarity> for auto-clustering, "+
+			"similarity is float in (0.0, 1.0] range",
 	)
 
 	flag.StringVar(
