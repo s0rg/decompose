@@ -11,10 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/s0rg/decompose/internal/builder"
 	"github.com/s0rg/decompose/internal/client"
+	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -22,6 +24,7 @@ const (
 	appName       = "Decompose"
 	appSite       = "https://github.com/s0rg/decompose"
 	linuxOS       = "linux"
+	autoPrefix    = "auto:"
 	defaultProto  = "all"
 	defaultOutput = "-"
 )
@@ -81,7 +84,14 @@ func setupFlags() {
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
-	flag.StringVar(&fCluster, "cluster", "", "json file with clusterization rules")
+	flag.StringVar(
+		&fCluster,
+		"cluster",
+		"",
+		"json file with clusterization rules, or auto:<similarity> for auto-clustering, "+
+			"similarity is float in (0.0, 1.0] range",
+	)
+
 	flag.StringVar(
 		&fFormat,
 		"format",
@@ -145,6 +155,40 @@ func feed(name string, read func(io.Reader) error) (err error) {
 	return nil
 }
 
+func makeClusterizer(
+	b graph.NamedBuilderWriter,
+	f, v string,
+) (rv graph.NamedBuilderWriter, err error) {
+	if !builder.SupportCluster(f) {
+		log.Println(b.Name(), "cannot handle graph clusters - ignoring")
+
+		return b, nil
+	}
+
+	if strings.HasPrefix(v, autoPrefix) {
+		sims, _ := strings.CutPrefix(v, autoPrefix)
+
+		simf, errf := strconv.ParseFloat(sims, 64)
+		if errf != nil {
+			return nil, fmt.Errorf("auto: %w", errf)
+		}
+
+		rv = cluster.NewLayers(b, simf)
+	} else {
+		cr := cluster.NewRules(b, nil)
+
+		if err = feed(fCluster, cr.FromReader); err != nil {
+			return nil, fmt.Errorf("rules: %w", err)
+		}
+
+		log.Printf("Cluster rules loaded: %d", cr.CountRules())
+
+		rv = cr
+	}
+
+	return rv, nil
+}
+
 func prepareConfig() (
 	cfg *graph.Config,
 	nwr graph.NamedWriter,
@@ -176,19 +220,12 @@ func prepareConfig() (
 	}
 
 	if fCluster != "" {
-		if builder.SupportCluster(fFormat) {
-			cluster := graph.NewClusterBuilder(bildr, nil)
-
-			if err = feed(fCluster, cluster.FromReader); err != nil {
-				return nil, nil, fmt.Errorf("cluster: %w", err)
-			}
-
-			log.Printf("Cluster rules loaded: %d", cluster.CountRules())
-
-			bildr, nwr = cluster, cluster
-		} else {
-			log.Println(bildr.Name(), "cannot handle graph clusters - ignoring")
+		cb, err := makeClusterizer(bildr, fFormat, fCluster)
+		if err != nil {
+			return nil, nil, fmt.Errorf("cluster: %w", err)
 		}
+
+		bildr, nwr = cb, cb
 	}
 
 	skipKeys := []string{}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/s0rg/decompose/internal/builder"
+	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -107,14 +108,14 @@ func TestStatCluster(t *testing.T) {
 	const rules = `[{"name": "foo", "if": "node.Listen.Has('1/tcp')"},
 {"name": "bar", "if": "node.Listen.HasAny('2/tcp')"}]`
 
-	cluster := graph.NewClusterBuilder(builder.NewStat(), nil)
+	cb := cluster.NewRules(builder.NewStat(), nil)
 
-	if err := cluster.FromReader(bytes.NewBufferString(rules)); err != nil {
+	if err := cb.FromReader(bytes.NewBufferString(rules)); err != nil {
 		t.Fatal(err)
 	}
 
 	cfg := &graph.Config{
-		Builder: cluster,
+		Builder: cb,
 		Meta:    &testEnricher{},
 		Proto:   graph.ALL,
 	}
@@ -147,7 +148,7 @@ func TestStatCluster(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	cluster.Write(&buf)
+	cb.Write(&buf)
 
 	res := buf.String()
 

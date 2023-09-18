@@ -2,8 +2,7 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
-
-<!-- ![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg) -->
+![Downloads](https://img.shields.io/github/downloads/s0rg/decompose/total.svg)
 
 [![CI](https://github.com/s0rg/decompose/workflows/ci/badge.svg)](https://github.com/s0rg/decompose/actions?query=workflow%3Aci)
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
@@ -42,8 +41,8 @@ Closest analogs, i can find, that not suit my needs very well:
 ## features
 
 - os-independent, it uses different strategies to get container connections:
-  - running on **linux as root** is the fastest way and it will work with all types of containers (even
-    `scratch`-based)
+  - running on **linux as root** is the fastest way and it will work with all types of containers (even `scratch`-based)
+    as it use `nsenter`
   - running as non-root or on non-linux OS will attempt to run `netsat` inside container, if this fails
     (i.e. for missing `netstat` binary), no connections for such container will be gathered
 - single-binary, static-compiled unix-way `cli` (all output goes to stdout, progress information to stderr)
@@ -51,6 +50,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - save `json` stream once and process it later in any way you want
 - all output formats are sorted, thus can be placed to any `vcs` to observe changes
 - fast, scans ~470 containers with ~4000 connections in around 5 sec
+- auto-clusterization based on graph topology
 - 100% test-coverage
 
 ## known limitations
@@ -71,7 +71,7 @@ decompose [flags]
 possible flags with default values:
 
   -cluster string
-        json file with clusterization rules
+        json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
   -follow string
         follow only this container by name
   -format string
@@ -193,7 +193,9 @@ one of provided keys, like `foo-1` or `bar1` for this example.
 See [csv2meta.py](examples/csv2meta.py) for example how to create such `json` fom csv, and
 [meta.json](examples/meta.json) for metadata sample.
 
-## clusterization rules
+## clusterization
+
+### with rules
 
 You can join your services into `clusters` by flexible rules, in `dot`, `structurizr` and `stat` output formats.
 Example `json` (order matters):
@@ -216,17 +218,23 @@ fields:
 
 ```go
 type Node struct {
-	Listen     PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
-	Name       string       // container name
-	Image      string       // container image
-	Cmd        string       // container cmd
-	Args       []string     // container args
-	Tags       []string     // tags, if meta present
-	IsExternal bool         // external flag
+    Listen     PortMatcher  // port matcher with two methods: `HasAny(...string) bool` and `Has(...string) bool`
+    Name       string       // container name
+    Image      string       // container image
+    Cmd        string       // container cmd
+    Args       []string     // container args
+    Tags       []string     // tags, if meta present
+    IsExternal bool         // external flag
 }
 ```
 
 See: [cluster.json](examples/cluster.json) for detailed example.
+
+### automatic
+
+Decompose provides automatic clusterization option, use `-cluster auto:<similarity>` to try it out, `similarity` is
+a float in `(0.0, 1.0]` range, representing how much similar ports nodes must have to be placed in same cluster
+(\`1.0 - must have all ports equal).
 
 ## examples
 
@@ -258,6 +266,12 @@ Load json stream, enrich and save as `structurizr dsl`:
 
 ```shell
 decompose -load nodes-1.json -meta metadata.json -format sdsl > workspace.dsl
+```
+
+Save auto-clustered graph, with similarity factor `0.6` as `structurizr dsl`:
+
+```shell
+decompose -cluster auto:0.6 -format sdsl > workspace.dsl
 ```
 
 ## example result

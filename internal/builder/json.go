@@ -1,10 +1,11 @@
 package builder
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -55,8 +56,8 @@ func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
 		nodes = append(nodes, n)
 	}
 
-	sort.SliceStable(nodes, func(i, j int) bool {
-		return nodes[i].Name < nodes[j].Name
+	slices.SortStableFunc(nodes, func(a, b *node.JSON) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
 
 	for i, n := range nodes {

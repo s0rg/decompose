@@ -128,7 +128,6 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 	}
 
 	slices.SortStableFunc(ports, byCount)
-	slices.Reverse(ports)
 
 	if len(s.clusters) < minClusters {
 		return ports, clusters
@@ -141,13 +140,12 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 	}
 
 	slices.SortStableFunc(clusters, byCount)
-	slices.Reverse(clusters)
 
 	return ports, clusters
 }
 
 func byCount(a, b *stat) int {
-	return cmp.Compare(a.Count, b.Count)
+	return cmp.Compare(b.Count, a.Count)
 }
 
 func writeStats(w io.Writer, s []*stat) {
