@@ -1,92 +1,85 @@
 package cluster
 
 import (
-	"cmp"
 	"slices"
 
-	"github.com/s0rg/set"
-
 	"github.com/s0rg/decompose/internal/node"
+	"github.com/s0rg/set"
 )
 
 type PortMatcher struct {
-	ports set.Set[node.Port]
+	ports node.Ports
 }
 
 func FromPorts(
-	ports set.Unordered[node.Port],
+	ports node.Ports,
 ) *PortMatcher {
 	return &PortMatcher{
-		ports: ports.Clone(),
+		ports: slices.Clone(ports),
 	}
+}
+
+func portsToProtos(ports node.Ports) (rv map[string][]int) {
+	rv = make(map[string][]int)
+
+	for _, p := range ports {
+		rv[p.Kind] = append(rv[p.Kind], p.Value)
+	}
+
+	for k := range rv {
+		slices.Sort(rv[k])
+	}
+
+	return rv
 }
 
 func (pm *PortMatcher) Match(other *PortMatcher) (rv float64) {
-	match := set.Intersect(pm.ports, other.ports).
-		Len()
-	union := set.Union(pm.ports, other.ports).
-		Len()
+	var (
+		a = portsToProtos(pm.ports)
+		b = portsToProtos(other.ports)
+	)
 
-	return float64(match) / float64(union)
-}
-
-func (pm *PortMatcher) Contains(other *PortMatcher) (rv float64) {
-	match := set.Intersect(pm.ports, other.ports).
-		Len()
-
-	return float64(match) / float64(other.Count())
-}
-
-func (pm *PortMatcher) Diff(other *PortMatcher) (rv float64) {
-	match := set.Intersect(pm.ports, other.ports)
-	union := set.Union(pm.ports, other.ports).
-		Len() - match.Len()
-
-	a := set.Diff(pm.ports, match)
-	b := set.Diff(other.ports, match)
-	c := 0
-
-	sa, sb := set.ToSlice(a), set.ToSlice(b)
-
-	if len(sb) > len(sa) {
-		sa, sb = sb, sa
+	if len(a) > len(b) {
+		a, b = b, a
 	}
 
-	byProto := func(a, b node.Port) int {
-		switch {
-		case a.Kind == b.Kind:
-			return cmp.Compare(a.Value, b.Value)
-		case a.Kind == "tcp":
-			return 1
-		default:
-			return -1
+	const (
+		one = 1
+		two = 2.0
+	)
+
+	for k, ap := range a {
+		bp := b[k]
+
+		sa := make(set.Unordered[int])
+		sb := make(set.Unordered[int])
+
+		if len(ap) >= len(bp) {
+			ap, bp = bp, ap
 		}
-	}
 
-	slices.SortStableFunc(sa, byProto)
-	slices.SortStableFunc(sb, byProto)
+		set.Load(sa, ap...)
+		set.Load(sb, bp...)
 
-	for i := 0; i < len(sa); i++ {
-		for j := 0; j < len(sb); j++ {
-			if abs(sa[i].Value-sb[j].Value) == 1 {
-				c++
+		m := set.Intersect(sa, sb).Len()
+		u := float64(set.Union(sa, sb).Len()) / two
+
+		for _, av := range ap {
+			for _, bv := range bp {
+				if abs(av-bv) == one {
+					m++
+				}
 			}
 		}
+
+		rv += float64(m) / u
 	}
 
-	return float64(c) / float64(union)
+	return rv
 }
 
 func (pm *PortMatcher) Merge(other *PortMatcher) {
-	other.ports.Iter(func(v node.Port) bool {
-		pm.ports.Add(v)
-
-		return true
-	})
-}
-
-func (pm *PortMatcher) Count() (rv int) {
-	return pm.ports.Len()
+	pm.ports = append(pm.ports, other.ports...).Dedup()
 }
 
 func abs(v int) int {

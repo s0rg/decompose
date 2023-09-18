@@ -9,9 +9,9 @@ import (
 )
 
 type connNode struct {
-	Ports     set.Unordered[node.Port]
 	Inbounds  set.Unordered[string]
 	Outbounds set.Unordered[string]
+	Ports     node.Ports
 }
 
 type connGraph map[string]*connNode
@@ -23,7 +23,7 @@ func (g connGraph) upsert(name string) (gn *connNode) {
 		gn = &connNode{
 			Outbounds: make(set.Unordered[string]),
 			Inbounds:  make(set.Unordered[string]),
-			Ports:     make(set.Unordered[node.Port]),
+			Ports:     node.Ports{},
 		}
 
 		g[name] = gn
@@ -35,9 +35,7 @@ func (g connGraph) upsert(name string) (gn *connNode) {
 func (g connGraph) AddNode(n *node.Node) {
 	gn := g.upsert(n.ID)
 
-	for _, p := range n.Ports {
-		gn.Ports.Add(*p)
-	}
+	gn.Ports = append(gn.Ports, n.Ports...)
 }
 
 func (g connGraph) AddEdge(src, dst string) {
@@ -45,23 +43,15 @@ func (g connGraph) AddEdge(src, dst string) {
 	g.upsert(dst).Inbounds.Add(src)
 }
 
-func (g connGraph) DelNode(name string) {
-	delete(g, name)
-
-	for _, node := range g {
-		node.Inbounds.Del(name)
-		node.Outbounds.Del(name)
-	}
-}
-
-func (g connGraph) NextLayer(from []string) (rv []string) {
-	seen := make(set.Unordered[string])
-
+func (g connGraph) NextLayer(
+	from []string,
+	seen set.Unordered[string],
+) (rv []string) {
 	if len(from) == 0 {
-		for k, node := range g {
+		for k, n := range g {
 			switch {
-			case len(node.Inbounds) > 0:
-			case len(node.Ports) == 0:
+			case len(n.Inbounds) > 0:
+			case len(n.Ports) == 0:
 			default:
 				if seen.Add(k) {
 					rv = append(rv, k)
@@ -72,12 +62,9 @@ func (g connGraph) NextLayer(from []string) (rv []string) {
 		set.Load(seen, from...)
 
 		for _, src := range from {
-			node, ok := g[src]
-			if !ok {
-				continue
-			}
+			n := g[src]
 
-			for k := range node.Outbounds {
+			for k := range n.Outbounds {
 				if seen.Add(k) {
 					rv = append(rv, k)
 				}

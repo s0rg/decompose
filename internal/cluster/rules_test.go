@@ -20,27 +20,35 @@ const (
 )
 
 type testNamedBuilder struct {
-	Err   error
-	nodes int
-	edges int
+	clusters map[string][]string
+	Err      error
+	Nodes    int
+	Edges    int
 }
 
-func (tb *testNamedBuilder) AddNode(_ *node.Node) error {
+func (tb *testNamedBuilder) AddNode(n *node.Node) error {
 	if tb.Err != nil {
 		return tb.Err
 	}
 
-	tb.nodes++
+	tb.Nodes++
+	if tb.clusters != nil {
+		tb.clusters[n.Cluster] = append(tb.clusters[n.Cluster], n.Name)
+	}
 
 	return nil
 }
 
 func (tb *testNamedBuilder) AddEdge(_, _ string, _ *node.Port) {
-	tb.edges++
+	tb.Edges++
 }
 
 func (tb *testNamedBuilder) Name() string            { return testBuilderName }
 func (tb *testNamedBuilder) Write(_ io.Writer) error { return tb.Err }
+
+func (tb *testNamedBuilder) Clusters() int {
+	return len(tb.clusters)
+}
 
 func TestClusterError(t *testing.T) {
 	t.Parallel()
@@ -205,13 +213,13 @@ func TestRules(t *testing.T) {
 	ca.AddEdge("5", "1", &node.Port{Kind: "tcp", Value: 80})
 	ca.AddEdge("1", "5", &node.Port{Kind: "tcp", Value: 80})
 
-	if tb.edges != 4 || tb.nodes != 4 {
+	if tb.Edges != 4 || tb.Nodes != 4 {
 		t.Fail()
 	}
 
 	ca.Write(nil)
 
-	if tb.edges != 7 {
+	if tb.Edges != 7 {
 		t.Fail()
 	}
 }

@@ -39,6 +39,8 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 
 	state := s.ws.System(system)
 
+	state.Tags = append(state.Tags, n.Name)
+
 	cont, ok := state.AddContainer(n.ID, n.Name)
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrDuplicate, n.Name)

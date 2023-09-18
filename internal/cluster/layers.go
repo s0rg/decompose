@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/s0rg/set"
 
@@ -11,31 +12,37 @@ import (
 )
 
 type Layers struct {
-	r set.Unordered[string]
-	g connGraph
-	b graph.NamedBuilderWriter
-	p float64
+	edges      map[string]map[string]node.Ports
+	nodes      map[string]*node.Node
+	remotes    set.Unordered[string]
+	b          graph.NamedBuilderWriter
+	g          connGraph
+	similarity float64
 }
 
 func NewLayers(
 	b graph.NamedBuilderWriter,
-	p float64,
+	s float64,
 ) *Layers {
 	return &Layers{
-		r: make(set.Unordered[string]),
-		g: make(connGraph),
-		b: b,
-		p: p,
+		b:          NewRules(b, nil),
+		g:          make(connGraph),
+		edges:      make(map[string]map[string]node.Ports),
+		nodes:      make(map[string]*node.Node),
+		remotes:    make(set.Unordered[string]),
+		similarity: s,
 	}
 }
 
 func (l *Layers) Name() string {
-	return l.b.Name() + " layers-clustered"
+	return l.b.Name() + " auto:" + strconv.FormatFloat(l.similarity, 'f', 1, 64)
 }
 
 func (l *Layers) AddNode(n *node.Node) error {
+	l.nodes[n.ID] = n
+
 	if n.IsExternal() {
-		l.r.Add(n.ID)
+		l.remotes.Add(n.ID)
 
 		return nil
 	}
@@ -45,8 +52,28 @@ func (l *Layers) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (l *Layers) AddEdge(src, dst string, _ *node.Port) {
-	if l.r.Has(src) || l.r.Has(dst) {
+func (l *Layers) upsertEdge(src, dst string, p *node.Port) (rv node.Ports) {
+	dest, ok := l.edges[src]
+	if !ok {
+		dest = make(map[string]node.Ports)
+	}
+
+	if rv, ok = dest[dst]; !ok {
+		rv = make(node.Ports, 0, 1)
+	}
+
+	rv = append(rv, p)
+
+	dest[dst] = rv
+	l.edges[src] = dest
+
+	return rv
+}
+
+func (l *Layers) AddEdge(src, dst string, p *node.Port) {
+	l.upsertEdge(src, dst, p)
+
+	if l.remotes.Has(src) || l.remotes.Has(dst) {
 		return
 	}
 
@@ -55,43 +82,52 @@ func (l *Layers) AddEdge(src, dst string, _ *node.Port) {
 
 func (l *Layers) Write(w io.Writer) error {
 	var (
-		layer          []string
-		gtotal, etotal int
+		seen  = make(set.Unordered[string])
+		layer []string
 	)
 
 	for i := 0; ; i++ {
-		layer = l.g.NextLayer(layer)
+		layer = l.g.NextLayer(layer, seen)
 		if len(layer) == 0 {
 			break
 		}
 
-		grp := NewGrouper(l.p)
+		grp := NewGrouper(l.similarity)
 
 		for _, name := range layer {
 			grp.Add(name, l.g[name].Ports)
 		}
 
-		fmt.Println("layer: ", i)
-		fmt.Println("  initial:", grp.Groups())
+		lname := fmt.Sprintf("layer-%d", i)
 
-		grp.Compress()
+		grp.IterGroups(func(id int, members []string) {
+			for _, mid := range members {
+				n := l.nodes[mid]
+				n.Cluster = fmt.Sprintf("%s-group-%d", lname, id)
 
-		// fmt.Println(grp)
+				_ = l.b.AddNode(n)
 
-		fmt.Println("  compressed:", grp.Groups())
-
-		count := grp.Count()
-
-		etotal += count
-		gtotal += grp.Groups()
-
-		fmt.Println("  elements:", count)
-		fmt.Println("===============================")
+				delete(l.nodes, mid)
+			}
+		})
 	}
 
-	fmt.Println("total:")
-	fmt.Println("  elements:", etotal)
-	fmt.Println("  groups:", gtotal)
+	// store remains
+	for _, n := range l.nodes {
+		_ = l.b.AddNode(n)
+	}
+
+	for src, dmap := range l.edges {
+		for dst, ports := range dmap {
+			for _, p := range ports {
+				l.b.AddEdge(src, dst, p)
+			}
+		}
+	}
+
+	if err := l.b.Write(w); err != nil {
+		return fmt.Errorf("auto: %w", err)
+	}
 
 	return nil
 }

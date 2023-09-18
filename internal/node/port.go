@@ -1,8 +1,8 @@
 package node
 
 import (
+	"cmp"
 	"slices"
-	"sort"
 	"strconv"
 
 	"github.com/s0rg/set"
@@ -24,52 +24,26 @@ func (p *Port) ID() string {
 }
 
 func (ps Ports) Dedup() (rv Ports) {
-	state := make(map[string]set.Set[int])
+	s := make(set.Unordered[Port])
 
-	for i := 0; i < len(ps); i++ {
-		p := ps[i]
-
-		s, ok := state[p.Kind]
-		if !ok {
-			s = make(set.Unordered[int])
-
-			state[p.Kind] = s
-		}
-
-		s.Add(p.Value)
+	for _, p := range ps {
+		s.Add(*p)
 	}
 
-	var (
-		total int
-		keys  = make([]string, 0, len(state))
-	)
+	p := set.ToSlice(s)
+	rv = make([]*Port, len(p))
 
-	for k, s := range state {
-		keys = append(keys, k)
-
-		total += s.Len()
+	for i := 0; i < len(p); i++ {
+		rv[i] = &p[i]
 	}
 
-	rv = make([]*Port, 0, total)
-
-	slices.Sort(keys)
-
-	for _, k := range keys {
-		s := state[k]
-
-		ports := set.ToSlice(s)
-
-		if len(ports) > 1 {
-			sort.Ints(ports)
+	slices.SortStableFunc(rv, func(a, b *Port) int {
+		if a.Kind == b.Kind {
+			return cmp.Compare(a.Value, b.Value)
 		}
 
-		for _, p := range ports {
-			rv = append(rv, &Port{
-				Kind:  k,
-				Value: p,
-			})
-		}
-	}
+		return cmp.Compare(a.Kind, b.Kind)
+	})
 
 	return rv
 }

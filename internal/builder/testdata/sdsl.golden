@@ -3,6 +3,7 @@ workspace {
 
 	model {
 		default = softwareSystem "default" {
+		tags "3"
 			3 = container "3" {
 				description "info 3"
 				technology "node-image"
@@ -10,6 +11,7 @@ workspace {
 			}
 		}
 		c1 = softwareSystem "c1" {
+		tags "1,2"
 			1 = container "1" {
 				description "info 1 \
 docs-url \
@@ -24,6 +26,7 @@ repo-url"
 			}
 		}
 		c2 = softwareSystem "c2" {
+		tags "ext2"
 			ext2 = container "ext2" {
 				tags "external,listen:2/tcp"
 			}
