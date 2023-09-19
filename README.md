@@ -234,7 +234,7 @@ See: [cluster.json](examples/cluster.json) for detailed example.
 
 Decompose provides automatic clusterization option, use `-cluster auto:<similarity>` to try it out, `similarity` is
 a float in `(0.0, 1.0]` range, representing how much similar ports nodes must have to be placed in same cluster
-(\`1.0 - must have all ports equal).
+(`1.0` - must have all ports equal).
 
 ## examples
 

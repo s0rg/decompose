@@ -8,25 +8,19 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
-type connNode struct {
-	Inbounds  set.Unordered[string]
-	Outbounds set.Unordered[string]
-	Ports     node.Ports
-}
+type connGraph map[string]*Node
 
-type connGraph map[string]*connNode
-
-func (g connGraph) upsert(name string) (gn *connNode) {
+func (g connGraph) upsert(id string) (gn *Node) {
 	var ok bool
 
-	if gn, ok = g[name]; !ok {
-		gn = &connNode{
+	if gn, ok = g[id]; !ok {
+		gn = &Node{
 			Outbounds: make(set.Unordered[string]),
 			Inbounds:  make(set.Unordered[string]),
 			Ports:     node.Ports{},
 		}
 
-		g[name] = gn
+		g[id] = gn
 	}
 
 	return gn
@@ -50,7 +44,7 @@ func (g connGraph) NextLayer(
 	if len(from) == 0 {
 		for k, n := range g {
 			switch {
-			case len(n.Inbounds) > 0:
+			case n.Inbounds.Len() > 0:
 			case len(n.Ports) == 0:
 			default:
 				if seen.Add(k) {
@@ -62,13 +56,13 @@ func (g connGraph) NextLayer(
 		set.Load(seen, from...)
 
 		for _, src := range from {
-			n := g[src]
-
-			for k := range n.Outbounds {
-				if seen.Add(k) {
-					rv = append(rv, k)
+			g[src].Outbounds.Iter(func(v string) bool {
+				if seen.Add(v) {
+					rv = append(rv, v)
 				}
-			}
+
+				return true
+			})
 		}
 	}
 

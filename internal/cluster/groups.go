@@ -3,41 +3,34 @@ package cluster
 import (
 	"cmp"
 	"slices"
-
-	"github.com/s0rg/decompose/internal/node"
 )
 
 type match struct {
-	Matcher *PortMatcher
+	Matcher *Node
 	Weight  float64
-	Index   int
 }
 
-type PortGrouper struct {
-	groups     map[*PortMatcher][]string
-	matchers   []*PortMatcher
+type NodeGrouper struct {
+	groups     map[*Node][]string
+	matchers   []*Node
 	similarity float64
 }
 
 func NewGrouper(
 	similarity float64,
-) *PortGrouper {
-	return &PortGrouper{
+) *NodeGrouper {
+	return &NodeGrouper{
 		similarity: similarity,
-		matchers:   []*PortMatcher{},
-		groups:     make(map[*PortMatcher][]string),
+		matchers:   []*Node{},
+		groups:     make(map[*Node][]string),
 	}
 }
 
-func (pg *PortGrouper) Add(
-	key string,
-	ports node.Ports,
-) {
-	current := FromPorts(ports)
-	matches := make([]match, 0, len(pg.matchers))
+func (ng *NodeGrouper) Add(k string, n *Node) {
+	matches := make([]match, 0, len(ng.matchers))
 
-	for _, m := range pg.matchers {
-		if w := m.Match(current); w >= pg.similarity {
+	for _, m := range ng.matchers {
+		if w := m.Match(k, n); w >= ng.similarity {
 			matches = append(matches, match{
 				Matcher: m,
 				Weight:  w,
@@ -45,12 +38,15 @@ func (pg *PortGrouper) Add(
 		}
 	}
 
-	var best *PortMatcher
+	var (
+		best  *Node
+		found = true
+	)
 
 	switch len(matches) {
 	case 0:
-		pg.matchers = append(pg.matchers, current)
-		best = current
+		best, found = n.Clone(), false
+		ng.matchers = append(ng.matchers, best)
 	case 1:
 		best = matches[0].Matcher
 	default:
@@ -59,18 +55,18 @@ func (pg *PortGrouper) Add(
 		}).Matcher
 	}
 
-	if best != current {
-		best.Merge(current)
+	if found {
+		best.Merge(n)
 	}
 
-	pg.groups[best] = append(pg.groups[best], key)
+	ng.groups[best] = append(ng.groups[best], k)
 }
 
-func (pg *PortGrouper) IterGroups(
-	iter func(id int, members []string),
+func (ng *NodeGrouper) IterGroups(
+	iter func(int, []string),
 ) {
-	for id, m := range pg.matchers {
-		if l := pg.groups[m]; len(l) > 0 {
+	for id, m := range ng.matchers {
+		if l := ng.groups[m]; len(l) > 0 {
 			iter(id, l)
 		}
 	}
