@@ -152,7 +152,7 @@ func TestStatCluster(t *testing.T) {
 
 	res := buf.String()
 
-	if !strings.Contains(res, "Clusters:") {
+	if !strings.Contains(res, "Clusters") {
 		t.Fail()
 	}
 

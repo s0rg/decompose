@@ -36,6 +36,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/s0rg/set v1.2.0 h1:53b207YMktNQJXYei/oHuTR5oOO2e9+eieZOncYsh9g=
 github.com/s0rg/set v1.2.0/go.mod h1:xz3nDbjF4nyMLvAHvmE7rigXpNrKKTsi6iANznIB1/4=
+github.com/s0rg/trie v1.3.0 h1:VeMjAJdVvAMt06QlrLJs9B7tplwyxGtCPPZHfvW4Duo=
+github.com/s0rg/trie v1.3.0/go.mod h1:P+hJUWvPu/imKrsdzOrVswr8Mme6GgFtZfBKojYYkfk=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

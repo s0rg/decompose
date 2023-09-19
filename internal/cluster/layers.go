@@ -3,9 +3,12 @@ package cluster
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/s0rg/set"
+	"github.com/s0rg/trie"
 
 	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"
@@ -35,7 +38,8 @@ func NewLayers(
 }
 
 func (l *Layers) Name() string {
-	return l.b.Name() + " auto:" + strconv.FormatFloat(l.similarity, 'f', 1, 64)
+	return l.b.Name() + " auto:" +
+		strconv.FormatFloat(l.similarity, 'f', 1, 64)
 }
 
 func (l *Layers) AddNode(n *node.Node) error {
@@ -80,11 +84,25 @@ func (l *Layers) AddEdge(src, dst string, p *node.Port) {
 	l.g.AddEdge(src, dst)
 }
 
+func (l *Layers) names(ids []string) (rv []string) {
+	rv = make([]string, 0, len(ids))
+
+	for _, id := range ids {
+		n := l.nodes[id]
+
+		rv = append(rv, n.Name)
+	}
+
+	return rv
+}
+
 func (l *Layers) Write(w io.Writer) error {
 	var (
 		seen  = make(set.Unordered[string])
 		layer []string
 	)
+
+	const maxLabelParts = 3
 
 	for i := 0; ; i++ {
 		layer = l.g.NextLayer(layer, seen)
@@ -94,16 +112,16 @@ func (l *Layers) Write(w io.Writer) error {
 
 		grp := NewGrouper(l.similarity)
 
-		for _, name := range layer {
-			grp.Add(name, l.g[name].Ports)
+		for _, id := range layer {
+			grp.Add(id, l.g[id])
 		}
 
-		lname := fmt.Sprintf("layer-%d", i)
+		grp.IterGroups(func(id int, membersID []string) {
+			label := CreateLabel(l.names(membersID), maxLabelParts)
 
-		grp.IterGroups(func(id int, members []string) {
-			for _, mid := range members {
+			for _, mid := range membersID {
 				n := l.nodes[mid]
-				n.Cluster = fmt.Sprintf("%s-group-%d", lname, id)
+				n.Cluster = fmt.Sprintf("l%02d-%02d-%s", i, id, label)
 
 				_ = l.b.AddNode(n)
 
@@ -130,4 +148,40 @@ func (l *Layers) Write(w io.Writer) error {
 	}
 
 	return nil
+}
+
+func CreateLabel(names []string, nmax int) (rv string) {
+	t := trie.New[struct{}]()
+	v := struct{}{}
+
+	for _, n := range names {
+		t.Add(n, v)
+	}
+
+	const (
+		root    = ""
+		minus   = "-"
+		cutset  = "1234567890" + minus
+		maxdiff = 3
+	)
+
+	comm := slices.DeleteFunc(t.Common(root, maxdiff), func(v string) bool {
+		s, _ := t.Suggest(v)
+
+		return len(s) == 1
+	})
+
+	if len(comm) > nmax {
+		comm = comm[:nmax]
+	}
+
+	for i := 0; i < len(comm); i++ {
+		comm[i] = strings.Trim(comm[i], cutset)
+
+		if k := strings.Index(comm[i], minus); k > 0 {
+			comm[i] = comm[i][:k]
+		}
+	}
+
+	return strings.Join(comm, "-")
 }

@@ -7,6 +7,7 @@ require (
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/emicklei/dot v1.6.0
 	github.com/s0rg/set v1.2.0
+	github.com/s0rg/trie v1.3.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

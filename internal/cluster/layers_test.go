@@ -24,21 +24,21 @@ func TestLayers(t *testing.T) {
 	}
 
 	_ = ca.AddNode(&node.Node{
-		ID:   "1",
-		Name: "node-1",
-		Ports: []*node.Port{
-			{Kind: "tcp", Value: 80},
-			{Kind: "tcp", Value: 443},
-		},
-	})
-
-	_ = ca.AddNode(&node.Node{
 		ID:   "6",
 		Name: "node-6",
 		Ports: []*node.Port{
 			{Kind: "tcp", Value: 6},
 			{Kind: "tcp", Value: 1234},
 			{Kind: "tcp", Value: 8080},
+		},
+	})
+
+	_ = ca.AddNode(&node.Node{
+		ID:   "1",
+		Name: "node-1",
+		Ports: []*node.Port{
+			{Kind: "tcp", Value: 80},
+			{Kind: "tcp", Value: 443},
 		},
 	})
 
@@ -95,6 +95,12 @@ func TestLayers(t *testing.T) {
 		},
 	})
 
+	_ = ca.AddNode(&node.Node{
+		ID:    "10",
+		Name:  "node-10",
+		Ports: []*node.Port{},
+	})
+
 	ca.AddEdge("1", "2", &node.Port{Kind: "tcp", Value: 1234})
 	ca.AddEdge("1", "3", &node.Port{Kind: "tcp", Value: 8080})
 	ca.AddEdge("1", "6", &node.Port{Kind: "tcp", Value: 8080})
@@ -117,7 +123,7 @@ func TestLayers(t *testing.T) {
 		edgesDirect  = 9
 		edgesCluster = 6
 
-		wantNodes    = 7
+		wantNodes    = 8
 		wantEdges    = edgesDirect + edgesCluster
 		wantClusters = 4
 	)
@@ -143,6 +149,35 @@ func TestLayersWriteError(t *testing.T) {
 	ca := cluster.NewLayers(tb, similarity)
 
 	if err := ca.Write(nil); !errors.Is(err, tb.Err) {
+		t.Fail()
+	}
+}
+
+func TestLayersLabel(t *testing.T) {
+	t.Parallel()
+
+	s := []string{
+		"foo-one1",
+		"foo-two-1",
+		"bar1",
+		"bar-two-2",
+		"barista",
+		"doo",
+		"doo2",
+		"foo-1",
+		"too-tee-1",
+		"too-tee-2",
+		"too-tee-3",
+		"too-tee-4",
+	}
+
+	const (
+		maxParts = 2
+		want     = "too-foo"
+	)
+
+	if l := cluster.CreateLabel(s, 2); l != want {
+		t.Log(l)
 		t.Fail()
 	}
 }

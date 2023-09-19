@@ -110,7 +110,7 @@ func (s *Stat) Write(w io.Writer) error {
 	ports, clusters := s.calcStats()
 
 	if len(clusters) > 0 {
-		fmt.Fprintln(w, "Clusters:")
+		fmt.Fprintf(w, "Clusters %d:\n", len(s.clusters))
 		writeStats(w, clusters)
 	}
 
