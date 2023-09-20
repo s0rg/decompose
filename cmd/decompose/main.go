@@ -173,7 +173,12 @@ func makeClusterizer(
 			return nil, fmt.Errorf("auto: %w", errf)
 		}
 
-		rv = cluster.NewLayers(b, simf)
+		const (
+			low  = 0.0
+			high = 1.0
+		)
+
+		rv = cluster.NewLayers(b, min(high, max(low, simf)))
 	} else {
 		cr := cluster.NewRules(b, nil)
 

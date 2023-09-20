@@ -5,24 +5,6 @@ import (
 	"slices"
 )
 
-type Process struct {
-	Cmd []string `json:"cmd"`
-	Env []string `json:"env"`
-}
-
-type Volume struct {
-	Type string `json:"type"`
-	Src  string `json:"src"`
-	Dst  string `json:"dst"`
-}
-
-type Meta struct {
-	Info string   `json:"info"`
-	Docs string   `json:"docs"`
-	Repo string   `json:"repo"`
-	Tags []string `json:"tags"`
-}
-
 type Node struct {
 	ID       string
 	Name     string
