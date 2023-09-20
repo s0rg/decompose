@@ -3,7 +3,6 @@ package cluster
 import (
 	"fmt"
 	"io"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -165,12 +164,7 @@ func CreateLabel(names []string, nmax int) (rv string) {
 		maxdiff = 3
 	)
 
-	comm := slices.DeleteFunc(t.Common(root, maxdiff), func(v string) bool {
-		s, _ := t.Suggest(v)
-
-		return len(s) == 1
-	})
-
+	comm := t.Common(root, maxdiff)
 	if len(comm) > nmax {
 		comm = comm[:nmax]
 	}

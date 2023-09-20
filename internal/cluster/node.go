@@ -23,16 +23,23 @@ func (n *Node) Clone() *Node {
 }
 
 func (n *Node) Match(id string, o *Node) (rv float64) {
-	return n.matchConns(id) + n.matchPorts(o.Ports)
+	rv = n.matchConns(id) + n.matchPorts(o.Ports)
+
+	return rv
 }
 
 func (n *Node) Merge(o *Node) {
+	n.Ports = append(n.Ports, o.Ports...).Dedup()
 	n.Inbounds = set.Union(n.Inbounds, o.Inbounds)
 	n.Outbounds = set.Union(n.Outbounds, o.Outbounds)
-	n.Ports = append(n.Ports, o.Ports...).Dedup()
 }
 
 func (n *Node) matchConns(id string) (rv float64) {
+	t := n.Inbounds.Len() + n.Outbounds.Len()
+	if t == 0 {
+		return
+	}
+
 	if n.Inbounds.Has(id) {
 		rv += 1.0 / float64(n.Inbounds.Len())
 	}
@@ -41,7 +48,7 @@ func (n *Node) matchConns(id string) (rv float64) {
 		rv += 1.0 / float64(n.Outbounds.Len())
 	}
 
-	return
+	return rv / float64(t)
 }
 
 func (n *Node) matchPorts(p node.Ports) (rv float64) {
