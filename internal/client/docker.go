@@ -8,7 +8,6 @@ import (
 	"io"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
@@ -21,7 +20,6 @@ const (
 	stateRunning = "running"
 	nsenterCmd   = "nsenter"
 	netstatCmd   = "netstat"
-	pingTimeout  = time.Second
 )
 
 var ErrModeNone = errors.New("mode not set")
@@ -34,7 +32,6 @@ type DockerClient interface {
 	ContainerInspect(context.Context, string) (types.ContainerJSON, error)
 	ContainerExecCreate(context.Context, string, types.ExecConfig) (types.IDResponse, error)
 	ContainerExecAttach(context.Context, string, types.ExecStartCheck) (types.HijackedResponse, error)
-	Ping(context.Context) (types.Ping, error)
 	Close() error
 }
 
@@ -58,13 +55,6 @@ func NewDocker(opts ...Option) (rv *Docker, err error) {
 
 	if rv.cli, err = rv.opt.Create(); err != nil {
 		return nil, fmt.Errorf("client: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
-	defer cancel()
-
-	if _, err = rv.cli.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("ping: %w", err)
 	}
 
 	return rv, nil

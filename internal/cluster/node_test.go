@@ -3,9 +3,10 @@ package cluster_test
 import (
 	"testing"
 
+	"github.com/s0rg/set"
+
 	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/node"
-	"github.com/s0rg/set"
 )
 
 func TestNodeMatch(t *testing.T) {
