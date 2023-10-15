@@ -119,17 +119,14 @@ func matchSlices(a, b []int) (rv float64) {
 	m := float64(db.Len()) / float64(u)
 
 	for i := 0; i < len(das); i++ {
-	inner:
 		for j := 0; j < len(dab); j++ {
 			if abs(das[i]-dab[j]) == onei {
 				rv += m
-
-				break inner
 			}
 		}
 	}
 
-	return
+	return rv
 }
 
 func abs(v int) int {
