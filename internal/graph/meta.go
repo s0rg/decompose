@@ -1,10 +1,11 @@
 package graph
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
@@ -61,8 +62,8 @@ func (ex *MetaLoader) Enrich(n *node.Node) {
 
 	switch len(matches) {
 	default:
-		sort.SliceStable(matches, func(i, j int) bool {
-			return matches[i].Weight < matches[j].Weight
+		slices.SortFunc(matches, func(a, b *match) int {
+			return cmp.Compare(a.Weight, b.Weight)
 		})
 
 		fallthrough

@@ -41,24 +41,6 @@ func TestDockerClientCreateError(t *testing.T) {
 	}
 }
 
-func TestDockerClientPingError(t *testing.T) {
-	t.Parallel()
-
-	testErr := errors.New("test-error")
-
-	cm := &clientMock{Err: testErr}
-
-	_, err := client.NewDocker(
-		client.WithClientCreator(func() (client.DockerClient, error) {
-			return cm, nil
-		}),
-		client.WithMode(client.InContainer),
-	)
-	if err == nil || !errors.Is(err, testErr) {
-		t.Fail()
-	}
-}
-
 func TestDockerClientContainersError(t *testing.T) {
 	t.Parallel()
 

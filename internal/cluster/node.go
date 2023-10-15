@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"math"
 	"slices"
 
 	"github.com/s0rg/set"
@@ -22,8 +23,14 @@ func (n *Node) Clone() *Node {
 	}
 }
 
+const (
+	onei = 1
+	onef = 1.0
+	half = 0.5
+)
+
 func (n *Node) Match(id string, o *Node) (rv float64) {
-	rv = n.matchConns(id) + n.matchPorts(o.Ports)
+	rv = (n.matchConns(id) + n.matchPorts(o.Ports)) * half
 
 	return rv
 }
@@ -35,20 +42,15 @@ func (n *Node) Merge(o *Node) {
 }
 
 func (n *Node) matchConns(id string) (rv float64) {
-	t := n.Inbounds.Len() + n.Outbounds.Len()
-	if t == 0 {
-		return
-	}
-
 	if n.Inbounds.Has(id) {
-		rv += 1.0 / float64(n.Inbounds.Len())
+		rv += half
 	}
 
 	if n.Outbounds.Has(id) {
-		rv += 1.0 / float64(n.Outbounds.Len())
+		rv += half
 	}
 
-	return rv / float64(t)
+	return rv
 }
 
 func (n *Node) matchPorts(p node.Ports) (rv float64) {
@@ -61,36 +63,10 @@ func (n *Node) matchPorts(p node.Ports) (rv float64) {
 		a, b = b, a
 	}
 
-	const (
-		one = 1
-		two = 2.0
-	)
-
 	for k, ap := range a {
 		bp := b[k]
 
-		sa := make(set.Unordered[int])
-		sb := make(set.Unordered[int])
-
-		if len(ap) >= len(bp) {
-			ap, bp = bp, ap
-		}
-
-		set.Load(sa, ap...)
-		set.Load(sb, bp...)
-
-		m := set.Intersect(sa, sb).Len()
-		u := float64(set.Union(sa, sb).Len()) / two
-
-		for _, av := range ap {
-			for _, bv := range bp {
-				if abs(av-bv) == one {
-					m++
-				}
-			}
-		}
-
-		rv += float64(m) / u
+		rv += matchSlices(ap, bp) / float64(len(a))
 	}
 
 	return rv
@@ -108,6 +84,52 @@ func portsToProtos(ports node.Ports) (rv map[string][]int) {
 	}
 
 	return rv
+}
+
+func matchSlices(a, b []int) (rv float64) {
+	sa, sb := make(set.Unordered[int]), make(set.Unordered[int])
+
+	if len(a) < len(b) {
+		a, b = b, a
+	}
+
+	set.Load(sa, a...)
+	set.Load(sb, b...)
+
+	u := set.Union(sa, sb).Len()
+	c := set.Intersect(sa, sb).Len()
+
+	if u == c {
+		return onef
+	}
+
+	da, db := set.Diff(sa, sb), set.Diff(sb, sa)
+
+	if da.Len() < db.Len() {
+		da, db = db, da
+	}
+
+	rv = float64(da.Len()) / math.Abs(float64(u)-float64(c))
+
+	das, dab := set.ToSlice(da), set.ToSlice(db)
+
+	slices.Sort(das)
+	slices.Sort(dab)
+
+	m := float64(db.Len()) / float64(u)
+
+	for i := 0; i < len(das); i++ {
+	inner:
+		for j := 0; j < len(dab); j++ {
+			if abs(das[i]-dab[j]) == onei {
+				rv += m
+
+				break inner
+			}
+		}
+	}
+
+	return
 }
 
 func abs(v int) int {

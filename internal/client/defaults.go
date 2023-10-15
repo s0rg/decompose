@@ -8,13 +8,18 @@ import (
 	"io"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/s0rg/decompose/internal/graph"
 )
 
+const pingTimeout = time.Second
+
 func Default() (rv DockerClient, err error) {
-	rv, err = client.NewClientWithOpts(
+	var dc *client.Client
+
+	dc, err = client.NewClientWithOpts(
 		client.FromEnv,
 		client.WithAPIVersionNegotiation(),
 	)
@@ -22,7 +27,14 @@ func Default() (rv DockerClient, err error) {
 		return nil, fmt.Errorf("docker: %w", err)
 	}
 
-	return rv, nil
+	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
+	defer cancel()
+
+	if _, err = dc.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("ping: %w", err)
+	}
+
+	return dc, nil
 }
 
 func Nsenter(

@@ -121,18 +121,20 @@ func TestLayers(t *testing.T) {
 
 	const (
 		edgesDirect  = 9
-		edgesCluster = 6
+		edgesCluster = 9
 
 		wantNodes    = 8
 		wantEdges    = edgesDirect + edgesCluster
-		wantClusters = 4
+		wantClusters = 7
 	)
 
 	if tb.Nodes != wantNodes || tb.Edges != wantEdges {
+		t.Log("nodes:", tb.Nodes, "want:", wantNodes, "edges:", tb.Edges, "want:", wantEdges)
 		t.Fail()
 	}
 
 	if tb.Clusters() != wantClusters {
+		t.Log("clusters:", tb.Clusters(), "want:", wantClusters)
 		t.Fail()
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"slices"
-	"sort"
 	"strings"
 	"unicode"
 )
@@ -118,7 +117,7 @@ func compactTags(tags []string) (rv []string, ok bool) {
 		return rv, true
 	}
 
-	sort.Strings(rv)
+	slices.Sort(rv)
 
 	rv = slices.Clip(slices.Compact(rv))
 

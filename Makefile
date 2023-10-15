@@ -19,7 +19,7 @@ export CGO_ENABLED=0
 
 .PHONY: build
 build: vet
-	@go build -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
+	@go build -trimpath -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
 
 .PHONY: vet
 vet:

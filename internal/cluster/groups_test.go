@@ -11,7 +11,7 @@ import (
 func TestAdd(t *testing.T) {
 	t.Parallel()
 
-	g := cluster.NewGrouper(0.9)
+	g := cluster.NewGrouper(0.5)
 
 	g.Add("1", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
@@ -19,6 +19,17 @@ func TestAdd(t *testing.T) {
 		Ports: []*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: 3},
+		},
+	})
+
+	g.Add("11", &cluster.Node{
+		Inbounds:  make(set.Unordered[string]),
+		Outbounds: make(set.Unordered[string]),
+		Ports: []*node.Port{
+			{Kind: "tcp", Value: 1},
+			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: 3},
 		},
 	})
 
@@ -27,7 +38,7 @@ func TestAdd(t *testing.T) {
 		Outbounds: make(set.Unordered[string]),
 		Ports: []*node.Port{
 			{Kind: "tcp", Value: 3},
-			{Kind: "tcp", Value: 4},
+			{Kind: "tcp", Value: 2},
 		},
 	})
 
@@ -54,7 +65,16 @@ func TestAdd(t *testing.T) {
 		Outbounds: make(set.Unordered[string]),
 		Ports: []*node.Port{
 			{Kind: "tcp", Value: 1},
+			{Kind: "tcp", Value: 2},
 			{Kind: "tcp", Value: 4},
+		},
+	})
+
+	g.Add("6", &cluster.Node{
+		Inbounds:  make(set.Unordered[string]),
+		Outbounds: make(set.Unordered[string]),
+		Ports: []*node.Port{
+			{Kind: "tcp", Value: 1},
 		},
 	})
 
