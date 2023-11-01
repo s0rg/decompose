@@ -18,6 +18,7 @@ linters:
     - tagliatelle
     - nosnakecase
     - exhaustruct
+    - inamedparam
     - interfacer
     - varnamelen
     - scopelint

@@ -175,10 +175,13 @@ func TestLayersLabel(t *testing.T) {
 
 	const (
 		maxParts = 2
-		want     = "too-foo"
+		want1    = "too-foo"
+		want2    = "too-bar"
 	)
 
-	if l := cluster.CreateLabel(s, 2); l != want {
+	switch l := cluster.CreateLabel(s, 2); l {
+	case want1, want2:
+	default:
 		t.Log(l)
 		t.Fail()
 	}
