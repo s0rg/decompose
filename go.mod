@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/antonmedv/expr v1.15.3
-	github.com/docker/docker v24.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/emicklei/dot v1.6.0
 	github.com/s0rg/set v1.2.0
 	github.com/s0rg/trie v1.3.0

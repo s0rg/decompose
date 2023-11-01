@@ -331,7 +331,7 @@ func doBuild(
 	log.Println("Starting with method:", cli.Mode())
 
 	if err = graph.Build(cfg, cli); err != nil {
-		return fmt.Errorf("graph: %w", err)
+		return fmt.Errorf("build: %w", err)
 	}
 
 	return nil

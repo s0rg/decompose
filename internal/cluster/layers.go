@@ -38,7 +38,7 @@ func NewLayers(
 
 func (l *Layers) Name() string {
 	return l.b.Name() + " auto:" +
-		strconv.FormatFloat(l.similarity, 'f', 1, 64)
+		strconv.FormatFloat(l.similarity, 'f', 3, 64)
 }
 
 func (l *Layers) AddNode(n *node.Node) error {
