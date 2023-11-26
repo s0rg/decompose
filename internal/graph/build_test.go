@@ -6,6 +6,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/s0rg/set"
+
 	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -180,14 +182,17 @@ func TestBuildSimple(t *testing.T) {
 func TestBuildFollow(t *testing.T) {
 	t.Parallel()
 
+	flw := make(set.Unordered[string])
+	flw.Add("1")
+
 	cli := testClientWithEnv()
 	bld := &testBuilder{}
 	ext := &testEnricher{}
 	cfg := &graph.Config{
 		Builder: bld,
+		Follow:  flw,
 		Meta:    ext,
 		Proto:   graph.ALL,
-		Follow:  "1",
 	}
 
 	if err := graph.Build(cfg, cli); err != nil {
@@ -224,10 +229,13 @@ func TestBuildLocal(t *testing.T) {
 func TestBuildNoNodes(t *testing.T) {
 	t.Parallel()
 
+	flw := make(set.Unordered[string])
+	flw.Add("4")
+
 	cli := testClientWithEnv()
 	cfg := &graph.Config{
+		Follow: flw,
 		Proto:  graph.ALL,
-		Follow: "4",
 	}
 
 	if err := graph.Build(cfg, cli); err == nil {

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/builder"
 	"github.com/s0rg/decompose/internal/client"
@@ -79,11 +82,10 @@ func setupFlags() {
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
-
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
-	flag.StringVar(&fFollow, "follow", "", "follow only this container by name")
+	flag.StringVar(&fFollow, "follow", "", "follow only this container by name(s), comma-separated or from @file")
 	flag.StringVar(
 		&fCluster,
 		"cluster",
@@ -194,6 +196,51 @@ func makeClusterizer(
 	return rv, nil
 }
 
+func loadFile(
+	s set.Unordered[string],
+	v string,
+) (err error) {
+	return feed(v, func(r io.Reader) (err error) {
+		sc := bufio.NewScanner(r)
+
+		for sc.Scan() {
+			s.Add(sc.Text())
+		}
+
+		if err = sc.Err(); err != nil {
+			return fmt.Errorf("read: %w", err)
+		}
+
+		return nil
+	})
+}
+
+func loadSet(v string) (rv set.Unordered[string]) {
+	rv = make(set.Unordered[string])
+
+	if v == "" {
+		return
+	}
+
+	const (
+		doggy = "@"
+		comma = ","
+	)
+
+	switch {
+	case strings.HasPrefix(v, doggy):
+		if err := loadFile(rv, v[1:]); err != nil {
+			log.Println("follow:", err)
+		}
+	case strings.Contains(v, comma):
+		set.Load(rv, strings.Split(v, comma)...)
+	default:
+		rv.Add(v)
+	}
+
+	return rv
+}
+
 func prepareConfig() (
 	cfg *graph.Config,
 	nwr graph.NamedWriter,
@@ -247,7 +294,7 @@ func prepareConfig() (
 		Builder:   bildr,
 		Meta:      meta,
 		Proto:     proto,
-		Follow:    fFollow,
+		Follow:    loadSet(fFollow),
 		OnlyLocal: fLocal,
 		FullInfo:  fFull,
 		NoLoops:   fNoLoops,
