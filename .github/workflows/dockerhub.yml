@@ -27,13 +27,13 @@ jobs:
           file: ./docker/Dockerfile
           platforms: linux/amd64
           tags: |
-            ${{ env.GITHUB_REPOSITORY }}:${{ env.GITHUB_REF_NAME }}
-            ${{ env.GITHUB_REPOSITORY }}:latest
+            ${{ github.repository }}:${{ env.github.ref_name }}
+            ${{ github.repository }}:latest
           push: true
       - name: Update Docker Hub Readme for dolt image
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-          repository: ${{ env.GITHUB_REPOSITORY }}
+          repository: ${{ github.repository }}
           readme-filepath: ./docker/README.md
