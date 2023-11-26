@@ -805,3 +805,70 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestDockerClientNsEnterOk(t *testing.T) {
+	t.Parallel()
+
+	cm := &clientMock{}
+
+	cm.OnList = func() (rv []types.Container) {
+		return []types.Container{
+			{
+				ID:    "1",
+				Names: []string{"test"},
+				Image: "test-image",
+				State: "running",
+				NetworkSettings: &types.SummaryNetworkSettings{
+					Networks: map[string]*network.EndpointSettings{
+						"test-net": {
+							EndpointID: "1",
+							IPAddress:  "1.1.1.1",
+						},
+						"empty-id": {
+							IPAddress: "1.1.1.2",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+
+		return rv
+	}
+
+	testEnter := func(_ int, _ graph.NetProto, fn func(
+		locIP, remIP net.IP,
+		locPort, remPort uint16,
+		kind string,
+	)) error {
+		fn(net.IP{}, net.IP{}, 0, 0, "tcp")
+
+		return nil
+	}
+
+	cli, err := client.NewDocker(
+		client.WithClientCreator(func() (client.DockerClient, error) {
+			return cm, nil
+		}),
+		client.WithMode(client.LinuxNsenter),
+		client.WithNsEnter(testEnter),
+	)
+	if err != nil {
+		t.Fatal("client:", err)
+	}
+
+	_, err = cli.Containers(
+		context.Background(),
+		graph.ALL,
+		false,
+		nil,
+		voidProgress,
+	)
+	if err != nil {
+		t.Fatal("containers:", err)
+	}
+}
