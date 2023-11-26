@@ -73,7 +73,7 @@ possible flags with default values:
   -cluster string
         json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
   -follow string
-        follow only this container by name
+        follow only this container by name(s), comma-separated or from @file
   -format string
         output format: json, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
   -full
@@ -105,6 +105,7 @@ possible flags with default values:
 - `DOCKER_HOST` - connection uri
 - `DOCKER_CERT_PATH` - directory path containing key.pem, cert.pm and ca.pem
 - `DOCKER_TLS_VERIFY` - enable client TLS verification
+- `IN_DOCKER_PROC_ROOT` - for in-docker scenario - root for host-mounted /proc
 
 ## json stream format
 
