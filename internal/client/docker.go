@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"slices"
 	"strings"
 
@@ -18,14 +19,13 @@ import (
 
 const (
 	stateRunning = "running"
-	nsenterCmd   = "nsenter"
 	netstatCmd   = "netstat"
 )
 
 var ErrModeNone = errors.New("mode not set")
 
 type createClient func() (DockerClient, error)
-type nsEnter func(context.Context, int, graph.NetProto, func(io.Reader) error) error
+type nsEnter func(int, graph.NetProto, func(localIP, remoteIP net.IP, localPort, remotePort uint16, kind string)) error
 
 type DockerClient interface {
 	ContainerList(context.Context, types.ContainerListOptions) ([]types.Container, error)
@@ -143,17 +143,15 @@ func (d *Docker) connections(
 	cid string,
 	proto graph.NetProto,
 ) (rv []*graph.Connection, err error) {
-	parse := func(r io.Reader) (err error) {
-		if rv, err = graph.ParseNetstat(r); err != nil {
-			return fmt.Errorf("parse: %w", err)
-		}
-
-		return nil
-	}
-
 	switch d.opt.Mode {
 	case InContainer:
-		err = d.connectionsContainer(ctx, cid, proto, parse)
+		err = d.connectionsContainer(ctx, cid, proto, func(r io.Reader) (err error) {
+			if rv, err = graph.ParseNetstat(r); err != nil {
+				return fmt.Errorf("parse: %w", err)
+			}
+
+			return nil
+		})
 	case LinuxNsenter:
 		if pid == 0 {
 			info, ierr := d.cli.ContainerInspect(ctx, cid)
@@ -164,7 +162,17 @@ func (d *Docker) connections(
 			pid = info.State.Pid
 		}
 
-		err = d.opt.Nsenter(ctx, pid, proto, parse)
+		err = d.opt.Nsenter(pid, proto, func(locIP, remIP net.IP, locPort, remPort uint16, kind string) {
+			sk, _ := graph.ParseNetProto(kind)
+
+			rv = append(rv, &graph.Connection{
+				LocalIP:    locIP,
+				RemoteIP:   remIP,
+				LocalPort:  locPort,
+				RemotePort: remPort,
+				Proto:      sk,
+			})
+		})
 	}
 
 	if err != nil {

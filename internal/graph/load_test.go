@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/s0rg/set"
+
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -256,10 +258,13 @@ func TestLoaderEdgesFollowNone(t *testing.T) {
 	bldr := &testBuilder{}
 	ext := &testEnricher{}
 
+	flw := make(set.Unordered[string])
+	flw.Add("foo")
+
 	cfg := &graph.Config{
 		Builder: bldr,
+		Follow:  flw,
 		Meta:    ext,
-		Follow:  "foo",
 		Proto:   graph.ALL,
 	}
 
@@ -311,10 +316,13 @@ func TestLoaderEdgesFollowOne(t *testing.T) {
 	bldr := &testBuilder{}
 	ext := &testEnricher{}
 
+	flw := make(set.Unordered[string])
+	flw.Add("test3")
+
 	cfg := &graph.Config{
 		Builder: bldr,
+		Follow:  flw,
 		Meta:    ext,
-		Follow:  "test3",
 		Proto:   graph.UDP,
 	}
 

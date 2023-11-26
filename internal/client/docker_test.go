@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io"
+	"net"
 	"testing"
 
 	"github.com/docker/docker/api/types"
@@ -774,7 +774,11 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		return rv
 	}
 
-	failEnter := func(_ context.Context, _ int, _ graph.NetProto, _ func(io.Reader) error) error {
+	failEnter := func(_ int, _ graph.NetProto, _ func(
+		locIP, remIP net.IP,
+		locPort, remPort uint16,
+		kind string,
+	)) error {
 		return testErr
 	}
 
