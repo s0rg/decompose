@@ -62,6 +62,7 @@ Closest analogs, i can find, that not suit my needs very well:
 ## installation
 
 - [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
+- [docker](https://hub.docker.com/r/s0rg/decompose)
 
 ## usage
 
