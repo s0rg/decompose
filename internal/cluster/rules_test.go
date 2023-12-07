@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antonmedv/expr/vm"
+	"github.com/expr-lang/expr/vm"
 
 	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/node"

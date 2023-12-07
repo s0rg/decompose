@@ -8,8 +8,8 @@ import (
 	"io"
 	"slices"
 
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
 
 	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"

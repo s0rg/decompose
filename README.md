@@ -61,8 +61,8 @@ Closest analogs, i can find, that not suit my needs very well:
 
 ## installation
 
-- [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows.
-- [docker](https://hub.docker.com/r/s0rg/decompose)
+- [binaries / deb / rpm](https://github.com/s0rg/decompose/releases) for Linux, FreeBSD, macOS and Windows
+- [docker image](https://hub.docker.com/r/s0rg/decompose)
 
 ## usage
 
@@ -215,7 +215,7 @@ Example `json` (order matters):
 
 Weight can be omitted, if not specified it equals `1`.
 
-Where `<expression>` is [expr dsl](https://expr.medv.io/docs/Language-Definition), having env object `node` with follownig
+Where `<expression>` is [expr dsl](https://expr-lang.org/docs/Language-Definition), having env object `node` with follownig
 fields:
 
 ```go
