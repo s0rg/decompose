@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 )
 
 func voidProgress(_, _ int) {}
@@ -21,7 +22,7 @@ type clientMock struct {
 
 func (cm *clientMock) ContainerList(
 	_ context.Context,
-	_ types.ContainerListOptions,
+	_ container.ListOptions,
 ) (rv []types.Container, err error) {
 	if cm.Err != nil {
 		err = cm.Err
