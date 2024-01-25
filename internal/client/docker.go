@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/s0rg/set"
 
@@ -28,7 +29,7 @@ type createClient func() (DockerClient, error)
 type nsEnter func(int, graph.NetProto, func(localIP, remoteIP net.IP, localPort, remotePort uint16, kind string)) error
 
 type DockerClient interface {
-	ContainerList(context.Context, types.ContainerListOptions) ([]types.Container, error)
+	ContainerList(context.Context, container.ListOptions) ([]types.Container, error)
 	ContainerInspect(context.Context, string) (types.ContainerJSON, error)
 	ContainerExecCreate(context.Context, string, types.ExecConfig) (types.IDResponse, error)
 	ContainerExecAttach(context.Context, string, types.ExecStartCheck) (types.HijackedResponse, error)
@@ -71,7 +72,7 @@ func (d *Docker) Containers(
 	skipkeys []string,
 	progress func(int, int),
 ) (rv []*graph.Container, err error) {
-	containers, err := d.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	containers, err := d.cli.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("list: %w", err)
 	}
