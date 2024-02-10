@@ -161,12 +161,14 @@ func (ws *Workspace) writeDefaultIncludes(w io.Writer, level int) {
 
 func (ws *Workspace) writeViews(w io.Writer, level int) {
 	putHeader(w, level, headerViews)
+
 	level++
 
 	for _, key := range ws.systemsOrder {
 		system := ws.systems[key]
 
 		putView(w, level, blockSystemCtx, system.ID)
+
 		level++
 
 		putRaw(w, level, "include *")
@@ -178,34 +180,42 @@ func (ws *Workspace) writeViews(w io.Writer, level int) {
 		putRaw(w, level, "autoLayout")
 
 		level--
+
 		putEnd(w, level) // system context
 
 		putView(w, level, blockContainer, system.ID)
+
 		level++
 
 		putRaw(w, level, "include *")
 		putRaw(w, level, "autoLayout")
 
 		level--
+
 		putEnd(w, level) // container
 	}
 
 	fmt.Fprintln(w, "")
 	putHeader(w, level, "styles")
+
 	level++
 
 	putRaw(w, level, `element "Element" {`)
+
 	level++
 
 	putRaw(w, level, "metadata true")
 	putRaw(w, level, "description true")
 
 	level--
+
 	putEnd(w, level) // element
 
 	level--
+
 	putEnd(w, level) // styles
 
 	level--
+
 	putEnd(w, level) // views
 }

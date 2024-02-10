@@ -2,16 +2,17 @@ package builder_test
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/s0rg/decompose/internal/builder"
 	"github.com/s0rg/decompose/internal/node"
 )
 
-func TestTreeGolden(t *testing.T) {
+func TestCSVGolden(t *testing.T) {
 	t.Parallel()
 
-	bld := builder.NewTree()
+	bld := builder.NewCSV()
 
 	_ = bld.AddNode(&node.Node{
 		ID:    "node-1",
@@ -85,5 +86,39 @@ func TestTreeGolden(t *testing.T) {
 
 	if got != want {
 		t.Errorf("Want:\n%s\nGot:\n%s", want, got)
+	}
+}
+
+func TestCSVWriteError(t *testing.T) {
+	t.Parallel()
+
+	bldr := builder.NewCSV()
+	testErr := errors.New("test-error")
+	errW := &errWriter{Err: testErr}
+
+	_ = bldr.AddNode(&node.Node{
+		ID:    "#",
+		Name:  "#",
+		Image: "node-image",
+		Ports: node.Ports{
+			{Kind: "tcp", Value: 1},
+			{Kind: "tcp", Value: 2},
+		},
+		Networks: []string{"test-net"},
+		Meta: &node.Meta{
+			Info: "info 1",
+			Tags: []string{"1"},
+		},
+		Process: &node.Process{
+			Cmd: []string{"echo", "'test 1'"},
+			Env: []string{"FOO=1"},
+		},
+		Volumes: []*node.Volume{
+			{Type: "volume", Src: "src", Dst: "dst"},
+		},
+	})
+
+	if err := bldr.Write(errW); !errors.Is(err, testErr) {
+		t.Log(err)
 	}
 }
