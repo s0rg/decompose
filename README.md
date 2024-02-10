@@ -78,7 +78,7 @@ possible flags with default values:
   -follow string
         follow only this container by name(s), comma-separated or from @file
   -format string
-        output format: json, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
+        output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
   -full
         extract full process info: (cmd, args, env) and volumes info
   -help
