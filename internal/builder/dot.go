@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"fmt"
 	"hash/fnv"
 	"io"
 	"strings"
@@ -11,7 +10,10 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
-const outPort = "out"
+const (
+	outPort = "out"
+	dotLF   = "&#92;n"
+)
 
 // dark28 color scheme from https://www.graphviz.org/doc/info/colors.html
 var colors = []string{
@@ -51,24 +53,19 @@ func (d *DOT) AddNode(n *node.Node) error {
 
 	if n.IsExternal() {
 		color = "red"
-		label = fmt.Sprintf("external: %s", n.Name)
+		label = "external: " + n.Name
 	} else {
 		color = "black"
-		label = fmt.Sprintf(
-			"%s&#92;nimage: %s&#92;nnet: %s",
-			n.Name,
-			n.Image,
-			strings.Join(n.Networks, ", "),
-		)
+		label = n.Name + dotLF + "image: " + n.Image + dotLF + "net: " + strings.Join(n.Networks, ", ")
 	}
 
 	if n.Meta != nil {
 		if lines, ok := n.FormatMeta(); ok {
-			label += "&#92;ninfo:&#92;n" + strings.Join(lines, "&#92;n")
+			label += dotLF + "info:" + dotLF + strings.Join(lines, dotLF)
 		}
 
 		if len(n.Meta.Tags) > 0 {
-			label += "&#92;ntags: " + strings.Join(n.Meta.Tags, ",")
+			label += dotLF + "tags: " + strings.Join(n.Meta.Tags, ",")
 		}
 	}
 

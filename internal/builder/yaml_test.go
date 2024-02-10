@@ -65,8 +65,6 @@ func TestYAMLGolden(t *testing.T) {
 		},
 	})
 
-	_ = bld.Name()
-
 	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 1})
 	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 2})
 	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 3})
@@ -85,7 +83,7 @@ func TestYAMLGolden(t *testing.T) {
 	bld.Write(&buf)
 
 	got := buf.String()
-	want := golden(t, "yaml", got)
+	want := golden(t, bld.Name(), got)
 
 	if got != want {
 		t.Errorf("Want:\n%s\nGot:\n%s", want, got)

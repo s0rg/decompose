@@ -70,7 +70,6 @@ func TestSDSLGolden(t *testing.T) {
 	})
 
 	_ = bld.AddNode(&node.Node{ID: "ext2", Name: "ext2", Cluster: "c2"})
-	_ = bld.Name()
 
 	bld.AddEdge("ext2", "node-1", &node.Port{Kind: "tcp", Value: 1})
 	bld.AddEdge("ext2", "node-1", &node.Port{Kind: "tcp", Value: 2})
@@ -114,7 +113,7 @@ func TestSDSLGolden(t *testing.T) {
 	bld.Write(&buf)
 
 	got := buf.String()
-	want := golden(t, "sdsl", got)
+	want := golden(t, bld.Name(), got)
 
 	if got != want {
 		t.Errorf("Want:\n%s\nGot:\n%s", want, got)

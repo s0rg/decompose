@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -122,7 +123,10 @@ func setupFlags() {
 }
 
 func write(name string, writer func(io.Writer) error) error {
-	var out io.Writer = os.Stdout
+	var (
+		out io.Writer = os.Stdout
+		buf bytes.Buffer
+	)
 
 	if name != defaultOutput {
 		fd, err := os.Create(name)
@@ -135,8 +139,12 @@ func write(name string, writer func(io.Writer) error) error {
 		out = fd
 	}
 
-	if err := writer(out); err != nil {
+	if err := writer(&buf); err != nil {
 		return fmt.Errorf("write '%s': %w", name, err)
+	}
+
+	if _, err := buf.WriteTo(out); err != nil {
+		return fmt.Errorf("write: %w", err)
 	}
 
 	return nil

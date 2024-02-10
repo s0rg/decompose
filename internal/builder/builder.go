@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	KindCSV         = "csv"
 	KindDOT         = "dot"
 	KindJSON        = "json"
 	KindTREE        = "tree"
@@ -15,6 +16,8 @@ const (
 
 func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 	switch kind {
+	case KindCSV:
+		return NewCSV(), true
 	case KindDOT:
 		return NewDOT(), true
 	case KindJSON:
@@ -43,6 +46,7 @@ func SupportCluster(n string) (yes bool) {
 
 func Names() (rv []string) {
 	return []string{
+		KindCSV,
 		KindDOT,
 		KindJSON,
 		KindTREE,
