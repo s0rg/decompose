@@ -5,7 +5,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -30,10 +29,7 @@ const (
 
 var procROOT = procDefault
 
-type (
-	connCB = func(localIP, remoteIP net.IP, localPort, remotePort uint16, kind string)
-	sockCB func(s procnet.SockTabEntry)
-)
+type sockCB func(procnet.SockTabEntry)
 
 func Default() (rv DockerClient, err error) {
 	var dc *client.Client

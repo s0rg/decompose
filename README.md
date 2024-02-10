@@ -23,6 +23,7 @@ Takes all network connections from your docker containers and exports them as:
 - pseudographical tree
 - json stream
 - statistics - nodes, connections and listen ports counts
+- CSV with columns: `name`, `listen` and `outbounds`
 
 ## rationale
 

@@ -27,6 +27,7 @@ var ErrModeNone = errors.New("mode not set")
 
 type (
 	createClient func() (DockerClient, error)
+	connCB       = func(localIP, remoteIP net.IP, localPort, remotePort uint16, kind string)
 	nsEnter      func(int, graph.NetProto, connCB) error
 )
 
