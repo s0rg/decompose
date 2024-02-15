@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -15,21 +14,16 @@ const (
 	stateEstablished = "ESTABLISHED"
 )
 
-func ParseNetstat(r io.Reader) (rv []*Connection, err error) {
+func ParseNetstat(r io.Reader, cb func(*Connection)) (err error) {
 	s := bufio.NewScanner(r)
 	s.Split(bufio.ScanLines)
 
-	const (
-		nSkipHead = 2
-		nConnsNum = 64
-	)
+	const nSkipHead = 2
 
 	var (
 		conn *Connection
 		ok   bool
 	)
-
-	rv = make([]*Connection, 0, nConnsNum)
 
 	for i := 0; s.Scan(); i++ {
 		if i < nSkipHead {
@@ -40,19 +34,21 @@ func ParseNetstat(r io.Reader) (rv []*Connection, err error) {
 			continue
 		}
 
-		rv = append(rv, conn)
+		cb(conn)
 	}
 
 	if err = s.Err(); err != nil {
-		return nil, fmt.Errorf("scan: %w", err)
+		return fmt.Errorf("scan: %w", err)
 	}
 
-	return slices.Clip(rv), nil
+	return nil
 }
 
 func parseConnection(s string) (conn *Connection, ok bool) {
+	const minFields = 6
+
 	parts := strings.Fields(s)
-	if len(parts) < 1 {
+	if len(parts) < minFields {
 		return nil, false
 	}
 
@@ -66,15 +62,15 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		return nil, false
 	}
 
-	if conn.LocalIP.IsLoopback() {
-		return nil, false
-	}
-
 	if conn.RemoteIP, conn.RemotePort, ok = splitIP(parts[4]); !ok {
 		return nil, false
 	}
 
+	var nProcField = 5
+
 	if conn.Proto == TCP {
+		nProcField = 6
+
 		switch parts[5] {
 		case stateListen, stateEstablished:
 		default: // skip all other states
@@ -82,19 +78,23 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		}
 	}
 
+	if conn.Process, ok = splitName(parts[nProcField]); !ok {
+		return nil, false
+	}
+
 	return conn, true
 }
 
 func parseKind(kind string, fieldsNum int) (k NetProto, ok bool) {
 	const (
-		nPartsUDP = 5
-		nPartsTCP = 6
+		nPartsUDP = 6
+		nPartsTCP = 7
 	)
 
 	switch {
-	case strings.HasPrefix(kind, TCP.String()) && fieldsNum == nPartsTCP:
+	case strings.HasPrefix(kind, TCP.String()) && fieldsNum >= nPartsTCP:
 		return TCP, true
-	case strings.HasPrefix(kind, UDP.String()) && fieldsNum == nPartsUDP:
+	case strings.HasPrefix(kind, UDP.String()) && fieldsNum >= nPartsUDP:
 		return UDP, true
 	default: // unknown protocol or invalid fields count
 	}
@@ -124,4 +124,23 @@ func splitIP(v string) (ip net.IP, port uint16, ok bool) {
 	}
 
 	return ip, port, true
+}
+
+func splitName(v string) (name string, ok bool) {
+	const pidFields = 2
+
+	if !strings.ContainsRune(v, '/') {
+		return
+	}
+
+	parts := strings.SplitN(v, "/", pidFields)
+	if len(parts) != pidFields {
+		return
+	}
+
+	fields := strings.Fields(parts[1])
+
+	name = fields[0]
+
+	return name, name != ""
 }

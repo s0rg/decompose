@@ -6,6 +6,23 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
+func makeTestNode(
+	id, name, image string,
+	ports []*node.Port,
+) (rv *node.Node) {
+	rv = &node.Node{
+		ID:    id,
+		Name:  name,
+		Ports: &node.Ports{},
+	}
+
+	for _, p := range ports {
+		rv.Ports.Add("", p)
+	}
+
+	return rv
+}
+
 func TestNodeIsExternal(t *testing.T) {
 	t.Parallel()
 
@@ -25,6 +42,22 @@ func TestNodeIsExternal(t *testing.T) {
 func TestNodeToJSON(t *testing.T) {
 	t.Parallel()
 
+	nodeMeta := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+		{Kind: "udp", Value: 53},
+	})
+
+	nodeMeta.Meta = &node.Meta{
+		Info: "test",
+		Tags: []string{"test"},
+	}
+
+	nodeContainer := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+		{Kind: "udp", Value: 53},
+	})
+
+	nodeContainer.Container.Cmd = []string{"foo"}
+	nodeContainer.Container.Env = []string{"A=B"}
+
 	testCases := []struct {
 		Node       *node.Node
 		Name       string
@@ -36,73 +69,38 @@ func TestNodeToJSON(t *testing.T) {
 		HasProcess bool
 	}{
 		{
-			Node: &node.Node{
-				ID:   "test-id",
-				Name: "test-name",
-				Ports: []*node.Port{
-					{Kind: "tcp", Value: 80},
-					{Kind: "udp", Value: 53},
-				},
-			},
+			Node: makeTestNode("test-id", "test-name", "", []*node.Port{
+				{Kind: "tcp", Value: 80},
+				{Kind: "udp", Value: 53},
+			}),
 			Name:     "test-name",
 			PortsNum: 2,
 		},
 		{
-			Node: &node.Node{
-				ID:   "test-id",
-				Name: "test-id",
-				Ports: []*node.Port{
-					{Kind: "tcp", Value: 80},
-				},
-			},
+			Node: makeTestNode("test-id", "test-id", "", []*node.Port{
+				{Kind: "tcp", Value: 80},
+			}),
 			Name:     "test-id",
 			PortsNum: 1,
 			External: true,
 		},
 		{
-			Node: &node.Node{
-				ID:    "test-id",
-				Name:  "test-name",
-				Image: "test-image",
-				Ports: []*node.Port{
-					{Kind: "udp", Value: 53},
-				},
-			},
+			Node: makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+				{Kind: "udp", Value: 53},
+			}),
 			Name:     "test-name",
 			Image:    "test-image",
 			PortsNum: 1,
 		},
 		{
-			Node: &node.Node{
-				ID:    "test-id",
-				Name:  "test-name",
-				Image: "test-image",
-				Ports: []*node.Port{
-					{Kind: "udp", Value: 53},
-				},
-				Meta: &node.Meta{
-					Info: "test",
-					Tags: []string{"test"},
-				},
-			},
+			Node:     nodeMeta,
 			Name:     "test-name",
 			Image:    "test-image",
 			PortsNum: 1,
 			HasMeta:  true,
 		},
 		{
-			Node: &node.Node{
-				ID:    "test-id",
-				Name:  "test-name",
-				Image: "test-image",
-				Ports: []*node.Port{
-					{Kind: "udp", Value: 53},
-				},
-				Process: &node.Process{
-					Cmd: []string{"foo"},
-					Env: []string{"A=B"},
-				},
-			},
+			Node:       nodeContainer,
 			Name:       "test-name",
 			Image:      "test-image",
 			PortsNum:   1,
@@ -113,7 +111,7 @@ func TestNodeToJSON(t *testing.T) {
 				ID:    "test-id",
 				Name:  "test-name",
 				Image: "test-image",
-				Ports: []*node.Port{},
+				Ports: &node.Ports{},
 				Volumes: []*node.Volume{
 					{Type: "none"},
 					{Type: "bind"},
@@ -144,7 +142,7 @@ func TestNodeToJSON(t *testing.T) {
 			t.Fatal("extra", tc)
 		}
 
-		if tc.HasProcess && j.Process == nil {
+		if tc.HasProcess && len(j.Container.Cmd) == 0 {
 			t.Fatal("process", tc)
 		}
 
@@ -168,6 +166,12 @@ func TestNodeToJSON(t *testing.T) {
 
 func TestNodeToView(t *testing.T) {
 	t.Parallel()
+
+	nodeContainer := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+		{Kind: "udp", Value: 53},
+	})
+
+	nodeContainer.Container.Cmd = []string{"foo", "-arg"}
 
 	testCases := []struct {
 		Node     *node.Node
@@ -224,13 +228,7 @@ func TestNodeToView(t *testing.T) {
 			Args:     0,
 		},
 		{
-			Node: &node.Node{
-				ID:   "test",
-				Name: "test",
-				Process: &node.Process{
-					Cmd: []string{"foo", "-arg"},
-				},
-			},
+			Node:     nodeContainer,
 			External: true,
 			Tags:     0,
 			Cmd:      "foo",

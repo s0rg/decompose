@@ -27,7 +27,7 @@ func TestCSVGolden(t *testing.T) {
 			Info: "info 1",
 			Tags: []string{"1"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 1'"},
 			Env: []string{"FOO=1"},
 		},
@@ -43,7 +43,7 @@ func TestCSVGolden(t *testing.T) {
 			Info: "info 2",
 			Tags: []string{"2"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 2'"},
 			Env: []string{"FOO=2"},
 		},
@@ -59,7 +59,7 @@ func TestCSVGolden(t *testing.T) {
 			Info: "info 3",
 			Tags: []string{"3"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 3'"},
 			Env: []string{"FOO=3"},
 		},
@@ -109,7 +109,7 @@ func TestCSVWriteError(t *testing.T) {
 			Info: "info 1",
 			Tags: []string{"1"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 1'"},
 			Env: []string{"FOO=1"},
 		},

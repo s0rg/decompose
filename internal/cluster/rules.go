@@ -70,17 +70,17 @@ func (cb *Rules) Name() string {
 }
 
 func (cb *Rules) Write(w io.Writer) error {
-	for src, dmap := range cb.cluster {
-		for dst, ports := range dmap {
-			for _, p := range ports.Dedup() {
-				cb.builder.AddEdge(src, dst, p)
-			}
-		}
-	}
+	// for src, dmap := range cb.cluster {
+	// 	for dst, ports := range dmap {
+	// 		for _, p := range ports.Dedup() {
+	// 			cb.builder.AddEdge(src, dst, p)
+	// 		}
+	// 	}
+	// }
 
-	if err := cb.builder.Write(w); err != nil {
-		return fmt.Errorf("%w", cb.builder.Write(w))
-	}
+	// if err := cb.builder.Write(w); err != nil {
+	// 	return fmt.Errorf("%w", cb.builder.Write(w))
+	// }
 
 	return nil
 }
@@ -99,28 +99,30 @@ func (cb *Rules) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (cb *Rules) AddEdge(src, dst string, port *node.Port) {
-	nsrc, ok := cb.nodes[src]
-	if !ok {
-		return
-	}
+func (cb *Rules) AddEdge(e *node.Edge) { //src, dst string, port *node.Port) {
+	/*
+		    nsrc, ok := cb.nodes[src]
+			if !ok {
+				return
+			}
 
-	ndst, ok := cb.nodes[dst]
-	if !ok {
-		return
-	}
+			ndst, ok := cb.nodes[dst]
+			if !ok {
+				return
+			}
 
-	if nsrc.Cluster != ndst.Cluster {
-		cdst, ok := cb.cluster[nsrc.Cluster]
-		if !ok {
-			cdst = make(map[string]node.Ports)
-		}
+			if nsrc.Cluster != ndst.Cluster {
+				cdst, ok := cb.cluster[nsrc.Cluster]
+				if !ok {
+					cdst = make(map[string]node.Ports)
+				}
 
-		cdst[ndst.Cluster] = append(cdst[ndst.Cluster], port)
-		cb.cluster[nsrc.Cluster] = cdst
-	}
+				// cdst[ndst.Cluster] = append(cdst[ndst.Cluster], port)
+				cb.cluster[nsrc.Cluster] = cdst
+			}
 
-	cb.builder.AddEdge(src, dst, port)
+			cb.builder.AddEdge(src, dst, port)
+	*/
 }
 
 func (cb *Rules) CountRules() int {

@@ -36,8 +36,8 @@ func (t *Tree) AddNode(n *node.Node) error {
 	return t.j.AddNode(n)
 }
 
-func (t *Tree) AddEdge(srcID, dstID string, port *node.Port) {
-	t.j.AddEdge(srcID, dstID, port)
+func (t *Tree) AddEdge(e *node.Edge) {
+	t.j.AddEdge(e)
 }
 
 func (t *Tree) Write(w io.Writer) error {
@@ -79,13 +79,8 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 		fmt.Fprintln(w, "tags:", strings.Join(n.Tags, ", "))
 	}
 
-	if n.Process != nil {
-		fmt.Fprint(w, next, " ")
-		fmt.Fprintf(w, "cmd: '%s'\n", strings.Join(n.Process.Cmd, " "))
-	}
-
 	fmt.Fprint(w, next, " ")
-	fmt.Fprintln(w, "listen:", strings.Join(n.Listen, ", "))
+	// fmt.Fprintln(w, "listen:", strings.Join(n.Listen, ", "))
 
 	if len(n.Networks) > 0 {
 		fmt.Fprint(w, next, " ")
@@ -120,7 +115,8 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 			fmt.Fprint(w, symEdge)
 		}
 
-		fmt.Fprintf(w, " %s: %s\n", dst, strings.Join(ports, ", "))
+		_ = ports
+		// fmt.Fprintf(w, " %s: %s\n", dst, strings.Join(ports, ", "))
 
 		cur++
 	}

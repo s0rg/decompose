@@ -8,6 +8,16 @@ import (
 	"github.com/s0rg/set"
 )
 
+func makeTestPorts(vals []*node.Port) (rv *node.Ports) {
+	rv = &node.Ports{}
+
+	for _, p := range vals {
+		rv.Add("", p)
+	}
+
+	return rv
+}
+
 func TestAdd(t *testing.T) {
 	t.Parallel()
 
@@ -16,66 +26,66 @@ func TestAdd(t *testing.T) {
 	g.Add("1", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
 			{Kind: "tcp", Value: 3},
-		},
+		}),
 	})
 
 	g.Add("11", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
 			{Kind: "tcp", Value: 3},
-		},
+		}),
 	})
 
 	g.Add("2", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 3},
 			{Kind: "tcp", Value: 2},
-		},
+		}),
 	})
 
 	g.Add("3", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 3},
-		},
+		}),
 	})
 
 	g.Add("4", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
-		},
+		}),
 	})
 
 	g.Add("5", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
 			{Kind: "tcp", Value: 4},
-		},
+		}),
 	})
 
 	g.Add("6", &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
-		},
+		}),
 	})
 
 	var groups int

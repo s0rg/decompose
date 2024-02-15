@@ -31,8 +31,8 @@ func (c *CSV) AddNode(n *node.Node) error {
 	return c.j.AddNode(n)
 }
 
-func (c *CSV) AddEdge(srcID, dstID string, port *node.Port) {
-	c.j.AddEdge(srcID, dstID, port)
+func (c *CSV) AddEdge(e *node.Edge) {
+	c.j.AddEdge(e)
 }
 
 func (c *CSV) Write(w io.Writer) error {
@@ -44,8 +44,8 @@ func (c *CSV) Write(w io.Writer) error {
 	c.j.Sorted(func(n *node.JSON, _ bool) {
 		_ = cw.Write([]string{
 			n.Name,
-			strings.Join(n.Listen, "\r\n"),
-			renderOutbounds(n.Connected),
+			// strings.Join(n.Listen, "\r\n"),
+			// renderOutbounds(n.Connected),
 		})
 	})
 

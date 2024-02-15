@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"net"
 	"testing"
 
 	"github.com/docker/docker/api/types"
@@ -61,7 +60,7 @@ func TestDockerClientContainersError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false,
+		false, false,
 		nil,
 		voidProgress,
 	)
@@ -92,7 +91,7 @@ func TestDockerClientContainersEmpty(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false,
+		false, false,
 		nil,
 		voidProgress,
 	)
@@ -131,7 +130,7 @@ func TestDockerClientContainersSingleExited(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false,
+		false, false,
 		nil,
 		voidProgress,
 	)
@@ -189,6 +188,7 @@ func TestDockerClientContainersExecCreateError(t *testing.T) {
 		context.Background(),
 		graph.ALL,
 		false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -242,6 +242,7 @@ func TestDockerClientContainersInspectError(t *testing.T) {
 		context.Background(),
 		graph.ALL,
 		true,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -298,6 +299,7 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
+		false,
 		false,
 		nil,
 		voidProgress,
@@ -360,6 +362,7 @@ func TestDockerClientContainersParseError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
+		false,
 		false,
 		nil,
 		voidProgress,
@@ -440,6 +443,7 @@ func TestDockerClientContainersSingle(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
+		false,
 		false,
 		nil,
 		voidProgress,
@@ -540,6 +544,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 		context.Background(),
 		graph.ALL,
 		true,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -551,7 +556,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 		t.Fail()
 	}
 
-	if rv[0].Process == nil {
+	if rv[0].Info == nil {
 		t.Fail()
 	}
 
@@ -621,6 +626,7 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 		context.Background(),
 		graph.ALL,
 		true,
+		false,
 		[]string{"BAZ"},
 		voidProgress,
 	)
@@ -632,11 +638,11 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 		t.Fail()
 	}
 
-	if rv[0].Process == nil {
+	if rv[0].Info == nil {
 		t.Fail()
 	}
 
-	if len(rv[0].Process.Env) != 1 {
+	if len(rv[0].Info.Env) != 1 {
 		t.Fail()
 	}
 }
@@ -729,6 +735,7 @@ func TestDockerClientNsEnterInspectError(t *testing.T) {
 		context.Background(),
 		graph.ALL,
 		false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -767,17 +774,17 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID"}
+		rv.Processes = [][]string{
+			{"1"},
+		}
 
 		return rv
 	}
 
 	failEnter := func(_ int, _ graph.NetProto, _ func(
-		locIP, remIP net.IP,
-		locPort, remPort uint16,
-		kind string,
+		_ *graph.Connection,
 	)) error {
 		return testErr
 	}
@@ -796,6 +803,7 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
+		false,
 		false,
 		nil,
 		voidProgress,
@@ -833,19 +841,19 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID"}
+		rv.Processes = [][]string{
+			{"1"},
+		}
 
 		return rv
 	}
 
 	testEnter := func(_ int, _ graph.NetProto, fn func(
-		locIP, remIP net.IP,
-		locPort, remPort uint16,
-		kind string,
+		_ *graph.Connection,
 	)) error {
-		fn(net.IP{}, net.IP{}, 0, 0, "tcp")
+		fn(&graph.Connection{})
 
 		return nil
 	}
@@ -864,6 +872,7 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
+		false,
 		false,
 		nil,
 		voidProgress,

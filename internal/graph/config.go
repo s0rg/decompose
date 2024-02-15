@@ -11,6 +11,7 @@ type Config struct {
 	OnlyLocal bool
 	FullInfo  bool
 	NoLoops   bool
+	Deep      bool
 }
 
 func (c *Config) MatchName(v string) (yes bool) {

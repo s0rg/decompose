@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	"github.com/otterize/go-procnet/procnet"
+	"github.com/prometheus/procfs"
+	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/graph"
 )
@@ -20,16 +21,13 @@ const (
 	pingTimeout = time.Second
 	procENV     = "IN_DOCKER_PROC_ROOT"
 	procDefault = "/proc"
-	procNET     = "net"
-	procTCP4    = "tcp"
-	procTCP6    = "tcp6"
-	procUDP4    = "udp"
-	procUDP6    = "udp6"
+
+	// from net/tcp_states.h.
+	tcpEstablished = uint64(1)
+	tcpListen      = uint64(10)
 )
 
 var procROOT = procDefault
-
-type sockCB func(procnet.SockTabEntry)
 
 func Default() (rv DockerClient, err error) {
 	var dc *client.Client
@@ -56,88 +54,186 @@ func Default() (rv DockerClient, err error) {
 	return dc, nil
 }
 
-func scanTCP(pid string, onconn connCB) (err error) {
-	onsock := func(s procnet.SockTabEntry) {
-		switch s.State {
-		case procnet.Listen, procnet.Established:
-			onconn(
-				s.LocalAddr.IP,
-				s.RemoteAddr.IP,
-				s.LocalAddr.Port,
-				s.RemoteAddr.Port,
-				procTCP4,
-			)
-		default:
-		}
+func isValidState(state uint64) (ok bool) {
+	switch state {
+	case tcpEstablished, tcpListen:
+		ok = true
+	default:
 	}
 
-	pathTCP4 := filepath.Join(procROOT, pid, procNET, procTCP4)
-	if err = scan(pathTCP4, onsock); err != nil {
-		return fmt.Errorf("tcp4: %w", err)
-	}
-
-	pathTCP6 := filepath.Join(procROOT, pid, procNET, procTCP6)
-	if err = scan(pathTCP6, onsock); err != nil {
-		return fmt.Errorf("tcp6: %w", err)
-	}
-
-	return nil
+	return ok
 }
 
-func scanUDP(pid string, onconn connCB) (err error) {
-	onsock := func(s procnet.SockTabEntry) {
-		onconn(
-			s.LocalAddr.IP,
-			s.RemoteAddr.IP,
-			s.LocalAddr.Port,
-			s.RemoteAddr.Port,
-			procUDP4,
-		)
-	}
-
-	pathUDP4 := filepath.Join(procROOT, pid, procNET, procUDP4)
-	if err = scan(pathUDP4, onsock); err != nil {
-		return fmt.Errorf("udp4: %w", err)
-	}
-
-	pathUDP6 := filepath.Join(procROOT, pid, procNET, procUDP6)
-	if err = scan(pathUDP6, onsock); err != nil {
-		return fmt.Errorf("udp6: %w", err)
-	}
-
-	return nil
-}
-
-func scan(path string, onsock sockCB) (err error) {
-	socks, err := procnet.SocksFromPath(path)
+func scanTCP(
+	pfs procfs.FS,
+	name string,
+	inodes set.Unordered[uint64],
+	onconn func(*graph.Connection),
+) (err error) {
+	tcp4, err := pfs.NetTCP()
 	if err != nil {
-		return fmt.Errorf("path: %w", err)
+		return fmt.Errorf("procfs/tcp4: %w", err)
 	}
 
-	for _, s := range socks {
-		onsock(s)
+	for _, s := range tcp4 {
+		if !isValidState(s.St) {
+			continue
+		}
+
+		if !inodes.Has(s.Inode) {
+			continue
+		}
+
+		onconn(&graph.Connection{
+			LocalIP:    s.LocalAddr,
+			RemoteIP:   s.RemAddr,
+			LocalPort:  uint16(s.LocalPort),
+			RemotePort: uint16(s.RemPort),
+			Proto:      graph.TCP,
+			Process:    name,
+		})
+	}
+
+	tcp6, err := pfs.NetTCP6()
+	if err != nil {
+		return fmt.Errorf("procfs/tcp6: %w", err)
+	}
+
+	for _, s := range tcp6 {
+		if !isValidState(s.St) {
+			continue
+		}
+
+		if !inodes.Has(s.Inode) {
+			continue
+		}
+
+		onconn(&graph.Connection{
+			LocalIP:    s.LocalAddr,
+			RemoteIP:   s.RemAddr,
+			LocalPort:  uint16(s.LocalPort),
+			RemotePort: uint16(s.RemPort),
+			Proto:      graph.TCP,
+			Process:    name,
+		})
 	}
 
 	return nil
+}
+
+func scanUDP(
+	pfs procfs.FS,
+	name string,
+	inodes set.Unordered[uint64],
+	onconn func(*graph.Connection),
+) (err error) {
+	udp4, err := pfs.NetUDP()
+	if err != nil {
+		return fmt.Errorf("procfs/udp4: %w", err)
+	}
+
+	for _, s := range udp4 {
+		if !inodes.Has(s.Inode) {
+			continue
+		}
+
+		onconn(&graph.Connection{
+			LocalIP:    s.LocalAddr,
+			RemoteIP:   s.RemAddr,
+			LocalPort:  uint16(s.LocalPort),
+			RemotePort: uint16(s.RemPort),
+			Proto:      graph.UDP,
+			Process:    name,
+		})
+	}
+
+	udp6, err := pfs.NetUDP6()
+	if err != nil {
+		return fmt.Errorf("procfs/udp6: %w", err)
+	}
+
+	for _, s := range udp6 {
+		if !inodes.Has(s.Inode) {
+			continue
+		}
+
+		onconn(&graph.Connection{
+			LocalIP:    s.LocalAddr,
+			RemoteIP:   s.RemAddr,
+			LocalPort:  uint16(s.LocalPort),
+			RemotePort: uint16(s.RemPort),
+			Proto:      graph.UDP,
+			Process:    name,
+		})
+	}
+
+	return nil
+}
+
+func processInfo(pid int) (
+	name string,
+	inodes set.Unordered[uint64],
+	err error,
+) {
+	pfs, err := procfs.NewFS(procROOT)
+	if err != nil {
+		return "", nil, fmt.Errorf("procfs: %w", err)
+	}
+
+	proc, err := pfs.Proc(pid)
+	if err != nil {
+		return "", nil, fmt.Errorf("procfs/pid: %w", err)
+	}
+
+	name, err = proc.Executable()
+	if err != nil {
+		return "", nil, fmt.Errorf("procfs/executable: %w", err)
+	}
+
+	fds, err := proc.FileDescriptorsInfo()
+	if err != nil {
+		return "", nil, fmt.Errorf("procfs/descriptors: %w", err)
+	}
+
+	inodes = make(set.Unordered[uint64])
+
+	for _, f := range fds {
+		ino, err := strconv.ParseUint(f.Ino, 10, 64)
+		if err != nil {
+			continue
+		}
+
+		inodes.Add(ino)
+	}
+
+	return filepath.Base(name), inodes, nil
 }
 
 func Nsenter(
 	pid int,
 	proto graph.NetProto,
-	onconn connCB,
+	onconn func(*graph.Connection),
 ) (
 	err error,
 ) {
-	spid := strconv.Itoa(pid)
+	name, inodes, err := processInfo(pid)
+	if err != nil {
+		return fmt.Errorf("procfs: %w", err)
+	}
+
+	fs, err := procfs.NewFS(filepath.Join(procROOT, strconv.Itoa(pid)))
+	if err != nil {
+		return fmt.Errorf("procfs/net: %w", err)
+	}
 
 	if proto == graph.ALL || proto == graph.TCP {
-		if err = scanTCP(spid, onconn); err != nil {
+		if err = scanTCP(fs, name, inodes, onconn); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}
 
 	if proto == graph.ALL || proto == graph.UDP {
-		if err = scanUDP(spid, onconn); err != nil {
+		if err = scanUDP(fs, name, inodes, onconn); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}

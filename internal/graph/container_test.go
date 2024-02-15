@@ -59,7 +59,7 @@ func TestContainerListeners(t *testing.T) {
 		res := 0
 
 		c := graph.Container{}
-		c.SetConnections(tc.Conns)
+		c.AddMany(tc.Conns)
 		c.IterListeners(func(_ *graph.Connection) {
 			res++
 		})
@@ -79,7 +79,7 @@ func TestContainerOutbounds(t *testing.T) {
 		res := 0
 
 		c := graph.Container{}
-		c.SetConnections(tc.Conns)
+		c.AddMany(tc.Conns)
 		c.IterOutbounds(func(_ *graph.Connection) {
 			res++
 		})
@@ -97,7 +97,7 @@ func TestContainerCount(t *testing.T) {
 		tc := &testCases[i]
 
 		c := graph.Container{}
-		c.SetConnections(tc.Conns)
+		c.AddMany(tc.Conns)
 
 		if res := c.ConnectionsCount(); res != tc.Count {
 			t.Fatalf("test case[%d] fail want %d got %d", i, tc.Count, res)

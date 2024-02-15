@@ -50,9 +50,11 @@ func (s *Stat) AddNode(n *node.Node) error {
 
 	s.nodes++
 
-	for _, p := range n.Ports {
-		s.ports[p.Label()]++
-	}
+	/*
+		for _, p := range n.Ports {
+			s.ports[p.Label()]++
+		}
+	*/
 
 	s.conns[n.ID] = make(set.Unordered[string])
 
@@ -84,8 +86,8 @@ func (s *Stat) isSuitable(srcID, dstID string) (uniq, yes bool) {
 	return uniq, true
 }
 
-func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
-	uniq, ok := s.isSuitable(srcID, dstID)
+func (s *Stat) AddEdge(e *node.Edge) {
+	uniq, ok := s.isSuitable(e.SrcID, e.DstID)
 	if !ok {
 		return
 	}

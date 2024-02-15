@@ -6,15 +6,23 @@ import (
 )
 
 type Node struct {
-	ID       string
-	Name     string
-	Image    string
-	Cluster  string
-	Networks []string
-	Meta     *Meta
-	Process  *Process
-	Volumes  []*Volume
-	Ports    Ports
+	ID        string
+	Name      string
+	Image     string
+	Cluster   string
+	Networks  []string
+	Meta      *Meta
+	Container Container
+	Volumes   []*Volume
+	Ports     *Ports
+}
+
+func External(name string) (rv *Node) {
+	return &Node{
+		ID:    name,
+		Name:  name,
+		Ports: &Ports{},
+	}
 }
 
 func (n *Node) IsExternal() bool {
@@ -26,27 +34,32 @@ func (n *Node) ToJSON() (rv *JSON) {
 		Name:       n.Name,
 		IsExternal: n.IsExternal(),
 		Networks:   n.Networks,
-		Listen:     make([]string, len(n.Ports)),
+		Container:  n.Container,
+		Listen:     make(map[string][]string),
 		Volumes:    []*Volume{},
 		Tags:       []string{},
-		Connected:  make(map[string][]string),
+		Connected:  make(map[string][]*Connection),
 	}
 
 	if n.Meta != nil {
 		rv.Tags = n.Meta.Tags
 	}
 
-	if n.Process != nil {
-		rv.Process = n.Process
-	}
-
 	if n.Image != "" {
 		rv.Image = &n.Image
 	}
 
-	for i := 0; i < len(n.Ports); i++ {
-		rv.Listen[i] = n.Ports[i].Label()
-	}
+	n.Ports.Sort()
+
+	n.Ports.Iter(func(name string, ports []*Port) {
+		labels := make([]string, len(ports))
+
+		for i := 0; i < len(ports); i++ {
+			labels[i] = ports[i].Label()
+		}
+
+		rv.Listen[name] = labels
+	})
 
 	if len(n.Volumes) > 0 {
 		rv.Volumes = n.Volumes
@@ -67,9 +80,9 @@ func (n *Node) ToView() (rv *View) {
 		rv.Tags = n.Meta.Tags
 	}
 
-	if n.Process != nil && len(n.Process.Cmd) > 0 {
-		rv.Cmd = filepath.Base(n.Process.Cmd[0])
-		rv.Args = n.Process.Cmd[1:]
+	if len(n.Container.Cmd) > 0 {
+		rv.Cmd = filepath.Base(n.Container.Cmd[0])
+		rv.Args = n.Container.Cmd[1:]
 	}
 
 	return rv

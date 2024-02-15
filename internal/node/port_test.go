@@ -7,6 +7,16 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
+func makeTestPorts(vals ...*node.Port) (rv *node.Ports) {
+	rv = &node.Ports{}
+
+	for _, p := range vals {
+		rv.Add("", p)
+	}
+
+	return rv
+}
+
 func TestPortLabelID(t *testing.T) {
 	t.Parallel()
 
@@ -34,60 +44,45 @@ func TestPortLabelID(t *testing.T) {
 	}
 }
 
-func TestPortsDedup(t *testing.T) {
-	t.Parallel()
-
-	ports := []*node.Port{
-		{Kind: "tcp", Value: 1},
-		{Kind: "udp", Value: 1},
-		{Kind: "tcp", Value: 1},
-		{Kind: "udp", Value: 2},
-		{Kind: "tcp", Value: 3},
-	}
-
-	rv := node.Ports(ports).Dedup()
-
-	if len(rv) != 4 {
-		t.Fail()
-	}
-}
-
 func TestPortsHas(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Ports  node.Ports
+		Ports  *node.Ports
 		Labels []string
 		Want   bool
 	}{
 		{
-			Ports:  []*node.Port{},
+			Ports:  &node.Ports{},
 			Labels: []string{},
 			Want:   false,
 		},
 		{
-			Ports:  []*node.Port{},
+			Ports:  &node.Ports{},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 80},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 80,
+			}),
 			Labels: []string{"80/tcp"},
 			Want:   true,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 81},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 81,
+			}),
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 80},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 80,
+			}),
 			Labels: []string{"80/tcp", "443/tcp"},
 			Want:   false,
 		},
@@ -104,38 +99,41 @@ func TestPortsHasAny(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Ports  node.Ports
+		Ports  *node.Ports
 		Labels []string
 		Want   bool
 	}{
 		{
-			Ports:  []*node.Port{},
+			Ports:  &node.Ports{},
 			Labels: []string{},
 			Want:   false,
 		},
 		{
-			Ports:  []*node.Port{},
+			Ports:  &node.Ports{},
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 80},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 80,
+			}),
 			Labels: []string{"80/tcp"},
 			Want:   true,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 81},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 81,
+			}),
 			Labels: []string{"80/tcp"},
 			Want:   false,
 		},
 		{
-			Ports: []*node.Port{
-				{Kind: "tcp", Value: 80},
-			},
+			Ports: makeTestPorts(&node.Port{
+				Kind:  "tcp",
+				Value: 80,
+			}),
 			Labels: []string{"80/tcp", "443/tcp"},
 			Want:   true,
 		},

@@ -44,6 +44,7 @@ var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
 	fFull, fNoLoops   bool
+	fDeep             bool
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta, fCluster   string
@@ -83,6 +84,7 @@ func setupFlags() {
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
+	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
@@ -99,7 +101,7 @@ func setupFlags() {
 		&fFormat,
 		"format",
 		builder.KindJSON,
-		"output format: json, dot, yaml, stat, tree or sdsl for structurizr dsl",
+		"output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl",
 	)
 	flag.StringVar(
 		&fSkipEnv,
@@ -305,6 +307,7 @@ func prepareConfig() (
 		Follow:    loadSet(fFollow),
 		OnlyLocal: fLocal,
 		FullInfo:  fFull,
+		Deep:      fDeep,
 		NoLoops:   fNoLoops,
 		SkipEnv:   skipKeys,
 	}
@@ -386,7 +389,7 @@ func doBuild(
 	log.Println("Starting with method:", cli.Mode())
 
 	if err = graph.Build(cfg, cli); err != nil {
-		return fmt.Errorf("build: %w", err)
+		return fmt.Errorf("graph: %w", err)
 	}
 
 	return nil

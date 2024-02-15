@@ -8,6 +8,8 @@ import (
 	"github.com/s0rg/decompose/internal/node"
 )
 
+const clusterPorts = "[cluster]"
+
 type connGraph map[string]*Node
 
 func (g connGraph) upsert(id string) (gn *Node) {
@@ -17,7 +19,7 @@ func (g connGraph) upsert(id string) (gn *Node) {
 		gn = &Node{
 			Outbounds: make(set.Unordered[string]),
 			Inbounds:  make(set.Unordered[string]),
-			Ports:     node.Ports{},
+			Ports:     &node.Ports{},
 		}
 
 		g[id] = gn
@@ -29,7 +31,7 @@ func (g connGraph) upsert(id string) (gn *Node) {
 func (g connGraph) AddNode(n *node.Node) {
 	gn := g.upsert(n.ID)
 
-	gn.Ports = append(gn.Ports, n.Ports...)
+	gn.Ports.Join(n.Ports)
 }
 
 func (g connGraph) AddEdge(src, dst string) {
@@ -45,7 +47,7 @@ func (g connGraph) NextLayer(
 		for k, n := range g {
 			switch {
 			case n.Inbounds.Len() > 0:
-			case len(n.Ports) == 0:
+			case n.Ports.Len() == 0:
 			default:
 				if seen.Add(k) {
 					rv = append(rv, k)

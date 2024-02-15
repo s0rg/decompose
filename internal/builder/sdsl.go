@@ -47,11 +47,13 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 	}
 
 	cont.Technology = n.Image
-	cont.Tags = make([]string, 0, len(n.Ports)+len(n.Networks))
+	/*
+		    cont.Tags = make([]string, 0, len(n.Ports)+len(n.Networks))
 
-	for _, p := range n.Ports {
-		cont.Tags = append(cont.Tags, "listen:"+p.Label())
-	}
+			for _, p := range n.Ports {
+				cont.Tags = append(cont.Tags, "listen:"+p.Label())
+			}
+	*/
 
 	for _, n := range n.Networks {
 		cont.Tags = append(cont.Tags, "net:"+n)
@@ -70,30 +72,30 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (s *Structurizr) AddEdge(srcID, dstID string, port *node.Port) {
+func (s *Structurizr) AddEdge(e *node.Edge) {
 	var (
 		rel *sdsl.Relation
 		ok  bool
 	)
 
 	switch {
-	case srcID == "":
-		srcID = systemName
-	case dstID == "":
-		dstID = systemName
+	case e.SrcID == "":
+		e.SrcID = systemName
+	case e.DstID == "":
+		e.DstID = systemName
 	}
 
-	if s.ws.HasSystem(srcID) {
-		rel, ok = s.ws.AddRelation(srcID, dstID)
+	if s.ws.HasSystem(e.SrcID) {
+		rel, ok = s.ws.AddRelation(e.SrcID, e.DstID)
 	} else {
-		rel, ok = s.ws.System(systemName).AddRelation(srcID, dstID)
+		rel, ok = s.ws.System(systemName).AddRelation(e.SrcID, e.DstID)
 	}
 
 	if !ok {
 		return
 	}
 
-	rel.Tags = append(rel.Tags, port.Label())
+	rel.Tags = append(rel.Tags, e.Port.Label())
 }
 
 func (s *Structurizr) Write(w io.Writer) error {

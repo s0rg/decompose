@@ -1,13 +1,11 @@
 package graph
 
 import (
-	"strconv"
-
-	"github.com/s0rg/set"
+	"github.com/s0rg/decompose/internal/node"
 )
 
 type (
-	ProcessInfo struct {
+	ContainerInfo struct {
 		Cmd []string
 		Env []string
 	}
@@ -20,50 +18,106 @@ type (
 
 	Container struct {
 		Endpoints map[string]string
+		Labels    map[string]string
+		conns     map[string]*connGroup
 		ID        string
 		Name      string
 		Image     string
-		Process   *ProcessInfo
+		Info      *ContainerInfo
 		Volumes   []*VolumeInfo
-		outbounds []*Connection
-		listeners []*Connection
 	}
 )
 
-func (ct *Container) ConnectionsCount() int {
-	return len(ct.outbounds) + len(ct.listeners)
+func (c *Container) ConnectionsCount() (rv int) {
+	for _, cg := range c.conns {
+		rv += cg.Len()
+	}
+
+	return rv
 }
 
-func (ct *Container) SetConnections(conns []*Connection) {
-	lseen := make(set.Unordered[string])
-	oseen := make(set.Unordered[string])
+func (c *Container) AddConnection(conn *Connection) {
+	if c.conns == nil {
+		c.conns = make(map[string]*connGroup)
+	}
 
-	for _, con := range conns {
-		switch {
-		case con.IsListener():
-			key := con.Proto.String() + strconv.Itoa(int(con.LocalPort))
+	grp, ok := c.conns[conn.Process]
+	if !ok {
+		grp = &connGroup{}
+		c.conns[conn.Process] = grp
+	}
 
-			if lseen.Add(key) {
-				ct.listeners = append(ct.listeners, con)
-			}
-		case !con.IsInbound():
-			key := con.RemoteIP.String() + con.Proto.String() + strconv.Itoa(int(con.RemotePort))
+	switch {
+	case conn.IsListener():
+		grp.AddListener(conn)
+	case !conn.IsInbound():
+		grp.AddOutbound(conn)
+	}
+}
 
-			if oseen.Add(key) {
-				ct.outbounds = append(ct.outbounds, con)
+func (c *Container) AddMany(conns []*Connection) {
+	for _, conn := range conns {
+		c.AddConnection(conn)
+	}
+}
+
+func (c *Container) IterOutbounds(it func(*Connection)) {
+	for _, cg := range c.conns {
+		cg.IterOutbounds(it)
+	}
+}
+
+func (c *Container) IterListeners(it func(*Connection)) {
+	for _, cg := range c.conns {
+		cg.IterListeners(it)
+	}
+}
+
+func (c *Container) SortConnections() {
+	for _, cg := range c.conns {
+		cg.Sort()
+	}
+}
+
+func (c *Container) ToNode() (rv *node.Node) {
+	rv = &node.Node{
+		ID:       c.ID,
+		Name:     c.Name,
+		Image:    c.Image,
+		Ports:    &node.Ports{},
+		Volumes:  []*node.Volume{},
+		Networks: make([]string, 0, len(c.Endpoints)),
+	}
+
+	for _, n := range c.Endpoints {
+		rv.Networks = append(rv.Networks, n)
+	}
+
+	c.IterListeners(func(conn *Connection) {
+		rv.Ports.Add(conn.Process, &node.Port{
+			Kind:  conn.Proto.String(),
+			Value: int(conn.LocalPort),
+		})
+	})
+
+	if len(c.Volumes) > 0 {
+		rv.Volumes = make([]*node.Volume, len(c.Volumes))
+
+		for idx, v := range c.Volumes {
+			rv.Volumes[idx] = &node.Volume{
+				Type: v.Type,
+				Src:  v.Src,
+				Dst:  v.Dst,
 			}
 		}
 	}
-}
 
-func (ct *Container) IterOutbounds(it func(*Connection)) {
-	for _, con := range ct.outbounds {
-		it(con)
-	}
-}
+	rv.Container.Labels = c.Labels
 
-func (ct *Container) IterListeners(it func(*Connection)) {
-	for _, con := range ct.listeners {
-		it(con)
+	if c.Info != nil {
+		rv.Container.Cmd = c.Info.Cmd
+		rv.Container.Env = c.Info.Env
 	}
+
+	return rv
 }

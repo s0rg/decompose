@@ -1,19 +1,16 @@
 package node
 
 import (
-	"cmp"
-	"slices"
 	"strconv"
-
-	"github.com/s0rg/set"
+	"strings"
 )
+
+const portMax = 65535
 
 type Port struct {
 	Kind  string `json:"kind"`
 	Value int    `json:"value"`
 }
-
-type Ports []*Port
 
 func (p *Port) Label() string {
 	return strconv.Itoa(p.Value) + "/" + p.Kind
@@ -23,59 +20,34 @@ func (p *Port) ID() string {
 	return p.Kind + strconv.Itoa(p.Value)
 }
 
-func (ps Ports) Dedup() (rv Ports) {
-	s := make(set.Unordered[Port])
-
-	for _, p := range ps {
-		s.Add(*p)
-	}
-
-	p := set.ToSlice(s)
-	rv = make([]*Port, len(p))
-
-	for i := 0; i < len(p); i++ {
-		rv[i] = &p[i]
-	}
-
-	slices.SortStableFunc(rv, func(a, b *Port) int {
-		if a.Kind == b.Kind {
-			return cmp.Compare(a.Value, b.Value)
-		}
-
-		return cmp.Compare(a.Kind, b.Kind)
-	})
-
-	return rv
+func (p *Port) Equal(v *Port) (yes bool) {
+	return p.Kind == v.Kind && p.Value == v.Value
 }
 
-func (ps Ports) HasAny(label ...string) (yes bool) {
-	if len(ps) == 0 {
+func ParsePort(v string) (rv *Port, ok bool) {
+	const (
+		nparts = 2
+		sep    = "/"
+	)
+
+	parts := strings.SplitN(v, sep, nparts)
+	if len(parts) != nparts {
 		return
 	}
 
-	s := make(set.Unordered[string])
-	set.Load(s, label...)
-
-	for _, p := range ps {
-		if s.Has(p.Label()) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (ps Ports) Has(label ...string) (yes bool) {
-	if len(ps) == 0 {
+	iport, err := strconv.Atoi(parts[0])
+	if err != nil {
 		return
 	}
 
-	s := make(set.Unordered[string])
-	set.Load(s, label...)
-
-	for _, p := range ps {
-		s.Del(p.Label())
+	if iport < 0 || iport > portMax {
+		return
 	}
 
-	return s.Len() == 0
+	rv = &Port{
+		Kind:  parts[1],
+		Value: iport,
+	}
+
+	return rv, true
 }

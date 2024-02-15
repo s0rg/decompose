@@ -6,7 +6,7 @@ require (
 	github.com/docker/docker v25.0.3+incompatible
 	github.com/emicklei/dot v1.6.1
 	github.com/expr-lang/expr v1.16.0
-	github.com/otterize/go-procnet v0.1.1
+	github.com/prometheus/procfs v0.12.0
 	github.com/s0rg/set v1.2.0
 	github.com/s0rg/trie v1.3.0
 	gopkg.in/yaml.v3 v3.0.1

@@ -14,7 +14,7 @@ import (
 )
 
 type Layers struct {
-	edges      map[string]map[string]node.Ports
+	edges      map[string]map[string]*node.Ports
 	nodes      map[string]*node.Node
 	remotes    set.Unordered[string]
 	b          graph.NamedBuilderWriter
@@ -29,7 +29,7 @@ func NewLayers(
 	return &Layers{
 		b:          NewRules(b, nil),
 		g:          make(connGraph),
-		edges:      make(map[string]map[string]node.Ports),
+		edges:      make(map[string]map[string]*node.Ports),
 		nodes:      make(map[string]*node.Node),
 		remotes:    make(set.Unordered[string]),
 		similarity: s,
@@ -55,32 +55,32 @@ func (l *Layers) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (l *Layers) upsertEdge(src, dst string, p *node.Port) (rv node.Ports) {
+func (l *Layers) upsertEdge(src, dst string, p *node.Port) {
 	dest, ok := l.edges[src]
 	if !ok {
-		dest = make(map[string]node.Ports)
+		dest = make(map[string]*node.Ports)
 	}
 
-	if rv, ok = dest[dst]; !ok {
-		rv = make(node.Ports, 0, 1)
+	var ports *node.Ports
+
+	if ports, ok = dest[dst]; !ok {
+		ports = &node.Ports{}
+		dest[dst] = ports
 	}
 
-	rv = append(rv, p)
+	ports.Add(clusterPorts, p)
 
-	dest[dst] = rv
 	l.edges[src] = dest
-
-	return rv
 }
 
-func (l *Layers) AddEdge(src, dst string, p *node.Port) {
-	l.upsertEdge(src, dst, p)
+func (l *Layers) AddEdge(e *node.Edge) {
+	l.upsertEdge(e.SrcID, e.DstID, e.Port)
 
-	if l.remotes.Has(src) || l.remotes.Has(dst) {
+	if l.remotes.Has(e.SrcID) || l.remotes.Has(e.DstID) {
 		return
 	}
 
-	l.g.AddEdge(src, dst)
+	l.g.AddEdge(e.SrcID, e.DstID)
 }
 
 func (l *Layers) names(ids []string) (rv []string) {
@@ -136,9 +136,17 @@ func (l *Layers) Write(w io.Writer) error {
 
 	for src, dmap := range l.edges {
 		for dst, ports := range dmap {
-			for _, p := range ports {
-				l.b.AddEdge(src, dst, p)
-			}
+			ports.Iter(func(process string, ports []*node.Port) {
+				for _, p := range ports {
+					l.b.AddEdge(&node.Edge{
+						SrcID:   src,
+						DstID:   dst,
+						SrcName: clusterPorts,
+						DstName: process,
+						Port:    p,
+					})
+				}
+			})
 		}
 	}
 

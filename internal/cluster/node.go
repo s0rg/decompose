@@ -12,14 +12,14 @@ import (
 type Node struct {
 	Inbounds  set.Set[string]
 	Outbounds set.Set[string]
-	Ports     node.Ports
+	Ports     *node.Ports
 }
 
 func (n *Node) Clone() *Node {
 	return &Node{
 		Inbounds:  n.Inbounds.Clone(),
 		Outbounds: n.Outbounds.Clone(),
-		Ports:     slices.Clone(n.Ports),
+		Ports:     n.Ports,
 	}
 }
 
@@ -36,7 +36,9 @@ func (n *Node) Match(id string, o *Node) (rv float64) {
 }
 
 func (n *Node) Merge(o *Node) {
-	n.Ports = append(n.Ports, o.Ports...).Dedup()
+	n.Ports.Join(o.Ports)
+	n.Ports.Sort()
+
 	n.Inbounds = set.Union(n.Inbounds, o.Inbounds)
 	n.Outbounds = set.Union(n.Outbounds, o.Outbounds)
 }
@@ -53,7 +55,7 @@ func (n *Node) matchConns(id string) (rv float64) {
 	return rv
 }
 
-func (n *Node) matchPorts(p node.Ports) (rv float64) {
+func (n *Node) matchPorts(p *node.Ports) (rv float64) {
 	var (
 		a = portsToProtos(n.Ports)
 		b = portsToProtos(p)
@@ -72,12 +74,14 @@ func (n *Node) matchPorts(p node.Ports) (rv float64) {
 	return rv
 }
 
-func portsToProtos(ports node.Ports) (rv map[string][]int) {
+func portsToProtos(ports *node.Ports) (rv map[string][]int) {
 	rv = make(map[string][]int)
 
-	for _, p := range ports {
-		rv[p.Kind] = append(rv[p.Kind], p.Value)
-	}
+	ports.Iter(func(_ string, pl []*node.Port) {
+		for _, p := range pl {
+			rv[p.Kind] = append(rv[p.Kind], p.Value)
+		}
+	})
 
 	for k := range rv {
 		slices.Sort(rv[k])
