@@ -60,7 +60,7 @@ func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
 		nodes = append(nodes, n)
 	}
 
-	slices.SortStableFunc(nodes, func(a, b *node.JSON) int {
+	slices.SortFunc(nodes, func(a, b *node.JSON) int {
 		return cmp.Compare(a.Name, b.Name)
 	})
 

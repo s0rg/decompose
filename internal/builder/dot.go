@@ -87,15 +87,14 @@ func (d *DOT) AddNode(n *node.Node) error {
 	).NewRecordBuilder()
 
 	rb.FieldWithId(label, outPort)
-	/*
-		    rb.Nesting(func() {
-				for i := 0; i < len(n.Ports); i++ {
-					p := n.Ports[i]
 
-					rb.FieldWithId(p.Label(), p.ID())
-				}
-			})
-	*/
+	rb.Nesting(func() {
+		n.Ports.Iter(func(_ string, plist []*node.Port) {
+			for _, p := range plist {
+				rb.FieldWithId(p.Label(), p.ID())
+			}
+		})
+	})
 
 	_ = rb.Build()
 

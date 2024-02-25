@@ -44,8 +44,8 @@ func (c *CSV) Write(w io.Writer) error {
 	c.j.Sorted(func(n *node.JSON, _ bool) {
 		_ = cw.Write([]string{
 			n.Name,
-			// strings.Join(n.Listen, "\r\n"),
-			// renderOutbounds(n.Connected),
+			joinListeners(n.Listen, "\r\n"),
+			renderOutbounds(n.Connected),
 		})
 	})
 
@@ -58,13 +58,13 @@ func (c *CSV) Write(w io.Writer) error {
 	return nil
 }
 
-func renderOutbounds(conns map[string][]string) (rv string) {
+func renderOutbounds(conns map[string][]*node.Connection) (rv string) {
 	var b strings.Builder
 
 	for k, v := range conns {
 		b.WriteString(k)
 		b.WriteString(": ")
-		b.WriteString(strings.Join(v, "; "))
+		b.WriteString(joinConnections(v, "; "))
 		b.WriteString("\r\n")
 	}
 

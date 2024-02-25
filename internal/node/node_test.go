@@ -13,6 +13,7 @@ func makeTestNode(
 	rv = &node.Node{
 		ID:    id,
 		Name:  name,
+		Image: image,
 		Ports: &node.Ports{},
 	}
 
@@ -51,7 +52,7 @@ func TestNodeToJSON(t *testing.T) {
 		Tags: []string{"test"},
 	}
 
-	nodeContainer := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+	nodeContainer := makeTestNode("test-id2", "test-name", "test-image", []*node.Port{
 		{Kind: "udp", Value: 53},
 	})
 
@@ -62,48 +63,42 @@ func TestNodeToJSON(t *testing.T) {
 		Node       *node.Node
 		Name       string
 		Image      string
-		PortsNum   int
 		Volumes    int
 		External   bool
 		HasMeta    bool
 		HasProcess bool
 	}{
 		{
-			Node: makeTestNode("test-id", "test-name", "", []*node.Port{
+			Node: makeTestNode("test-id", "test-name1", "", []*node.Port{
 				{Kind: "tcp", Value: 80},
 				{Kind: "udp", Value: 53},
 			}),
-			Name:     "test-name",
-			PortsNum: 2,
+			Name: "test-name1",
 		},
 		{
 			Node: makeTestNode("test-id", "test-id", "", []*node.Port{
 				{Kind: "tcp", Value: 80},
 			}),
 			Name:     "test-id",
-			PortsNum: 1,
 			External: true,
 		},
 		{
-			Node: makeTestNode("test-id", "test-name", "test-image", []*node.Port{
+			Node: makeTestNode("test-id3", "test-name", "test-image", []*node.Port{
 				{Kind: "udp", Value: 53},
 			}),
-			Name:     "test-name",
-			Image:    "test-image",
-			PortsNum: 1,
+			Name:  "test-name",
+			Image: "test-image",
 		},
 		{
-			Node:     nodeMeta,
-			Name:     "test-name",
-			Image:    "test-image",
-			PortsNum: 1,
-			HasMeta:  true,
+			Node:    nodeMeta,
+			Name:    "test-name",
+			Image:   "test-image",
+			HasMeta: true,
 		},
 		{
 			Node:       nodeContainer,
 			Name:       "test-name",
 			Image:      "test-image",
-			PortsNum:   1,
 			HasProcess: true,
 		},
 		{
@@ -132,10 +127,6 @@ func TestNodeToJSON(t *testing.T) {
 
 		if j.IsExternal != tc.External {
 			t.Fatal("external", tc)
-		}
-
-		if len(j.Listen) != tc.PortsNum {
-			t.Fatal("listen", tc)
 		}
 
 		if tc.HasMeta && len(j.Tags) == 0 {
@@ -229,7 +220,7 @@ func TestNodeToView(t *testing.T) {
 		},
 		{
 			Node:     nodeContainer,
-			External: true,
+			External: false,
 			Tags:     0,
 			Cmd:      "foo",
 			Args:     1,

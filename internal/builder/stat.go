@@ -50,11 +50,11 @@ func (s *Stat) AddNode(n *node.Node) error {
 
 	s.nodes++
 
-	/*
-		for _, p := range n.Ports {
+	n.Ports.Iter(func(_ string, ports []*node.Port) {
+		for _, p := range ports {
 			s.ports[p.Label()]++
 		}
-	*/
+	})
 
 	s.conns[n.ID] = make(set.Unordered[string])
 
@@ -129,7 +129,7 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 		ports = append(ports, &stat{Name: k, Count: c})
 	}
 
-	slices.SortStableFunc(ports, byCount)
+	slices.SortFunc(ports, byCount)
 
 	if len(s.clusters) < minClusters {
 		return ports, clusters
@@ -141,7 +141,7 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 		clusters = append(clusters, &stat{Name: k, Count: c})
 	}
 
-	slices.SortStableFunc(clusters, byCount)
+	slices.SortFunc(clusters, byCount)
 
 	return ports, clusters
 }

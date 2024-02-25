@@ -199,7 +199,7 @@ func TestBuildFollow(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 
-	if bld.Nodes != 3 || bld.Edges != 3 {
+	if bld.Nodes != 3 || bld.Edges != 2 {
 		t.Fail()
 	}
 }

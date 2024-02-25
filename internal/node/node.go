@@ -6,15 +6,15 @@ import (
 )
 
 type Node struct {
+	Container Container
+	Meta      *Meta
+	Ports     *Ports
 	ID        string
 	Name      string
 	Image     string
 	Cluster   string
 	Networks  []string
-	Meta      *Meta
-	Container Container
 	Volumes   []*Volume
-	Ports     *Ports
 }
 
 func External(name string) (rv *Node) {

@@ -93,15 +93,15 @@ func (y *YAML) AddNode(n *node.Node) error {
 		Kind: yaml.SequenceNode,
 	}
 
-	/*
-		for _, p := range n.Ports {
+	n.Ports.Iter(func(_ string, plist []*node.Port) {
+		for _, p := range plist {
 			svc.Expose.Content = append(svc.Expose.Content, &yaml.Node{
 				Kind:  yaml.ScalarNode,
 				Style: yaml.DoubleQuotedStyle,
 				Value: p.Label(),
 			})
 		}
-	*/
+	})
 
 	svc.Volumes = make([]string, len(n.Volumes))
 

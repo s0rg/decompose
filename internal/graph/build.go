@@ -214,7 +214,10 @@ func buildEdges(
 					return
 				}
 
-				dst := nodes[ldst.ID]
+				dst, found := nodes[ldst.ID]
+				if !found {
+					return
+				}
 
 				dname, found := dst.Ports.Get(port)
 				if !found {

@@ -79,8 +79,13 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 		fmt.Fprintln(w, "tags:", strings.Join(n.Tags, ", "))
 	}
 
+	if len(n.Container.Cmd) > 0 {
+		fmt.Fprint(w, next, " ")
+		fmt.Fprintf(w, "cmd: '%s'\n", strings.Join(n.Container.Cmd, " "))
+	}
+
 	fmt.Fprint(w, next, " ")
-	// fmt.Fprintln(w, "listen:", strings.Join(n.Listen, ", "))
+	fmt.Fprintln(w, "listen:", joinListeners(n.Listen, ", "))
 
 	if len(n.Networks) > 0 {
 		fmt.Fprint(w, next, " ")
@@ -102,7 +107,7 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 		dstOrder = append(dstOrder, dst)
 	}
 
-	slices.SortStableFunc(dstOrder, cmp.Compare)
+	slices.SortFunc(dstOrder, cmp.Compare)
 
 	for _, dst := range dstOrder {
 		ports := n.Connected[dst]
@@ -115,8 +120,7 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 			fmt.Fprint(w, symEdge)
 		}
 
-		_ = ports
-		// fmt.Fprintf(w, " %s: %s\n", dst, strings.Join(ports, ", "))
+		fmt.Fprintf(w, " %s: %s\n", dst, joinConnections(ports, ", "))
 
 		cur++
 	}
@@ -124,4 +128,28 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 	if !last {
 		fmt.Fprintln(w, next)
 	}
+}
+
+func joinConnections(conns []*node.Connection, sep string) (rv string) {
+	raw := make([]string, 0, len(conns))
+
+	for _, c := range conns {
+		raw = append(raw, c.Port)
+	}
+
+	slices.Sort(raw)
+
+	return strings.Join(raw, sep)
+}
+
+func joinListeners(ports map[string][]string, sep string) (rv string) {
+	var tmp []string
+
+	for _, plist := range ports {
+		tmp = append(tmp, plist...)
+	}
+
+	slices.Sort(tmp)
+
+	return strings.Join(tmp, sep)
 }

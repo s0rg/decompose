@@ -18,16 +18,16 @@ func TestYAMLGolden(t *testing.T) {
 		ID:    "node-1",
 		Name:  "1",
 		Image: "node-image",
-		Ports: node.Ports{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
-		},
+		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
 			Info: "info 1",
 			Tags: []string{"1"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 1'"},
 			Env: []string{"FOO=1"},
 		},
@@ -39,16 +39,16 @@ func TestYAMLGolden(t *testing.T) {
 		ID:    "node-2",
 		Name:  "2",
 		Image: "node-image",
-		Ports: node.Ports{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1},
 			{Kind: "tcp", Value: 2},
-		},
+		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
 			Info: "info 2",
 			Tags: []string{"2"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 2'"},
 			Env: []string{"FOO=2"},
 		},
@@ -60,23 +60,64 @@ func TestYAMLGolden(t *testing.T) {
 	_ = bld.AddNode(&node.Node{
 		ID:   "2",
 		Name: "2",
-		Ports: node.Ports{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 2},
-		},
+		}...),
 	})
 
-	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 1})
-	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 2})
-	bld.AddEdge("2", "node-1", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 1},
+	})
 
-	bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 2})
-	bld.AddEdge("node-1", "node-2", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge(&node.Edge{
+		SrcID: "2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
 
-	bld.AddEdge("node-1", "2", &node.Port{Kind: "tcp", Value: 2})
-	bld.AddEdge("node-1", "2", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
-	bld.AddEdge("node-1", "3", &node.Port{Kind: "tcp", Value: 3})
-	bld.AddEdge("3", "node-1", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "node-2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "2",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "3",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "3",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
 	var buf bytes.Buffer
 
@@ -98,19 +139,16 @@ func TestYAMLWriteError(t *testing.T) {
 	errW := &errWriter{Err: testErr}
 
 	_ = bldr.AddNode(&node.Node{
-		ID:    "#",
-		Name:  "#",
-		Image: "node-image",
-		Ports: node.Ports{
-			{Kind: "tcp", Value: 1},
-			{Kind: "tcp", Value: 2},
-		},
+		ID:       "#",
+		Name:     "#",
+		Image:    "node-image",
+		Ports:    &node.Ports{},
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
 			Info: "info 1",
 			Tags: []string{"1"},
 		},
-		Process: &node.Process{
+		Container: node.Container{
 			Cmd: []string{"echo", "'test 1'"},
 			Env: []string{"FOO=1"},
 		},

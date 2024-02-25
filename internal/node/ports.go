@@ -3,6 +3,8 @@ package node
 import (
 	"cmp"
 	"slices"
+
+	"github.com/s0rg/set"
 )
 
 type Ports struct {
@@ -38,11 +40,13 @@ func (ps *Ports) Get(p *Port) (name string, ok bool) {
 }
 
 func (ps *Ports) Iter(it func(process string, p []*Port)) {
+	if ps == nil {
+		return
+	}
+
 	for name, pl := range ps.ports {
 		it(name, pl)
 	}
-
-	return
 }
 
 func (ps *Ports) Len() (rv int) {
@@ -63,44 +67,40 @@ func (ps *Ports) Sort() {
 			return cmp.Compare(a.Kind, b.Kind)
 		})
 	}
-
-	return
 }
 
 func (ps *Ports) HasAny(label ...string) (yes bool) {
-	/*
-		if len(ps) == 0 {
-			return
-		}
+	if len(ps.ports) == 0 {
+		return
+	}
 
-		s := make(set.Unordered[string])
-		set.Load(s, label...)
+	s := make(set.Unordered[string])
+	set.Load(s, label...)
 
-		for _, p := range ps {
+	for _, ports := range ps.ports {
+		for _, p := range ports {
 			if s.Has(p.Label()) {
 				return true
 			}
 		}
+	}
 
-		return false
-	*/
-	return
+	return false
 }
 
 func (ps *Ports) Has(label ...string) (yes bool) {
-	/*
-		    if len(ps) == 0 {
-				return
-			}
+	if len(ps.ports) == 0 {
+		return
+	}
 
-			s := make(set.Unordered[string])
-			set.Load(s, label...)
+	s := make(set.Unordered[string])
+	set.Load(s, label...)
 
-			for _, p := range ps {
-				s.Del(p.Label())
-			}
+	for _, ports := range ps.ports {
+		for _, p := range ports {
+			s.Del(p.Label())
+		}
+	}
 
-			return s.Len() == 0
-	*/
-	return
+	return s.Len() == 0
 }

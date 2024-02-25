@@ -55,6 +55,16 @@ func (l *Layers) AddNode(n *node.Node) error {
 	return nil
 }
 
+func (l *Layers) AddEdge(e *node.Edge) {
+	l.upsertEdge(e.SrcID, e.DstID, e.Port)
+
+	if l.remotes.Has(e.SrcID) || l.remotes.Has(e.DstID) {
+		return
+	}
+
+	l.g.AddEdge(e.SrcID, e.DstID)
+}
+
 func (l *Layers) upsertEdge(src, dst string, p *node.Port) {
 	dest, ok := l.edges[src]
 	if !ok {
@@ -71,16 +81,6 @@ func (l *Layers) upsertEdge(src, dst string, p *node.Port) {
 	ports.Add(clusterPorts, p)
 
 	l.edges[src] = dest
-}
-
-func (l *Layers) AddEdge(e *node.Edge) {
-	l.upsertEdge(e.SrcID, e.DstID, e.Port)
-
-	if l.remotes.Has(e.SrcID) || l.remotes.Has(e.DstID) {
-		return
-	}
-
-	l.g.AddEdge(e.SrcID, e.DstID)
 }
 
 func (l *Layers) names(ids []string) (rv []string) {
@@ -136,13 +136,13 @@ func (l *Layers) Write(w io.Writer) error {
 
 	for src, dmap := range l.edges {
 		for dst, ports := range dmap {
-			ports.Iter(func(process string, ports []*node.Port) {
-				for _, p := range ports {
+			ports.Iter(func(_ string, plist []*node.Port) {
+				for _, p := range plist {
 					l.b.AddEdge(&node.Edge{
 						SrcID:   src,
 						DstID:   dst,
 						SrcName: clusterPorts,
-						DstName: process,
+						DstName: clusterPorts,
 						Port:    p,
 					})
 				}
@@ -185,5 +185,5 @@ func CreateLabel(names []string, nmax int) (rv string) {
 		}
 	}
 
-	return strings.Join(comm, "-")
+	return strings.Join(comm, minus)
 }

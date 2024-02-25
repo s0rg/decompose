@@ -15,27 +15,27 @@ func TestSystemRelation(t *testing.T) {
 	s.AddContainer("id1", "name1")
 	s.AddContainer("id2", "name2")
 
-	if _, ok := s.AddRelation("id1", "id2"); !ok {
+	if _, ok := s.AddRelation("id1", "id2", "id1", "id2"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := s.AddRelation("id2", "id1"); !ok {
+	if _, ok := s.AddRelation("id2", "id1", "id2", "id1"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := s.AddRelation("id2", "id1"); !ok {
+	if _, ok := s.AddRelation("id2", "id1", "id2", "id1"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := s.AddRelation("id1", "id2"); !ok {
+	if _, ok := s.AddRelation("id1", "id2", "id1", "id2"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := s.AddRelation("id1", "id3"); ok {
+	if _, ok := s.AddRelation("id1", "id3", "id1", "id3"); ok {
 		t.Fail()
 	}
 
-	if _, ok := s.AddRelation("id3", "id1"); ok {
+	if _, ok := s.AddRelation("id3", "id1", "id3", "id1"); ok {
 		t.Fail()
 	}
 

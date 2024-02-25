@@ -303,7 +303,7 @@ func extractVolumesInfo(
 		}
 	}
 
-	slices.SortStableFunc(rv, func(a, b *graph.VolumeInfo) int {
+	slices.SortFunc(rv, func(a, b *graph.VolumeInfo) int {
 		switch rv := cmp.Compare(a.Type, b.Type); rv {
 		case 0:
 			return cmp.Compare(a.Src, b.Src)

@@ -111,8 +111,6 @@ func (l *Loader) loadNode(n *node.JSON) (id string, rv *node.Node) {
 		loadListeners(nod.Ports, n.Listen)
 	}
 
-	nod.Ports.Sort()
-
 	return id, nod
 }
 
@@ -130,15 +128,10 @@ func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string][]*node.Conne
 			continue
 		}
 
-		if skip && l.cfg.MatchName(k) {
+		if !skip || l.cfg.MatchName(k) {
+			rv[k] = append(rv[k], p...)
 			skip = false
 		}
-
-		if skip {
-			continue
-		}
-
-		rv[k] = append(rv[k], p...)
 	}
 
 	return rv, skip
@@ -153,6 +146,8 @@ func (l *Loader) insert(n *node.JSON) {
 	}
 
 	l.cfg.Meta.Enrich(nod)
+
+	nod.Ports.Sort()
 
 	l.nodes[id] = nod
 	l.edges[id] = cons
@@ -183,6 +178,10 @@ func (l *Loader) connect(
 		for _, c := range cl {
 			port, ok := node.ParsePort(c.Port)
 			if !ok {
+				continue
+			}
+
+			if !l.cfg.MatchProto(port.Kind) {
 				continue
 			}
 

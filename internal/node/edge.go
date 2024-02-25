@@ -1,7 +1,9 @@
 package node
 
 type Edge struct {
-	SrcID, SrcName string
-	DstID, DstName string
-	Port           *Port
+	Port    *Port
+	SrcID   string
+	SrcName string
+	DstID   string
+	DstName string
 }

@@ -47,13 +47,12 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 	}
 
 	cont.Technology = n.Image
-	/*
-		    cont.Tags = make([]string, 0, len(n.Ports)+len(n.Networks))
 
-			for _, p := range n.Ports {
-				cont.Tags = append(cont.Tags, "listen:"+p.Label())
-			}
-	*/
+	n.Ports.Iter(func(_ string, plist []*node.Port) {
+		for _, p := range plist {
+			cont.Tags = append(cont.Tags, "listen:"+p.Label())
+		}
+	})
 
 	for _, n := range n.Networks {
 		cont.Tags = append(cont.Tags, "net:"+n)
@@ -86,9 +85,9 @@ func (s *Structurizr) AddEdge(e *node.Edge) {
 	}
 
 	if s.ws.HasSystem(e.SrcID) {
-		rel, ok = s.ws.AddRelation(e.SrcID, e.DstID)
+		rel, ok = s.ws.AddRelation(e.SrcID, e.DstID, e.SrcID, e.DstID)
 	} else {
-		rel, ok = s.ws.System(systemName).AddRelation(e.SrcID, e.DstID)
+		rel, ok = s.ws.System(systemName).AddRelation(e.SrcID, e.DstID, e.SrcName, e.DstName)
 	}
 
 	if !ok {

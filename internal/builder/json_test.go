@@ -26,11 +26,13 @@ func TestJSON(t *testing.T) {
 	t.Parallel()
 
 	testNode := node.JSON{
-		Name:      "test1",
-		Networks:  []string{"test"},
-		Listen:    []string{"2/tcp", "1/udp"},
+		Name:     "test1",
+		Networks: []string{"test"},
+		Listen: map[string][]string{
+			"foo": {"2/tcp", "1/udp"},
+		},
 		Tags:      []string{},
-		Connected: make(map[string][]string),
+		Connected: make(map[string][]*node.Connection),
 		Volumes:   []*node.Volume{},
 	}
 
@@ -94,15 +96,15 @@ func TestJSONAddEdge(t *testing.T) {
           "name": "test1",
           "is_external": false,
           "networks": ["test"],
-          "listen": ["1/udp"],
-          "connected": {"test2":["2/tcp"]}
+          "listen": {"foo":["1/udp"]},
+          "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
         }
         {
           "name": "test2",
           "is_external": false,
           "networks": ["test"],
-          "listen": ["2/tcp"],
-          "connected": {"test1":["1/udp"]}
+          "listen": {"bar": ["2/tcp"]},
+          "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
         }`
 
 	bldr := builder.NewJSON()
@@ -129,6 +131,7 @@ func TestJSONAddEdge(t *testing.T) {
 	bldr.Write(&buf)
 
 	if strings.Count(buf.String(), "test2") < 2 {
+		t.Log(buf)
 		t.Fail()
 	}
 }
@@ -144,7 +147,7 @@ func (tb *testBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(_, _ string, _ *node.Port) {
+func (tb *testBuilder) AddEdge(_ *node.Edge) {
 	tb.Edges++
 }
 
@@ -153,11 +156,11 @@ func TestJSONAddBadEdges(t *testing.T) {
 
 	bld := builder.NewJSON()
 
-	_ = bld.AddNode(&node.Node{ID: "1", Name: "1"})
-	_ = bld.AddNode(&node.Node{ID: "2", Name: "2"})
+	_ = bld.AddNode(&node.Node{ID: "1", Name: "1", Ports: &node.Ports{}})
+	_ = bld.AddNode(&node.Node{ID: "2", Name: "2", Ports: &node.Ports{}})
 
-	bld.AddEdge("3", "1", &node.Port{})
-	bld.AddEdge("1", "3", &node.Port{})
+	bld.AddEdge(&node.Edge{SrcID: "3", DstID: "1", Port: &node.Port{}})
+	bld.AddEdge(&node.Edge{SrcID: "1", DstID: "3", Port: &node.Port{}})
 
 	var buf bytes.Buffer
 
@@ -194,7 +197,7 @@ func TestJSONWriteError(t *testing.T) {
 	testErr := errors.New("test-error")
 	errW := &errWriter{Err: testErr}
 
-	_ = bldr.AddNode(&node.Node{ID: "1", Name: "1"})
+	_ = bldr.AddNode(&node.Node{ID: "1", Name: "1", Ports: &node.Ports{}})
 
 	if err := bldr.Write(errW); !errors.Is(err, testErr) {
 		t.Fail()
