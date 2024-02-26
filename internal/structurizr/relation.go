@@ -14,7 +14,7 @@ type Relation struct {
 }
 
 func (r *Relation) Write(w io.Writer, level int) {
-	desc := fmt.Sprintf("%s to %s: %s", r.Src, r.Dst, r.Description)
+	desc := fmt.Sprintf("%s to %s %s", r.Src, r.Dst, r.Description)
 
 	putCommon(w, level, desc, r.Technology, r.Tags)
 }

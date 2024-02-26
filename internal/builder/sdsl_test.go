@@ -1,5 +1,3 @@
-//go:build !test
-
 package builder_test
 
 import (
@@ -73,44 +71,137 @@ func TestSDSLGolden(t *testing.T) {
 
 	_ = bld.AddNode(&node.Node{ID: "ext2", Name: "ext2", Cluster: "c2"})
 
-	/*
-		bld.AddEdge("ext2", "node-1", &node.Port{Kind: "tcp", Value: 1})
-		bld.AddEdge("ext2", "node-1", &node.Port{Kind: "tcp", Value: 2})
-		bld.AddEdge("ext2", "node-1", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "ext2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 1},
+	})
 
-		bld.AddEdge("node-1", "ext2", &node.Port{Kind: "tcp", Value: 2})
-		bld.AddEdge("node-1", "ext2", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "ext2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
 
-		bld.AddEdge("node-1", "3", &node.Port{})
-		bld.AddEdge("3", "node-1", &node.Port{})
+	bld.AddEdge(&node.Edge{
+		SrcID: "ext2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 1})
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 2})
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "ext2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
 
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 1})
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 2})
-		bld.AddEdge("node-2", "node-1", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "ext2",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
-		bld.AddEdge("node-2", "node-3", &node.Port{Kind: "tcp", Value: 3})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "3",
+		Port:  &node.Port{},
+	})
 
-		bld.AddEdge("node-1", "node-3", &node.Port{Kind: "tcp", Value: 3})
-		bld.AddEdge("node-1", "node-2", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge(&node.Edge{
+		SrcID: "3",
+		DstID: "node-1",
+		Port:  &node.Port{},
+	})
 
-		bld.AddEdge("node-1", "c2", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 1},
+	})
 
-		bld.AddEdge("node-3", "node-1", &node.Port{Kind: "tcp", Value: 1})
-		bld.AddEdge("node-3", "node-1", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
 
-		bld.AddEdge("c1", "2", &node.Port{Kind: "tcp", Value: 2})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
-		bld.AddEdge("c1", "c2", &node.Port{})
-		bld.AddEdge("c1", "", &node.Port{})
-		bld.AddEdge("", "c2", &node.Port{})
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "node-3",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
 
-		bld.AddEdge("node-1", "node-4", &node.Port{})
-		bld.AddEdge("node-3", "node-1", &node.Port{})
-	*/
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "node-3",
+		Port:  &node.Port{Kind: "tcp", Value: 3},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "node-2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "c2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-3",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 1},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-3",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "c1",
+		DstID: "2",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "c1",
+		DstID: "c2",
+		Port:  &node.Port{},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "c1",
+		DstID: "",
+		Port:  &node.Port{},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "",
+		DstID: "c2",
+		Port:  &node.Port{},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-1",
+		DstID: "node-4",
+		Port:  &node.Port{},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-3",
+		DstID: "node-1",
+		Port:  &node.Port{},
+	})
 
 	var buf bytes.Buffer
 

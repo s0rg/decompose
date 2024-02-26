@@ -13,9 +13,6 @@ import (
 func TestLayers(t *testing.T) {
 	t.Parallel()
 
-	// TODO: fix thist test
-	t.SkipNow()
-
 	tb := &testNamedBuilder{clusters: make(map[string][]string)}
 
 	const similarity = 0.6
@@ -164,11 +161,11 @@ func TestLayers(t *testing.T) {
 
 	const (
 		edgesDirect  = 9
-		edgesCluster = 9
+		edgesCluster = 8
 
 		wantNodes    = 8
 		wantEdges    = edgesDirect + edgesCluster
-		wantClusters = 7
+		wantClusters = 6
 	)
 
 	if tb.Nodes != wantNodes || tb.Edges != wantEdges {

@@ -180,9 +180,6 @@ func TestRulesMatchWeight(t *testing.T) {
 func TestRules(t *testing.T) {
 	t.Parallel()
 
-	// TODO: fix thist test
-	t.SkipNow()
-
 	tb := &testNamedBuilder{}
 	ca := cluster.NewRules(tb, nil)
 
@@ -257,7 +254,8 @@ func TestRules(t *testing.T) {
 
 	ca.Write(nil)
 
-	if tb.Edges != 7 {
+	if tb.Edges != 8 {
+		t.Log(tb)
 		t.Fail()
 	}
 }

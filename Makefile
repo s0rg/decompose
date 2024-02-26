@@ -32,11 +32,14 @@ test: vet
 				"${ALL}"
 
 .PHONY: test-update
-test-update:
+test-update: test-clean
+	@echo "updating golden files..."
+	@go test -tags=test "./internal/builder" -update
+
+.PHONY: test-clean
+test-clean:
 	@echo "clean-up..."
 	@find . -name "*.golden" -delete
-	@echo "update"
-	@go test -tags=test "./internal/builder" -update
 
 .PHONY: test-cover
 test-cover: test

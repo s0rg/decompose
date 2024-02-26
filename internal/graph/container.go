@@ -1,6 +1,8 @@
 package graph
 
 import (
+	"slices"
+
 	"github.com/s0rg/decompose/internal/node"
 )
 
@@ -20,6 +22,7 @@ type (
 		Endpoints map[string]string
 		Labels    map[string]string
 		conns     map[string]*connGroup
+		connOrder []string
 		ID        string
 		Name      string
 		Image     string
@@ -41,10 +44,11 @@ func (c *Container) AddConnection(conn *Connection) {
 		c.conns = make(map[string]*connGroup)
 	}
 
-	grp, ok := c.conns[conn.Process]
-	if !ok {
+	var seen bool
+
+	grp, seen := c.conns[conn.Process]
+	if !seen {
 		grp = &connGroup{}
-		c.conns[conn.Process] = grp
 	}
 
 	switch {
@@ -52,7 +56,16 @@ func (c *Container) AddConnection(conn *Connection) {
 		grp.AddListener(conn)
 	case !conn.IsInbound():
 		grp.AddOutbound(conn)
+	default:
+		return
 	}
+
+	if !seen {
+		c.connOrder = append(c.connOrder, conn.Process)
+		slices.Sort(c.connOrder)
+	}
+
+	c.conns[conn.Process] = grp
 }
 
 func (c *Container) AddMany(conns []*Connection) {
@@ -62,14 +75,14 @@ func (c *Container) AddMany(conns []*Connection) {
 }
 
 func (c *Container) IterOutbounds(it func(*Connection)) {
-	for _, cg := range c.conns {
-		cg.IterOutbounds(it)
+	for _, k := range c.connOrder {
+		c.conns[k].IterOutbounds(it)
 	}
 }
 
 func (c *Container) IterListeners(it func(*Connection)) {
-	for _, cg := range c.conns {
-		cg.IterListeners(it)
+	for _, k := range c.connOrder {
+		c.conns[k].IterListeners(it)
 	}
 }
 

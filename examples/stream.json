@@ -1,40 +1,40 @@
 {
     "name": "nginx-1",
     "is_external": false,
-    "listen": ["80/tcp"],
+    "listen": {"nginx": ["80/tcp"]},
     "connected": {
-        "back-1": ["8080/tcp"],
-        "back-2": ["8081/tcp"]
+      "back-1": [{"src": "nginx", "dst": "app", "port": "8080/tcp"}],
+      "back-2": [{"src": "nginx", "dst": "app", "port": "8081/tcp"}]
     }
 }
 {
     "name": "db-1",
     "is_external": false,
-    "listen": ["5432/tcp"],
+    "listen": {"postgres": ["5432/tcp"]},
     "connected": {}
 }
 {
     "name": "back-1",
     "is_external": false,
-    "listen": ["8080/tcp", "8081/tcp", "9000/tcp"],
+    "listen": {"app": ["8080/tcp", "8081/tcp", "9000/tcp"]},
     "connected": {
-        "db-1": ["5432/tcp"]
+        "db-1": [{"src": "app", "dst": "postgres", "port": "5432/tcp"}]
     }
 }
 {
     "name": "back-2",
     "is_external": false,
-    "listen": ["8080/tcp","8081/tcp"],
+    "listen": {"app": ["8080/tcp", "8081/tcp"]},
     "connected": {
-        "db-1": ["5432/tcp"],
-        "foo-1": ["9500/tcp"]
+        "db-1": [{"src": "app", "dst": "postgres", "port": "5432/tcp"}],
+        "foo-1": [{"src": "app", "dst": "[remote]", "port": "9500/tcp"}]
     }
 }
 {
     "name": "foo-1",
     "is_external": false,
-    "listen": ["9500/tcp"],
+    "listen": {"[remote]": ["9500/tcp"]},
     "connected": {
-        "back-1": ["9000/tcp"]
+        "back-1": [{"src": "[remote]", "dst": "app", "port": "9000/tcp"}]
     }
 }
