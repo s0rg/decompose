@@ -8,6 +8,7 @@ import (
 )
 
 type Ports struct {
+	order []string
 	ports map[string][]*Port
 }
 
@@ -16,7 +17,14 @@ func (ps *Ports) Add(process string, p *Port) {
 		ps.ports = make(map[string][]*Port)
 	}
 
-	ps.ports[process] = append(ps.ports[process], p)
+	ports, ok := ps.ports[process]
+
+	ps.ports[process] = append(ports, p)
+
+	if !ok {
+		ps.order = append(ps.order, process)
+		slices.Sort(ps.order)
+	}
 }
 
 func (ps *Ports) Join(other *Ports) {
@@ -40,12 +48,8 @@ func (ps *Ports) Get(p *Port) (name string, ok bool) {
 }
 
 func (ps *Ports) Iter(it func(process string, p []*Port)) {
-	if ps == nil {
-		return
-	}
-
-	for name, pl := range ps.ports {
-		it(name, pl)
+	for _, name := range ps.order {
+		it(name, ps.ports[name])
 	}
 }
 

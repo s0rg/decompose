@@ -129,16 +129,15 @@ func splitIP(v string) (ip net.IP, port uint16, ok bool) {
 func splitName(v string) (name string, ok bool) {
 	const pidFields = 2
 
-	if !strings.ContainsRune(v, '/') {
-		return
-	}
-
 	parts := strings.SplitN(v, "/", pidFields)
 	if len(parts) != pidFields {
 		return
 	}
 
 	fields := strings.Fields(parts[1])
+	if len(fields) == 0 {
+		return
+	}
 
 	name = fields[0]
 

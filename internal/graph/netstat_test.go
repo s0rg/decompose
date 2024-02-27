@@ -30,13 +30,16 @@ tcp        0      0 172.20.4.209:48021      172.20.4.198:3306       ESTABLISHED 
 tcp6       0      0 :::6501                 :::*                    LISTEN 2/bar
 tcp6       0      0 :::1234                 :::*                    LISTEN 1/foo
 tcp6       0      0 127.0.0.1:6501          127.0.0.1:43706         ESTABLISHED 2/bar
+tcp        1      0 172.20.4.209:43634      172.20.4.129:53         ESTABLISHED bar/
+tcp        1      0 172.20.4.209:43634      172.20.4.129:53         ESTABLISHED bar
 udp        0      0 127.0.0.11:56688        0.0.0.0:*                           -
-
-some garbage
+bgp        1      1 127.0.0.11:56689        0.0.0.0:*               LISTEN 1/foo
 tcp        0      0 invalid                 172.20.4.198:3306       ESTABLISHED -
 tcp        0      0 172.20.4.198:3306       invalid                 ESTABLISHED -
 tcp        0      0 172.20.4.198:bad        172.20.4.198:3306       ESTABLISHED -
-tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED -`)
+tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED -
+some       garbage
+`)
 
 	con := graph.Container{}
 

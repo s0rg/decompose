@@ -35,6 +35,10 @@ func ParsePort(v string) (rv *Port, ok bool) {
 		return
 	}
 
+	if parts[0] == "" || parts[1] == "" {
+		return
+	}
+
 	iport, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return

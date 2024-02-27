@@ -60,6 +60,7 @@ func TestContainerListeners(t *testing.T) {
 
 		c := graph.Container{}
 		c.AddMany(tc.Conns)
+		c.SortConnections()
 		c.IterListeners(func(_ *graph.Connection) {
 			res++
 		})
@@ -80,6 +81,7 @@ func TestContainerOutbounds(t *testing.T) {
 
 		c := graph.Container{}
 		c.AddMany(tc.Conns)
+		c.SortConnections()
 		c.IterOutbounds(func(_ *graph.Connection) {
 			res++
 		})

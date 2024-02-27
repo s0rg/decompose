@@ -39,9 +39,7 @@ func (c *Connection) UniqID() (id uint64, ok bool) {
 	}
 
 	h := fnv.New64a()
-	if _, err := io.WriteString(h, c.Process+key); err != nil {
-		return 0, false
-	}
+	_, _ = io.WriteString(h, c.Process+key)
 
 	return h.Sum64(), true
 }

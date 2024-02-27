@@ -21,7 +21,7 @@ type (
 	Container struct {
 		Endpoints map[string]string
 		Labels    map[string]string
-		conns     map[string]*connGroup
+		conns     map[string]*ConnGroup
 		connOrder []string
 		ID        string
 		Name      string
@@ -41,14 +41,14 @@ func (c *Container) ConnectionsCount() (rv int) {
 
 func (c *Container) AddConnection(conn *Connection) {
 	if c.conns == nil {
-		c.conns = make(map[string]*connGroup)
+		c.conns = make(map[string]*ConnGroup)
 	}
 
 	var seen bool
 
 	grp, seen := c.conns[conn.Process]
 	if !seen {
-		grp = &connGroup{}
+		grp = &ConnGroup{}
 	}
 
 	switch {

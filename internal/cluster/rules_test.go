@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log"
 	"strings"
 	"testing"
 
@@ -42,8 +41,6 @@ func (tb *testNamedBuilder) AddNode(n *node.Node) error {
 }
 
 func (tb *testNamedBuilder) AddEdge(e *node.Edge) {
-	log.Printf("%s -> %s %d/%s", e.SrcID, e.DstID, e.Port.Value, e.Port.Kind)
-
 	tb.Edges++
 }
 
