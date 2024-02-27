@@ -1,8 +1,9 @@
 package node
 
-type Process struct {
-	Cmd []string `json:"cmd"`
-	Env []string `json:"env"`
+type Container struct {
+	Cmd    []string          `json:"cmd,omitempty"`
+	Env    []string          `json:"env,omitempty"`
+	Labels map[string]string `json:"labels"`
 }
 
 type Volume struct {
@@ -18,14 +19,20 @@ type Meta struct {
 	Tags []string `json:"tags"`
 }
 
+type Connection struct {
+	Src  string `json:"src"`
+	Dst  string `json:"dst"`
+	Port string `json:"port"`
+}
+
 type JSON struct {
-	Name       string              `json:"name"`
-	IsExternal bool                `json:"is_external"`
-	Image      *string             `json:"image,omitempty"`
-	Process    *Process            `json:"process,omitempty"`
-	Listen     []string            `json:"listen"`
-	Networks   []string            `json:"networks"`
-	Tags       []string            `json:"tags"`
-	Volumes    []*Volume           `json:"volumes"`
-	Connected  map[string][]string `json:"connected"`
+	Name       string                   `json:"name"`
+	IsExternal bool                     `json:"is_external"`
+	Image      *string                  `json:"image,omitempty"`
+	Networks   []string                 `json:"networks"`
+	Tags       []string                 `json:"tags"`
+	Volumes    []*Volume                `json:"volumes"`
+	Container  Container                `json:"container"`
+	Listen     map[string][]string      `json:"listen"`
+	Connected  map[string][]*Connection `json:"connected"`
 }

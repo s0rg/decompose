@@ -20,7 +20,7 @@ type testClient struct {
 func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
-	_ bool,
+	_, _ bool,
 	_ []string,
 	fn func(int, int),
 ) ([]*graph.Container, error) {
@@ -57,7 +57,7 @@ func (tb *testBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(_, _ string, _ *node.Port) {
+func (tb *testBuilder) AddEdge(_ *node.Edge) {
 	tb.Edges++
 }
 
@@ -112,7 +112,7 @@ func makeContainer(name, ip string) *graph.Container {
 		Endpoints: map[string]string{
 			ip: "test-net",
 		},
-		Process: &graph.ProcessInfo{
+		Info: &graph.ContainerInfo{
 			Cmd: []string{"test-app", "-test-arg"},
 			Env: []string{"FOO=BAR"},
 		},
@@ -135,21 +135,21 @@ func testClientWithEnv() graph.ContainerClient {
 	}}
 
 	// node 1
-	cli.Data[0].SetConnections([]*graph.Connection{
+	cli.Data[0].AddMany([]*graph.Connection{
 		{LocalPort: 1, Proto: graph.TCP},                                     // listen 1
 		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP},    // connected to node2:2
 		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to external:1
 	})
 
 	// node 2
-	cli.Data[1].SetConnections([]*graph.Connection{
+	cli.Data[1].AddMany([]*graph.Connection{
 		{LocalPort: 2, Proto: graph.TCP},                                     // listen 2
 		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Proto: graph.TCP},    // connected to node3:3
 		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to external:2
 	})
 
 	// node 3
-	cli.Data[2].SetConnections([]*graph.Connection{
+	cli.Data[2].AddMany([]*graph.Connection{
 		{LocalPort: 3, Proto: graph.TCP},                                     // listen 3
 		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP},    // connected to node1:1
 		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Proto: graph.TCP}, // connected to external:3
@@ -199,7 +199,7 @@ func TestBuildFollow(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 
-	if bld.Nodes != 3 || bld.Edges != 3 {
+	if bld.Nodes != 3 || bld.Edges != 2 {
 		t.Fail()
 	}
 }
@@ -299,13 +299,13 @@ func TestBuildLoops(t *testing.T) {
 		makeContainer("2", node2.String()),
 	}}
 
-	cli.Data[0].SetConnections([]*graph.Connection{
+	cli.Data[0].AddMany([]*graph.Connection{
 		{LocalPort: 1, Proto: graph.TCP},                                  // listen 1
 		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to node2:2
 		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to itself
 	})
 
-	cli.Data[1].SetConnections([]*graph.Connection{
+	cli.Data[1].AddMany([]*graph.Connection{
 		{LocalPort: 2, Proto: graph.TCP},                                  // listen 2
 		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to node1:1
 	})

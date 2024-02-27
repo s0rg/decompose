@@ -13,7 +13,7 @@ func TestWorkspaceRelation(t *testing.T) {
 
 	ws := srtructurizr.NewWorkspace("test", "1")
 
-	if _, ok := ws.AddRelation("foo", "bar"); ok {
+	if _, ok := ws.AddRelation("foo", "bar", "foo", "bar"); ok {
 		t.Fail()
 	}
 
@@ -22,15 +22,15 @@ func TestWorkspaceRelation(t *testing.T) {
 
 	s.Tags = append(s.Tags, "")
 
-	if _, ok := ws.AddRelation("1", "2"); !ok {
+	if _, ok := ws.AddRelation("1", "2", "1", "2"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := ws.AddRelation("2", "1"); !ok {
+	if _, ok := ws.AddRelation("2", "1", "2", "1"); !ok {
 		t.Fail()
 	}
 
-	if _, ok := ws.AddRelation("1", "2"); !ok {
+	if _, ok := ws.AddRelation("1", "2", "1", "2"); !ok {
 		t.Fail()
 	}
 

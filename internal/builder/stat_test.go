@@ -8,6 +8,7 @@ import (
 	"github.com/s0rg/decompose/internal/builder"
 	"github.com/s0rg/decompose/internal/cluster"
 	"github.com/s0rg/decompose/internal/graph"
+	"github.com/s0rg/decompose/internal/node"
 )
 
 func TestStat(t *testing.T) {
@@ -30,34 +31,49 @@ func TestStat(t *testing.T) {
 	ldr := graph.NewLoader(cfg)
 
 	const raw = `{
-          "name": "test1",
-          "is_external": false,
-          "networks": ["test"],
-          "listen": ["1/udp", "1/tcp"],
-          "connected": {"test2":["2/tcp"], "test2": ["2/udp"], "test3": ["3/tcp"]}
-        }
-        {
-          "name": "test2",
-          "is_external": false,
-          "networks": ["test"],
-          "listen": ["2/tcp", "2/udp"],
-          "connected": {"test1":["1/udp"], "test1": ["1/tcp"], "test3": ["3/udp"]}
-        }
-        {
-          "name": "test3",
-          "is_external": true,
-          "networks": [],
-          "listen": ["3/tcp", "3/udp"],
-          "connected": {}
-        }
-        `
+    "name": "test1",
+    "is_external": false,
+    "networks": ["test"],
+    "listen": {"1": ["1/udp", "1/tcp"]},
+    "connected": {
+        "test2":[
+            {"src": "1", "dst": "2", "port": "2/tcp"},
+            {"src": "1", "dst": "2", "port": "2/udp"}
+        ],
+        "test3":[
+            {"src": "1", "dst": "3", "port": "3/tcp"}
+        ]
+      }
+    }
+    {
+    "name": "test2",
+    "is_external": false,
+    "networks": ["test"],
+    "listen": {"2":["2/tcp", "2/udp"]},
+    "connected": {
+        "test1":[
+            {"src": "2", "dst": "1", "port": "1/tcp"},
+            {"src": "2", "dst": "1", "port": "1/udp"}
+        ],
+        "test3": [
+            {"src": "2", "dst": "3", "port": "3/udp"}
+        ]
+      }
+    }
+    {
+    "name": "test3",
+    "is_external": true,
+    "networks": ["test"],
+    "listen": {"3":["3/tcp", "3/udp"]},
+    "connected": {}
+    }`
 
 	if err := ldr.FromReader(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)
 	}
 
-	bldr.AddEdge("test1", "bad-id", nil)
-	bldr.AddEdge("bad-id", "test1", nil)
+	bldr.AddEdge(&node.Edge{SrcID: "test1", DstID: "bad-id"})
+	bldr.AddEdge(&node.Edge{SrcID: "bad-id", DstID: "test1"})
 
 	if err := ldr.Build(); err != nil {
 		t.Fatal("build err=", err)
@@ -73,7 +89,7 @@ func TestStat(t *testing.T) {
 		t.Fail()
 	}
 
-	if !strings.Contains(res, "total: 2 uniq: 1") {
+	if !strings.Contains(res, "total: 4 uniq: 1") {
 		t.Fail()
 	}
 
@@ -123,20 +139,35 @@ func TestStatCluster(t *testing.T) {
 	ldr := graph.NewLoader(cfg)
 
 	const raw = `{
-          "name": "test1",
-          "is_external": false,
-          "networks": ["test"],
-          "listen": ["1/udp", "1/tcp"],
-          "connected": {"test2":["2/tcp"], "test2": ["2/udp"], "test3": ["3/tcp"]}
-        }
-        {
-          "name": "test2",
-          "is_external": false,
-          "networks": ["test"],
-          "listen": ["2/tcp", "2/udp"],
-          "connected": {"test1":["1/udp"], "test1": ["1/tcp"], "test3": ["3/udp"]}
-        }
-        `
+   "name": "test1",
+    "is_external": false,
+    "networks": ["test"],
+    "listen": {"1": ["1/udp", "1/tcp"]},
+    "connected": {
+        "test2":[
+            {"src": "1", "dst": "2", "port": "2/tcp"},
+            {"src": "1", "dst": "2", "port": "2/udp"}
+        ],
+        "test3":[
+            {"src": "1", "dst": "3", "port": "3/tcp"}
+        ]
+      }
+    }
+    {
+    "name": "test2",
+    "is_external": false,
+    "networks": ["test"],
+    "listen": {"2":["2/tcp", "2/udp"]},
+    "connected": {
+        "test1":[
+            {"src": "2", "dst": "1", "port": "1/tcp"},
+            {"src": "2", "dst": "1", "port": "1/udp"}
+        ],
+        "test3": [
+            {"src": "2", "dst": "3", "port": "3/udp"}
+        ]
+      }
+    }`
 
 	if err := ldr.FromReader(bytes.NewBufferString(raw)); err != nil {
 		t.Fatal("load err=", err)

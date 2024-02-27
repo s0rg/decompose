@@ -44,7 +44,7 @@ type (
 		builder graph.NamedBuilderWriter
 		runner  exprRUN
 		nodes   map[string]*node.Node
-		cluster map[string]map[string]node.Ports
+		cluster map[string]map[string]*node.Ports
 		rules   []*rulePROG
 	}
 )
@@ -61,7 +61,7 @@ func NewRules(
 		builder: b,
 		runner:  r,
 		nodes:   make(map[string]*node.Node),
-		cluster: make(map[string]map[string]node.Ports),
+		cluster: make(map[string]map[string]*node.Ports),
 	}
 }
 
@@ -72,14 +72,22 @@ func (cb *Rules) Name() string {
 func (cb *Rules) Write(w io.Writer) error {
 	for src, dmap := range cb.cluster {
 		for dst, ports := range dmap {
-			for _, p := range ports.Dedup() {
-				cb.builder.AddEdge(src, dst, p)
-			}
+			ports.Iter(func(_ string, plist []*node.Port) {
+				for _, p := range plist {
+					cb.builder.AddEdge(&node.Edge{
+						SrcID:   src,
+						DstID:   dst,
+						SrcName: clusterPorts,
+						DstName: clusterPorts,
+						Port:    p,
+					})
+				}
+			})
 		}
 	}
 
 	if err := cb.builder.Write(w); err != nil {
-		return fmt.Errorf("%w", cb.builder.Write(w))
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil
@@ -99,13 +107,13 @@ func (cb *Rules) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (cb *Rules) AddEdge(src, dst string, port *node.Port) {
-	nsrc, ok := cb.nodes[src]
+func (cb *Rules) AddEdge(e *node.Edge) {
+	nsrc, ok := cb.nodes[e.SrcID]
 	if !ok {
 		return
 	}
 
-	ndst, ok := cb.nodes[dst]
+	ndst, ok := cb.nodes[e.DstID]
 	if !ok {
 		return
 	}
@@ -113,14 +121,22 @@ func (cb *Rules) AddEdge(src, dst string, port *node.Port) {
 	if nsrc.Cluster != ndst.Cluster {
 		cdst, ok := cb.cluster[nsrc.Cluster]
 		if !ok {
-			cdst = make(map[string]node.Ports)
+			cdst = make(map[string]*node.Ports)
 		}
 
-		cdst[ndst.Cluster] = append(cdst[ndst.Cluster], port)
+		var ports *node.Ports
+
+		if ports, ok = cdst[ndst.Cluster]; !ok {
+			ports = &node.Ports{}
+			cdst[ndst.Cluster] = ports
+		}
+
+		ports.Add(clusterPorts, e.Port)
+
 		cb.cluster[nsrc.Cluster] = cdst
 	}
 
-	cb.builder.AddEdge(src, dst, port)
+	cb.builder.AddEdge(e)
 }
 
 func (cb *Rules) CountRules() int {
@@ -159,7 +175,7 @@ func (cb *Rules) FromReader(r io.Reader) (err error) {
 		})
 	}
 
-	slices.SortStableFunc(cb.rules, func(a, b *rulePROG) int {
+	slices.SortFunc(cb.rules, func(a, b *rulePROG) int {
 		return cmp.Compare(b.Weight, a.Weight)
 	})
 

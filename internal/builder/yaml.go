@@ -63,26 +63,24 @@ func (y *YAML) AddNode(n *node.Node) error {
 		Networks: n.Networks,
 	}
 
-	if n.Process != nil {
-		if len(n.Process.Cmd) > 0 {
-			svc.Command = n.Process.Cmd
+	if len(n.Container.Cmd) > 0 {
+		svc.Command = n.Container.Cmd
+	}
+
+	if len(n.Container.Env) > 0 {
+		yn := yaml.Node{
+			Kind: yaml.SequenceNode,
 		}
 
-		if len(n.Process.Env) > 0 {
-			yn := yaml.Node{
-				Kind: yaml.SequenceNode,
-			}
-
-			for _, ev := range n.Process.Env {
-				yn.Content = append(yn.Content, &yaml.Node{
-					Kind:  yaml.ScalarNode,
-					Style: yaml.DoubleQuotedStyle,
-					Value: ev,
-				})
-			}
-
-			svc.Environment = yn
+		for _, ev := range n.Container.Env {
+			yn.Content = append(yn.Content, &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Style: yaml.DoubleQuotedStyle,
+				Value: ev,
+			})
 		}
+
+		svc.Environment = yn
 	}
 
 	for _, name := range n.Networks {
@@ -95,13 +93,15 @@ func (y *YAML) AddNode(n *node.Node) error {
 		Kind: yaml.SequenceNode,
 	}
 
-	for _, p := range n.Ports {
-		svc.Expose.Content = append(svc.Expose.Content, &yaml.Node{
-			Kind:  yaml.ScalarNode,
-			Style: yaml.DoubleQuotedStyle,
-			Value: p.Label(),
-		})
-	}
+	n.Ports.Iter(func(_ string, plist []*node.Port) {
+		for _, p := range plist {
+			svc.Expose.Content = append(svc.Expose.Content, &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Style: yaml.DoubleQuotedStyle,
+				Value: p.Label(),
+			})
+		}
+	})
 
 	svc.Volumes = make([]string, len(n.Volumes))
 
@@ -122,15 +122,15 @@ func (y *YAML) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (y *YAML) AddEdge(srcID, dstID string, _ *node.Port) {
-	name, ok := y.idmap[srcID]
+func (y *YAML) AddEdge(e *node.Edge) {
+	name, ok := y.idmap[e.SrcID]
 	if !ok {
 		return
 	}
 
 	svc := y.state.Services[name]
 
-	name, ok = y.idmap[dstID]
+	name, ok = y.idmap[e.DstID]
 	if !ok {
 		return
 	}

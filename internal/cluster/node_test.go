@@ -15,13 +15,13 @@ func TestNodeMatch(t *testing.T) {
 	a := &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports:     []*node.Port{},
+		Ports:     &node.Ports{},
 	}
 
 	b := &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
-		Ports:     []*node.Port{},
+		Ports:     &node.Ports{},
 	}
 
 	a.Inbounds.Add("1")

@@ -87,12 +87,13 @@ func (d *DOT) AddNode(n *node.Node) error {
 	).NewRecordBuilder()
 
 	rb.FieldWithId(label, outPort)
-	rb.Nesting(func() {
-		for i := 0; i < len(n.Ports); i++ {
-			p := n.Ports[i]
 
-			rb.FieldWithId(p.Label(), p.ID())
-		}
+	rb.Nesting(func() {
+		n.Ports.Iter(func(_ string, plist []*node.Port) {
+			for _, p := range plist {
+				rb.FieldWithId(p.Label(), p.ID())
+			}
+		})
 	})
 
 	_ = rb.Build()
@@ -136,29 +137,30 @@ func (d *DOT) getDst(id string, port *node.Port) (rv dot.Node, out string, ok bo
 	return sg.Node(out).Label(port.Label()), out, true
 }
 
-func (d *DOT) AddEdge(srcID, dstID string, port *node.Port) {
-	if srcID == "" || dstID == "" { // fast exit, dot doesnt have default cluster
+func (d *DOT) AddEdge(e *node.Edge) {
+	if e.SrcID == "" || e.DstID == "" { // fast exit, dot doesnt have default cluster
 		return
 	}
 
-	src, srcPort, ok := d.getSrc(srcID)
+	src, srcPort, ok := d.getSrc(e.SrcID)
 	if !ok {
 		return
 	}
 
-	dst, dstPort, ok := d.getDst(dstID, port)
+	dst, dstPort, ok := d.getDst(e.DstID, e.Port)
 	if !ok {
 		return
 	}
 
-	color := labelColor(port.Label())
+	label := e.Port.Label()
+	color := labelColor(label)
 
 	var edge dot.Edge
 
 	if srcPort != outPort {
-		edge = d.g.Edge(src, dst, port.Label())
+		edge = d.g.Edge(src, dst, label)
 	} else {
-		edge = d.g.EdgeWithPorts(src, dst, srcPort, dstPort, port.Label())
+		edge = d.g.EdgeWithPorts(src, dst, srcPort, dstPort, label)
 	}
 
 	edge.Attr("color", color).Attr("fontcolor", color)

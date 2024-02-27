@@ -13,11 +13,26 @@ import (
 func voidProgress(_, _ int) {}
 
 type clientMock struct {
-	Err          error
-	OnList       func() []types.Container
-	OnInspect    func() types.ContainerJSON
-	OnExecCreate func() types.IDResponse
-	OnExecAttach func() types.HijackedResponse
+	Err            error
+	OnList         func() []types.Container
+	OnInspect      func() types.ContainerJSON
+	OnExecCreate   func() types.IDResponse
+	OnExecAttach   func() types.HijackedResponse
+	OnContainerTop func() container.ContainerTopOKBody
+}
+
+func (cm *clientMock) ContainerTop(
+	_ context.Context,
+	_ string,
+	_ []string,
+) (rv container.ContainerTopOKBody, err error) {
+	if cm.Err != nil {
+		err = cm.Err
+
+		return
+	}
+
+	return cm.OnContainerTop(), nil
 }
 
 func (cm *clientMock) ContainerList(

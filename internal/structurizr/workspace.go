@@ -50,7 +50,7 @@ func (ws *Workspace) HasSystem(name string) (yes bool) {
 	return
 }
 
-func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
+func (ws *Workspace) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relation, ok bool) {
 	srcID, dstID = safeID(srcID), safeID(dstID)
 
 	if !ws.HasSystem(srcID) || !ws.HasSystem(dstID) {
@@ -67,7 +67,10 @@ func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 		return rv, ok
 	}
 
-	rv = &Relation{}
+	rv = &Relation{
+		Src: srcName,
+		Dst: dstName,
+	}
 
 	dmap[dstID] = rv
 
@@ -77,7 +80,7 @@ func (ws *Workspace) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 func (ws *Workspace) Write(w io.Writer) {
 	var level int
 
-	slices.SortStableFunc(ws.systemsOrder[1:], cmp.Compare)
+	slices.SortFunc(ws.systemsOrder[1:], cmp.Compare)
 
 	putHeader(w, level, headerWorkspace)
 
@@ -126,7 +129,7 @@ func (ws *Workspace) writeRelations(w io.Writer, level int) {
 		relOrder = append(relOrder, srcID)
 	}
 
-	slices.SortStableFunc(relOrder, cmp.Compare)
+	slices.Sort(relOrder)
 
 	for _, srcID := range relOrder {
 		dest := ws.relationships[srcID]
@@ -137,7 +140,7 @@ func (ws *Workspace) writeRelations(w io.Writer, level int) {
 			dstOrder = append(dstOrder, dstID)
 		}
 
-		slices.SortStableFunc(dstOrder, cmp.Compare)
+		slices.SortFunc(dstOrder, cmp.Compare)
 
 		for _, dstID := range dstOrder {
 			rel := dest[dstID]

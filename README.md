@@ -71,36 +71,37 @@ Closest analogs, i can find, that not suit my needs very well:
 ```
 decompose [flags]
 
-possible flags with default values:
 
-  -cluster string
-        json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
-  -follow string
-        follow only this container by name(s), comma-separated or from @file
-  -format string
-        output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
-  -full
-        extract full process info: (cmd, args, env) and volumes info
-  -help
-        show this help
-  -load value
-        load json stream, can be used multiple times
-  -local
-        skip external hosts
-  -meta string
-        json file with metadata for enrichment
-  -no-loops
-        remove connection loops (node to itself) from output
-  -out string
-        output: filename or "-" for stdout (default "-")
-  -proto string
-        protocol to scan: tcp, udp or all (default "all")
-  -silent
-        suppress progress messages in stderr
-  -skip-env string
-        environment variables name(s) to skip from output, case-independent, comma-separated
-  -version
-        show version
+-cluster string
+    json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
+-deep
+    process-based introspection
+-follow string
+    follow only this container by name(s), comma-separated or from @file
+-format string
+    output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
+-full
+    extract full process info: (cmd, args, env) and volumes info
+-help
+    show this help
+-load value
+    load json stream, can be used multiple times
+-local
+    skip external hosts
+-meta string
+    json file with metadata for enrichment
+-no-loops
+    remove connection loops (node to itself) from output
+-out string
+    output: filename or "-" for stdout (default "-")
+-proto string
+    protocol to scan: tcp, udp or all (default "all")
+-silent
+    suppress progress messages in stderr
+-skip-env string
+    environment variables name(s) to skip from output, case-independent, comma-separated
+-version
+    show version
 ```
 
 ### environment variables:
@@ -117,11 +118,12 @@ type Item struct {
     Name       string              `json:"name"` // container name
     IsExternal bool                `json:"is_external"` // this host is external
     Image      *string             `json:"image,omitempty"` // docker image (if any)
-    Process    *struct{
-        Cmd []string `json:"cmd"`
-        Env []string `json:"env"`
-    } `json:"process,omitempty"` // process info, only when '-full'
-    Listen     []string            `json:"listen"` // ports description i.e. '443/tcp'
+    Container  struct{
+        Cmd    []string          `json:"cmd"`
+        Env    []string          `json:"env"`
+        Labels map[string]string `json:"labels"`
+    } `json:"container"` // conatiner info
+    Listen     map[string][]string `json:"listen"` // ports with process names
     Networks   []string            `json:"networks"` // network names
     Tags       []string            `json:"tags"` // tags, if meta presents
     Volumes    []*struct{
@@ -140,16 +142,17 @@ Single node example with full info and metadata filled:
     "name": "foo-1",
     "is_external": false,
     "image": "repo/foo:latest",
-    "process": {
+    "container": {
         "cmd": [
             "foo",
             "-foo-arg"
         ],
         "env": [
             "FOO=1"
-        ]
+        ],
+        "labels": {}
     },
-    "listen": ["80/tcp"],
+    "listen": {"foo": ["80/tcp"]},
     "networks": ["test-net"],
     "tags": ["some"],
     "volumes": [

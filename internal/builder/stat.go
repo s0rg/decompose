@@ -50,9 +50,11 @@ func (s *Stat) AddNode(n *node.Node) error {
 
 	s.nodes++
 
-	for _, p := range n.Ports {
-		s.ports[p.Label()]++
-	}
+	n.Ports.Iter(func(_ string, ports []*node.Port) {
+		for _, p := range ports {
+			s.ports[p.Label()]++
+		}
+	})
 
 	s.conns[n.ID] = make(set.Unordered[string])
 
@@ -84,8 +86,8 @@ func (s *Stat) isSuitable(srcID, dstID string) (uniq, yes bool) {
 	return uniq, true
 }
 
-func (s *Stat) AddEdge(srcID, dstID string, _ *node.Port) {
-	uniq, ok := s.isSuitable(srcID, dstID)
+func (s *Stat) AddEdge(e *node.Edge) {
+	uniq, ok := s.isSuitable(e.SrcID, e.DstID)
 	if !ok {
 		return
 	}
@@ -127,7 +129,7 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 		ports = append(ports, &stat{Name: k, Count: c})
 	}
 
-	slices.SortStableFunc(ports, byCount)
+	slices.SortFunc(ports, byCount)
 
 	if len(s.clusters) < minClusters {
 		return ports, clusters
@@ -139,7 +141,7 @@ func (s *Stat) calcStats() (ports, clusters []*stat) {
 		clusters = append(clusters, &stat{Name: k, Count: c})
 	}
 
-	slices.SortStableFunc(clusters, byCount)
+	slices.SortFunc(clusters, byCount)
 
 	return ports, clusters
 }

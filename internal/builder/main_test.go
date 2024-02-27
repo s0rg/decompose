@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/s0rg/decompose/internal/node"
 )
 
 const (
@@ -49,4 +51,14 @@ func golden(t *testing.T, file, actual string) string {
 	}
 
 	return string(content)
+}
+
+func makeTestPorts(vals ...*node.Port) (rv *node.Ports) {
+	rv = &node.Ports{}
+
+	for _, p := range vals {
+		rv.Add("", p)
+	}
+
+	return rv
 }

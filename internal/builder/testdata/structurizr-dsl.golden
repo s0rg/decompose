@@ -33,12 +33,15 @@ repo-url"
 		}
 
 		c1 -> c2 {
+			description "c1 to c2 "
 			tags "0/"
 		}
 		c1 -> default {
+			description "c1 to default "
 			tags "0/"
 		}
 		default -> c2 {
+			description "default to c2 "
 			tags "0/"
 		}
 	}

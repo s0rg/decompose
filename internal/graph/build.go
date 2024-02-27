@@ -13,17 +13,20 @@ import (
 const (
 	minItems  = 2
 	minReport = 10
+
+	ProcessRemote  = "[remote]"
+	ProcessUnknown = "[unknown]"
 )
 
 var ErrNotEnough = errors.New("not enough items")
 
 type ContainerClient interface {
-	Containers(context.Context, NetProto, bool, []string, func(int, int)) ([]*Container, error)
+	Containers(context.Context, NetProto, bool, bool, []string, func(int, int)) ([]*Container, error)
 }
 
 type Builder interface {
 	AddNode(*node.Node) error
-	AddEdge(src, dst string, port *node.Port)
+	AddEdge(*node.Edge)
 }
 
 type NamedWriter interface {
@@ -50,6 +53,7 @@ func Build(
 		context.Background(),
 		cfg.Proto,
 		cfg.FullInfo,
+		cfg.Deep,
 		cfg.SkipEnv,
 		func(cur, total int) {
 			switch {
@@ -84,8 +88,6 @@ func Build(
 	}
 
 	for _, node := range nodes {
-		node.Ports = node.Ports.Dedup()
-
 		cfg.Meta.Enrich(node)
 
 		if err = cfg.Builder.AddNode(node); err != nil {
@@ -115,7 +117,7 @@ func buildIPMap(cntrs []*Container) (rv map[string]*Container) {
 func createNodes(
 	cfg *Config,
 	cntrs []*Container,
-	neighbours map[string]*Container,
+	local map[string]*Container,
 ) (rv map[string]*node.Node) {
 	var (
 		skip   bool
@@ -125,21 +127,22 @@ func createNodes(
 	rv = make(map[string]*node.Node)
 
 	for _, con := range cntrs {
-		skip = !cfg.MatchName(con.Name)
-
-		n := &node.Node{ID: con.ID, Name: con.Name, Image: con.Image, Volumes: []*node.Volume{}}
-
 		if con.ConnectionsCount() == 0 && !notice {
 			log.Printf("No connections for container: %s:%s, try run as root", con.ID, con.Name)
 
 			notice = true
 		}
 
-		con.IterOutbounds(func(c *Connection) {
-			rip := c.RemoteIP.String()
-			rport := &node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
+		skip = !cfg.MatchName(con.Name)
 
-			if lc, ok := neighbours[rip]; ok {
+		con.IterOutbounds(func(c *Connection) {
+			if c.RemoteIP.IsLoopback() {
+				return
+			}
+
+			rip := c.RemoteIP.String()
+
+			if lc, ok := local[rip]; ok { // destination known
 				if skip && cfg.MatchName(lc.Name) {
 					skip = false
 				}
@@ -151,45 +154,22 @@ func createNodes(
 				return
 			}
 
+			// destination is remote host, add it
 			rem, ok := rv[rip]
 			if !ok {
-				rem = &node.Node{ID: rip, Name: rip}
+				rem = node.External(rip)
 				rv[rip] = rem
 			}
 
-			rem.Ports = append(rem.Ports, rport)
+			rem.Ports.Add(ProcessRemote, &node.Port{
+				Kind:  c.Proto.String(),
+				Value: int(c.RemotePort),
+			})
 		})
 
-		if skip {
-			continue
+		if !skip {
+			rv[con.ID] = con.ToNode()
 		}
-
-		n.Networks = make([]string, 0, len(con.Endpoints))
-
-		for _, epn := range con.Endpoints {
-			n.Networks = append(n.Networks, epn)
-		}
-
-		con.IterListeners(func(c *Connection) {
-			port := &node.Port{Kind: c.Proto.String(), Value: int(c.LocalPort)}
-
-			n.Ports = append(n.Ports, port)
-		})
-
-		if con.Process != nil {
-			n.Process = &node.Process{Cmd: con.Process.Cmd, Env: con.Process.Env}
-		}
-
-		if len(con.Volumes) > 0 {
-			n.Volumes = make([]*node.Volume, len(con.Volumes))
-
-			for i := 0; i < len(con.Volumes); i++ {
-				cv := con.Volumes[i]
-				n.Volumes[i] = &node.Volume{Type: cv.Type, Src: cv.Src, Dst: cv.Dst}
-			}
-		}
-
-		rv[con.ID] = n
 	}
 
 	return rv
@@ -208,17 +188,49 @@ func buildEdges(
 		}
 
 		con.IterOutbounds(func(c *Connection) {
-			port := &node.Port{Kind: c.Proto.String(), Value: int(c.RemotePort)}
 			key := c.RemoteIP.String()
+			port := &node.Port{
+				Kind:  c.Proto.String(),
+				Value: int(c.RemotePort),
+			}
 
-			if ldst, ok := local[key]; ok {
+			var (
+				ldst *Container
+				ok   bool
+			)
+
+			if c.RemoteIP.IsLoopback() {
+				ldst, ok = con, true
+			} else {
+				ldst, ok = local[key]
+			}
+
+			if ok {
 				if cfg.NoLoops && con.ID == ldst.ID {
 					return
 				}
 
-				if cfg.MatchName(ldst.Name) || cfg.MatchName(con.Name) {
-					cfg.Builder.AddEdge(src.ID, ldst.ID, port)
+				if !cfg.MatchName(ldst.Name) && !cfg.MatchName(con.Name) {
+					return
 				}
+
+				dst, found := nodes[ldst.ID]
+				if !found {
+					return
+				}
+
+				dname, found := dst.Ports.Get(port)
+				if !found {
+					dname = ProcessUnknown
+				}
+
+				cfg.Builder.AddEdge(&node.Edge{
+					SrcID:   src.ID,
+					SrcName: c.Process,
+					DstID:   ldst.ID,
+					DstName: dname,
+					Port:    port,
+				})
 
 				return
 			}
@@ -228,7 +240,13 @@ func buildEdges(
 			}
 
 			if rdst, ok := nodes[key]; ok {
-				cfg.Builder.AddEdge(src.ID, rdst.ID, port)
+				cfg.Builder.AddEdge(&node.Edge{
+					SrcID:   src.ID,
+					SrcName: c.Process,
+					DstID:   rdst.ID,
+					DstName: ProcessRemote,
+					Port:    port,
+				})
 
 				return
 			}

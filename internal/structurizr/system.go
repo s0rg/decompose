@@ -59,7 +59,7 @@ func (s *System) findRelation(src, dst string) (rv *Relation, found bool) {
 	return nil, false
 }
 
-func (s *System) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
+func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relation, ok bool) {
 	src, ok := s.containers[safeID(srcID)]
 	if !ok {
 		return nil, false
@@ -83,7 +83,10 @@ func (s *System) AddRelation(srcID, dstID string) (rv *Relation, ok bool) {
 
 	rv, ok = dest[dstID]
 	if !ok {
-		rv = &Relation{}
+		rv = &Relation{
+			Src: srcName,
+			Dst: dstName,
+		}
 	}
 
 	dest[dstID] = rv
@@ -104,7 +107,7 @@ func (s *System) WriteContainers(w io.Writer, level int) {
 		contOrder = append(contOrder, cID)
 	}
 
-	slices.SortStableFunc(contOrder, cmp.Compare)
+	slices.SortFunc(contOrder, cmp.Compare)
 
 	for _, cID := range contOrder {
 		cont := s.containers[cID]

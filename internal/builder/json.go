@@ -30,23 +30,27 @@ func (j *JSON) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (j *JSON) AddEdge(srcID, dstID string, port *node.Port) {
-	src, ok := j.state[srcID]
+func (j *JSON) AddEdge(e *node.Edge) {
+	src, ok := j.state[e.SrcID]
 	if !ok {
 		return
 	}
 
-	dst, ok := j.state[dstID]
+	dst, ok := j.state[e.DstID]
 	if !ok {
 		return
 	}
 
 	con, ok := src.Connected[dst.Name]
 	if !ok {
-		con = make([]string, 0, 1)
+		con = make([]*node.Connection, 0, 1)
 	}
 
-	src.Connected[dst.Name] = append(con, port.Label())
+	src.Connected[dst.Name] = append(con, &node.Connection{
+		Src:  e.SrcName,
+		Dst:  e.DstName,
+		Port: e.Port.Label(),
+	})
 }
 
 func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
@@ -56,7 +60,7 @@ func (j *JSON) Sorted(fn func(*node.JSON, bool)) {
 		nodes = append(nodes, n)
 	}
 
-	slices.SortStableFunc(nodes, func(a, b *node.JSON) int {
+	slices.SortFunc(nodes, func(a, b *node.JSON) int {
 		return cmp.Compare(a.Name, b.Name)
 	})
 

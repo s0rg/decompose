@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"slices"
-	"strconv"
-	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -15,7 +12,7 @@ const idSuffix = "-id"
 
 type Loader struct {
 	nodes map[string]*node.Node
-	edges map[string]map[string]node.Ports
+	edges map[string]map[string][]*node.Connection
 	cfg   *Config
 }
 
@@ -23,7 +20,7 @@ func NewLoader(cfg *Config) *Loader {
 	return &Loader{
 		cfg:   cfg,
 		nodes: make(map[string]*node.Node),
-		edges: make(map[string]map[string]node.Ports),
+		edges: make(map[string]map[string][]*node.Connection),
 	}
 }
 
@@ -43,11 +40,35 @@ func (l *Loader) FromReader(r io.Reader) error {
 	return nil
 }
 
+func (l *Loader) Build() error {
+	for id, node := range l.nodes {
+		if l.cfg.OnlyLocal && l.isExternal(id) {
+			continue
+		}
+
+		if err := l.cfg.Builder.AddNode(node); err != nil {
+			return fmt.Errorf("node %s: %w", node.Name, err)
+		}
+	}
+
+	for srcID, dmap := range l.edges {
+		if l.cfg.OnlyLocal && l.isExternal(srcID) {
+			continue
+		}
+
+		l.connect(srcID, dmap)
+	}
+
+	return nil
+}
+
 func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 	rv = &node.Node{
-		ID:       id,
-		Name:     n.Name,
-		Networks: []string{},
+		ID:        id,
+		Name:      n.Name,
+		Container: n.Container,
+		Ports:     &node.Ports{},
+		Networks:  []string{},
 	}
 
 	if n.Image != nil {
@@ -66,10 +87,6 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 
 	if !l.cfg.FullInfo {
 		return rv
-	}
-
-	if n.Process != nil {
-		rv.Process = n.Process
 	}
 
 	if len(n.Volumes) > 0 {
@@ -91,17 +108,17 @@ func (l *Loader) loadNode(n *node.JSON) (id string, rv *node.Node) {
 	}
 
 	if !(n.IsExternal && l.cfg.OnlyLocal) {
-		nod.Ports = append(nod.Ports, l.preparePorts(n.Listen)...)
+		loadListeners(nod.Ports, n.Listen)
 	}
 
 	return id, nod
 }
 
-func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string]node.Ports, skip bool) {
+func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string][]*node.Connection, skip bool) {
 	var ok bool
 
 	if rv, ok = l.edges[id]; !ok {
-		rv = make(map[string]node.Ports)
+		rv = make(map[string][]*node.Connection)
 	}
 
 	skip = !l.cfg.MatchName(n.Name)
@@ -111,25 +128,10 @@ func (l *Loader) loadEdges(id string, n *node.JSON) (rv map[string]node.Ports, s
 			continue
 		}
 
-		prep := l.preparePorts(p)
-		if len(prep) == 0 {
-			continue
-		}
-
-		if skip && l.cfg.MatchName(k) {
+		if !skip || l.cfg.MatchName(k) {
+			rv[k] = append(rv[k], p...)
 			skip = false
 		}
-
-		if skip {
-			continue
-		}
-
-		ports, ok := rv[k]
-		if !ok {
-			ports = []*node.Port{}
-		}
-
-		rv[k] = append(ports, prep...)
 	}
 
 	return rv, skip
@@ -145,7 +147,7 @@ func (l *Loader) insert(n *node.JSON) {
 
 	l.cfg.Meta.Enrich(nod)
 
-	nod.Ports = nod.Ports.Dedup()
+	nod.Ports.Sort()
 
 	l.nodes[id] = nod
 	l.edges[id] = cons
@@ -160,30 +162,11 @@ func (l *Loader) isExternal(id string) (yes bool) {
 	return n.IsExternal()
 }
 
-func (l *Loader) Build() error {
-	for id, node := range l.nodes {
-		if l.cfg.OnlyLocal && l.isExternal(id) {
-			continue
-		}
-
-		if err := l.cfg.Builder.AddNode(node); err != nil {
-			return fmt.Errorf("node %s: %w", node.Name, err)
-		}
-	}
-
-	for srcID, dmap := range l.edges {
-		if l.cfg.OnlyLocal && l.isExternal(srcID) {
-			continue
-		}
-
-		l.processPorts(srcID, dmap)
-	}
-
-	return nil
-}
-
-func (l *Loader) processPorts(srcID string, dmap map[string]node.Ports) {
-	for dstID, ports := range dmap {
+func (l *Loader) connect(
+	srcID string,
+	conns map[string][]*node.Connection,
+) {
+	for dstID, cl := range conns {
 		if l.isExternal(dstID) {
 			if l.cfg.OnlyLocal {
 				continue
@@ -192,48 +175,36 @@ func (l *Loader) processPorts(srcID string, dmap map[string]node.Ports) {
 			dstID += idSuffix
 		}
 
-		ports = ports.Dedup()
+		for _, c := range cl {
+			port, ok := node.ParsePort(c.Port)
+			if !ok {
+				continue
+			}
 
-		for i := 0; i < len(ports); i++ {
-			if l.cfg.MatchProto(ports[i].Kind) {
-				l.cfg.Builder.AddEdge(srcID, dstID, ports[i])
+			if !l.cfg.MatchProto(port.Kind) {
+				continue
+			}
+
+			l.cfg.Builder.AddEdge(&node.Edge{
+				SrcID:   srcID,
+				DstID:   dstID,
+				SrcName: c.Src,
+				DstName: c.Dst,
+				Port:    port,
+			})
+		}
+	}
+}
+
+func loadListeners(
+	ports *node.Ports,
+	conns map[string][]string,
+) {
+	for k, cl := range conns {
+		for _, p := range cl {
+			if res, ok := node.ParsePort(p); ok {
+				ports.Add(k, res)
 			}
 		}
 	}
-}
-
-func (l *Loader) preparePorts(lst []string) (rv []*node.Port) {
-	rv = make([]*node.Port, 0, len(lst))
-
-	for _, v := range lst {
-		if p, ok := parsePort(v); ok && l.cfg.MatchProto(p.Kind) {
-			rv = append(rv, p)
-		}
-	}
-
-	return slices.Clip(rv)
-}
-
-func parsePort(v string) (p *node.Port, ok bool) {
-	const (
-		nparts = 2
-		sep    = "/"
-	)
-
-	parts := strings.SplitN(v, sep, nparts)
-	if len(parts) != nparts {
-		return
-	}
-
-	iport, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return
-	}
-
-	p = &node.Port{
-		Kind:  parts[1],
-		Value: iport,
-	}
-
-	return p, true
 }

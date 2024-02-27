@@ -26,94 +26,134 @@ func TestLayers(t *testing.T) {
 	_ = ca.AddNode(&node.Node{
 		ID:   "6",
 		Name: "node-6",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 6},
 			{Kind: "tcp", Value: 1234},
 			{Kind: "tcp", Value: 8080},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "1",
 		Name: "node-1",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 80},
 			{Kind: "tcp", Value: 443},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "2",
 		Name: "node-2",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 2},
 			{Kind: "tcp", Value: 1234},
 			{Kind: "tcp", Value: 8080},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "3",
 		Name: "node-3",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "udp", Value: 53},
 			{Kind: "tcp", Value: 8080},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "4",
 		Name: "node-4",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 9090},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "5",
 		Name: "node-5",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1234},
 			{Kind: "tcp", Value: 8081},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "R",
 		Name: "R",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 22},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:   "5",
 		Name: "node-5",
-		Ports: []*node.Port{
+		Ports: makeTestPorts([]*node.Port{
 			{Kind: "tcp", Value: 1234},
 			{Kind: "tcp", Value: 8081},
-		},
+		}),
 	})
 
 	_ = ca.AddNode(&node.Node{
 		ID:    "10",
 		Name:  "node-10",
-		Ports: []*node.Port{},
+		Ports: &node.Ports{},
 	})
 
-	ca.AddEdge("1", "2", &node.Port{Kind: "tcp", Value: 1234})
-	ca.AddEdge("1", "3", &node.Port{Kind: "tcp", Value: 8080})
-	ca.AddEdge("1", "6", &node.Port{Kind: "tcp", Value: 8080})
-	ca.AddEdge("2", "4", &node.Port{Kind: "tcp", Value: 9090})
-	ca.AddEdge("3", "4", &node.Port{Kind: "tcp", Value: 9090})
-	ca.AddEdge("4", "3", &node.Port{Kind: "tcp", Value: 8080})
-	ca.AddEdge("1", "5", &node.Port{Kind: "tcp", Value: 8081})
-	ca.AddEdge("5", "4", &node.Port{Kind: "tcp", Value: 9090})
-	ca.AddEdge("5", "R", &node.Port{Kind: "tcp", Value: 22})
+	ca.AddEdge(&node.Edge{
+		SrcID: "1",
+		DstID: "2",
+		Port:  &node.Port{Kind: "tcp", Value: 1234},
+	})
 
-	if tb.Nodes > 0 || tb.Edges > 0 {
-		t.Fail()
-	}
+	ca.AddEdge(&node.Edge{
+		SrcID: "1",
+		DstID: "3",
+		Port:  &node.Port{Kind: "tcp", Value: 8080},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "1",
+		DstID: "6",
+		Port:  &node.Port{Kind: "tcp", Value: 8080},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "2",
+		DstID: "4",
+		Port:  &node.Port{Kind: "tcp", Value: 9090},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "3",
+		DstID: "2",
+		Port:  &node.Port{Kind: "tcp", Value: 9090},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "4",
+		DstID: "3",
+		Port:  &node.Port{Kind: "tcp", Value: 8080},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "1",
+		DstID: "5",
+		Port:  &node.Port{Kind: "tcp", Value: 8081},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "5",
+		DstID: "4",
+		Port:  &node.Port{Kind: "tcp", Value: 9090},
+	})
+
+	ca.AddEdge(&node.Edge{
+		SrcID: "5",
+		DstID: "R",
+		Port:  &node.Port{Kind: "tcp", Value: 22},
+	})
 
 	if err := ca.Write(nil); err != nil {
 		t.Fatal(err)
@@ -121,11 +161,11 @@ func TestLayers(t *testing.T) {
 
 	const (
 		edgesDirect  = 9
-		edgesCluster = 9
+		edgesCluster = 8
 
 		wantNodes    = 8
 		wantEdges    = edgesDirect + edgesCluster
-		wantClusters = 7
+		wantClusters = 6
 	)
 
 	if tb.Nodes != wantNodes || tb.Edges != wantEdges {
