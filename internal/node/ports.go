@@ -8,8 +8,8 @@ import (
 )
 
 type Ports struct {
-	order []string
 	ports map[string][]*Port
+	order []string
 }
 
 func (ps *Ports) Add(process string, p *Port) {

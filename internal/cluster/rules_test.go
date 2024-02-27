@@ -40,7 +40,7 @@ func (tb *testNamedBuilder) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (tb *testNamedBuilder) AddEdge(e *node.Edge) {
+func (tb *testNamedBuilder) AddEdge(_ *node.Edge) {
 	tb.Edges++
 }
 
