@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"log"
 	"strings"
 	"testing"
 
@@ -32,6 +33,7 @@ func (tb *testNamedBuilder) AddNode(n *node.Node) error {
 	}
 
 	tb.Nodes++
+
 	if tb.clusters != nil {
 		tb.clusters[n.Cluster] = append(tb.clusters[n.Cluster], n.Name)
 	}
@@ -39,7 +41,9 @@ func (tb *testNamedBuilder) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (tb *testNamedBuilder) AddEdge(_ *node.Edge) {
+func (tb *testNamedBuilder) AddEdge(e *node.Edge) {
+	log.Printf("%s -> %s %d/%s", e.SrcID, e.DstID, e.Port.Value, e.Port.Kind)
+
 	tb.Edges++
 }
 
