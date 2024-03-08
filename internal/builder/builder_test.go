@@ -23,8 +23,18 @@ func TestCreate(t *testing.T) {
 func TestSupportCluster(t *testing.T) {
 	t.Parallel()
 
-	does := []string{builder.KindDOT, builder.KindSTAT, builder.KindStructurizr}
-	doesnt := []string{builder.KindJSON, builder.KindTREE, builder.KindYAML}
+	does := []string{
+		builder.KindDOT,
+		builder.KindSTAT,
+		builder.KindStructurizr,
+		builder.KindPlantUML,
+	}
+
+	doesnt := []string{
+		builder.KindJSON,
+		builder.KindTREE,
+		builder.KindYAML,
+	}
 
 	for _, k := range does {
 		if !builder.SupportCluster(k) {

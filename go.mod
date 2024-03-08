@@ -3,10 +3,10 @@ module github.com/s0rg/decompose
 go 1.22
 
 require (
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/docker v25.0.4+incompatible
 	github.com/emicklei/dot v1.6.1
 	github.com/expr-lang/expr v1.16.1
-	github.com/prometheus/procfs v0.12.0
+	github.com/prometheus/procfs v0.13.0
 	github.com/s0rg/set v1.2.0
 	github.com/s0rg/trie v1.3.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -34,10 +34,10 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.22.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/mod v0.15.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.18.0 // indirect
+	golang.org/x/tools v0.19.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 )

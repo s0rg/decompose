@@ -145,21 +145,3 @@ func TestPortsHasAny(t *testing.T) {
 		}
 	}
 }
-
-func TestParsePort(t *testing.T) {
-	t.Parallel()
-
-	cases := []string{
-		"",
-		"1/",
-		"tcp/1",
-		"-1/udp",
-		"66000/tcp",
-	}
-
-	for _, c := range cases {
-		if _, ok := node.ParsePort(c); ok {
-			t.Fail()
-		}
-	}
-}

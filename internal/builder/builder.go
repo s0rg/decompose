@@ -1,6 +1,8 @@
 package builder
 
 import (
+	"slices"
+
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -12,7 +14,23 @@ const (
 	KindYAML        = "yaml"
 	KindSTAT        = "stat"
 	KindStructurizr = "sdsl"
+	KindPlantUML    = "puml"
 )
+
+var names = []string{
+	KindCSV,
+	KindDOT,
+	KindJSON,
+	KindTREE,
+	KindYAML,
+	KindSTAT,
+	KindStructurizr,
+	KindPlantUML,
+}
+
+func init() {
+	slices.Sort(names)
+}
 
 func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 	switch kind {
@@ -30,6 +48,8 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 		return NewYAML(), true
 	case KindSTAT:
 		return NewStat(), true
+	case KindPlantUML:
+		return NewPlantUML(), true
 	}
 
 	return
@@ -37,7 +57,7 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 
 func SupportCluster(n string) (yes bool) {
 	switch n {
-	case KindDOT, KindStructurizr, KindSTAT:
+	case KindDOT, KindStructurizr, KindSTAT, KindPlantUML:
 		return true
 	}
 
@@ -45,13 +65,5 @@ func SupportCluster(n string) (yes bool) {
 }
 
 func Names() (rv []string) {
-	return []string{
-		KindCSV,
-		KindDOT,
-		KindJSON,
-		KindTREE,
-		KindYAML,
-		KindSTAT,
-		KindStructurizr,
-	}
+	return names
 }

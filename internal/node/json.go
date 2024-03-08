@@ -20,9 +20,9 @@ type Meta struct {
 }
 
 type Connection struct {
+	Port *Port  `json:"port"`
 	Src  string `json:"src"`
 	Dst  string `json:"dst"`
-	Port string `json:"port"`
 }
 
 type JSON struct {
@@ -33,6 +33,6 @@ type JSON struct {
 	Tags       []string                 `json:"tags"`
 	Volumes    []*Volume                `json:"volumes"`
 	Container  Container                `json:"container"`
-	Listen     map[string][]string      `json:"listen"`
+	Listen     map[string][]*Port       `json:"listen"`
 	Connected  map[string][]*Connection `json:"connected"`
 }

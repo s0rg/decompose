@@ -97,12 +97,9 @@ func setupFlags() {
 			"similarity is float in (0.0, 1.0] range",
 	)
 
-	flag.StringVar(
-		&fFormat,
-		"format",
-		builder.KindJSON,
-		"output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl",
-	)
+	names := strings.Join(builder.Names(), ", ")
+	flag.StringVar(&fFormat, "format", builder.KindJSON, "output format: "+names)
+
 	flag.StringVar(
 		&fSkipEnv,
 		"skip-env",

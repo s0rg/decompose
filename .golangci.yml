@@ -70,6 +70,9 @@ issues:
       text: "fieldalignment"
       linters:
         - govet # fieldalignment issue, ignored for yaml readability
+    - path: internal/builder/builder\.go
+      linters:
+        - gochecknoinits # init sorts builders names
     - path: ._test\.go
       linters:
         - goerr113

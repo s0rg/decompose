@@ -34,14 +34,17 @@ func TestStat(t *testing.T) {
     "name": "test1",
     "is_external": false,
     "networks": ["test"],
-    "listen": {"1": ["1/udp", "1/tcp"]},
+    "listen": {"1": [
+        {"kind": "tcp", "value": 1},
+        {"kind": "udp", "value": 1}
+    ]},
     "connected": {
         "test2":[
-            {"src": "1", "dst": "2", "port": "2/tcp"},
-            {"src": "1", "dst": "2", "port": "2/udp"}
+            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": 2}},
+            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": 2}}
         ],
         "test3":[
-            {"src": "1", "dst": "3", "port": "3/tcp"}
+            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": 3}}
         ]
       }
     }
@@ -49,14 +52,17 @@ func TestStat(t *testing.T) {
     "name": "test2",
     "is_external": false,
     "networks": ["test"],
-    "listen": {"2":["2/tcp", "2/udp"]},
+    "listen": {"2":[
+        {"kind": "tcp", "value": 2},
+        {"kind": "udp", "value": 2}
+    ]},
     "connected": {
         "test1":[
-            {"src": "2", "dst": "1", "port": "1/tcp"},
-            {"src": "2", "dst": "1", "port": "1/udp"}
+            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": 1}},
+            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": 1}}
         ],
         "test3": [
-            {"src": "2", "dst": "3", "port": "3/udp"}
+            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": 3}}
         ]
       }
     }
@@ -64,7 +70,10 @@ func TestStat(t *testing.T) {
     "name": "test3",
     "is_external": true,
     "networks": ["test"],
-    "listen": {"3":["3/tcp", "3/udp"]},
+    "listen": {"3":[
+        {"kind": "tcp", "value": 3},
+        {"kind": "udp", "value": 3}
+    ]},
     "connected": {}
     }`
 
@@ -142,14 +151,17 @@ func TestStatCluster(t *testing.T) {
    "name": "test1",
     "is_external": false,
     "networks": ["test"],
-    "listen": {"1": ["1/udp", "1/tcp"]},
+    "listen": {"1": [
+        {"kind": "tcp", "value": 1},
+        {"kind": "udp", "value": 1}
+    ]},
     "connected": {
         "test2":[
-            {"src": "1", "dst": "2", "port": "2/tcp"},
-            {"src": "1", "dst": "2", "port": "2/udp"}
+            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": 2}},
+            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": 2}}
         ],
         "test3":[
-            {"src": "1", "dst": "3", "port": "3/tcp"}
+            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": 3}}
         ]
       }
     }
@@ -157,14 +169,17 @@ func TestStatCluster(t *testing.T) {
     "name": "test2",
     "is_external": false,
     "networks": ["test"],
-    "listen": {"2":["2/tcp", "2/udp"]},
+    "listen": {"2":[
+        {"kind": "tcp", "value": 2},
+        {"kind": "udp", "value": 2}
+    ]},
     "connected": {
         "test1":[
-            {"src": "2", "dst": "1", "port": "1/tcp"},
-            {"src": "2", "dst": "1", "port": "1/udp"}
+            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": 1}},
+            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": 1}}
         ],
         "test3": [
-            {"src": "2", "dst": "3", "port": "3/udp"}
+            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": 3}}
         ]
       }
     }`

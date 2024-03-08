@@ -2,14 +2,12 @@ package node
 
 import (
 	"strconv"
-	"strings"
 )
-
-const portMax = 65535
 
 type Port struct {
 	Kind  string `json:"kind"`
 	Value int    `json:"value"`
+	Local bool   `json:"local"`
 }
 
 func (p *Port) Label() string {
@@ -21,37 +19,7 @@ func (p *Port) ID() string {
 }
 
 func (p *Port) Equal(v *Port) (yes bool) {
-	return p.Kind == v.Kind && p.Value == v.Value
-}
-
-func ParsePort(v string) (rv *Port, ok bool) {
-	const (
-		nparts = 2
-		sep    = "/"
-	)
-
-	parts := strings.SplitN(v, sep, nparts)
-	if len(parts) != nparts {
-		return
-	}
-
-	if parts[0] == "" || parts[1] == "" {
-		return
-	}
-
-	iport, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return
-	}
-
-	if iport < 0 || iport > portMax {
-		return
-	}
-
-	rv = &Port{
-		Kind:  parts[1],
-		Value: iport,
-	}
-
-	return rv, true
+	return p.Kind == v.Kind &&
+		p.Value == v.Value &&
+		p.Local == v.Local
 }

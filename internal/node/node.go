@@ -35,7 +35,7 @@ func (n *Node) ToJSON() (rv *JSON) {
 		IsExternal: n.IsExternal(),
 		Networks:   n.Networks,
 		Container:  n.Container,
-		Listen:     make(map[string][]string),
+		Listen:     make(map[string][]*Port),
 		Volumes:    []*Volume{},
 		Tags:       []string{},
 		Connected:  make(map[string][]*Connection),
@@ -52,13 +52,7 @@ func (n *Node) ToJSON() (rv *JSON) {
 	n.Ports.Sort()
 
 	n.Ports.Iter(func(name string, ports []*Port) {
-		labels := make([]string, len(ports))
-
-		for i := 0; i < len(ports); i++ {
-			labels[i] = ports[i].Label()
-		}
-
-		rv.Listen[name] = labels
+		rv.Listen[name] = ports
 	})
 
 	if len(n.Volumes) > 0 {
