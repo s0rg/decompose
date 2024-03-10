@@ -1,8 +1,6 @@
 package builder
 
 import (
-	"slices"
-
 	"github.com/s0rg/decompose/internal/graph"
 )
 
@@ -17,7 +15,7 @@ const (
 	KindPlantUML    = "puml"
 )
 
-var names = []string{
+var Names = []string{
 	KindCSV,
 	KindDOT,
 	KindJSON,
@@ -26,10 +24,6 @@ var names = []string{
 	KindSTAT,
 	KindStructurizr,
 	KindPlantUML,
-}
-
-func init() {
-	slices.Sort(names)
 }
 
 func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
@@ -62,8 +56,4 @@ func SupportCluster(n string) (yes bool) {
 	}
 
 	return false
-}
-
-func Names() (rv []string) {
-	return names
 }

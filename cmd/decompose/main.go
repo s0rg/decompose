@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -51,7 +52,8 @@ var (
 	fSkipEnv          string
 	fLoad             []string
 
-	ErrUnknown = errors.New("unknown")
+	knownBuilders string
+	ErrUnknown    = errors.New("unknown")
 )
 
 func version() string {
@@ -97,8 +99,7 @@ func setupFlags() {
 			"similarity is float in (0.0, 1.0] range",
 	)
 
-	names := strings.Join(builder.Names(), ", ")
-	flag.StringVar(&fFormat, "format", builder.KindJSON, "output format: "+names)
+	flag.StringVar(&fFormat, "format", builder.KindJSON, "output format: "+knownBuilders)
 
 	flag.StringVar(
 		&fSkipEnv,
@@ -259,7 +260,7 @@ func prepareConfig() (
 			"%w format: %s known: %s",
 			ErrUnknown,
 			fFormat,
-			strings.Join(builder.Names(), ","),
+			knownBuilders,
 		)
 	}
 
@@ -393,6 +394,9 @@ func doBuild(
 }
 
 func main() {
+	slices.Sort(builder.Names)
+	knownBuilders = strings.Join(builder.Names, ", ")
+
 	setupFlags()
 
 	flag.Parse()

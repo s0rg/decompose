@@ -13,7 +13,7 @@ func TestCreate(t *testing.T) {
 		t.Fail()
 	}
 
-	for _, name := range builder.Names() {
+	for _, name := range builder.Names {
 		if _, ok := builder.Create(name); !ok {
 			t.Fail()
 		}
