@@ -210,10 +210,6 @@ func buildEdges(
 					return
 				}
 
-				if !cfg.MatchName(ldst.Name) && !cfg.MatchName(con.Name) {
-					return
-				}
-
 				dst, found := nodes[ldst.ID]
 				if !found {
 					return
