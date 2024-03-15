@@ -20,6 +20,7 @@ Takes all network connections from your docker containers and exports them as:
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
 - [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
+- [plant uml](https://github.com/plantuml/plantuml)
 - pseudographical tree
 - json stream
 - statistics - nodes, connections and listen ports counts
@@ -53,6 +54,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - all output formats are sorted, thus can be placed to any `vcs` to observe changes
 - fast, scans ~470 containers with ~4000 connections in around 5 sec
 - auto-clusterization based on graph topology
+- deep inspection mode, in wich connections between procesess inside containers, also collected and shown
 - 100% test-coverage
 
 ## known limitations

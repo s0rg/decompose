@@ -20,6 +20,5 @@ func (p *Port) ID() string {
 
 func (p *Port) Equal(v *Port) (yes bool) {
 	return p.Kind == v.Kind &&
-		p.Value == v.Value &&
-		p.Local == v.Local
+		p.Value == v.Value
 }

@@ -45,7 +45,7 @@ var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
 	fFull, fNoLoops   bool
-	fDeep             bool
+	fDeep, fCompress  bool
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta, fCluster   string
@@ -87,6 +87,8 @@ func setupFlags() {
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
 	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
+	flag.BoolVar(&fCompress, "compress", false, "compress graph")
+
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
@@ -286,6 +288,12 @@ func prepareConfig() (
 		}
 
 		bildr, nwr = cb, cb
+	}
+
+	if fCompress {
+		cmp := graph.NewCompressor(bildr)
+
+		bildr, nwr = cmp, cmp
 	}
 
 	skipKeys := []string{}
