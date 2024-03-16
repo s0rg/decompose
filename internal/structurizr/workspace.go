@@ -20,14 +20,14 @@ func NewWorkspace(name, defaultSystem string) *Workspace {
 	return &Workspace{
 		Name:          name,
 		defaultSystem: defaultSystem,
-		systemsOrder:  []string{safeID(defaultSystem)},
+		systemsOrder:  []string{SafeID(defaultSystem)},
 		systems:       make(map[string]*System),
 		relationships: make(map[string]map[string]*Relation),
 	}
 }
 
 func (ws *Workspace) System(name string) (rv *System) {
-	id := safeID(name)
+	id := SafeID(name)
 
 	if sys, ok := ws.systems[id]; ok {
 		return sys
@@ -45,13 +45,13 @@ func (ws *Workspace) System(name string) (rv *System) {
 }
 
 func (ws *Workspace) HasSystem(name string) (yes bool) {
-	_, yes = ws.systems[safeID(name)]
+	_, yes = ws.systems[SafeID(name)]
 
 	return
 }
 
 func (ws *Workspace) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relation, ok bool) {
-	srcID, dstID = safeID(srcID), safeID(dstID)
+	srcID, dstID = SafeID(srcID), SafeID(dstID)
 
 	if !ws.HasSystem(srcID) || !ws.HasSystem(dstID) {
 		return
@@ -80,7 +80,7 @@ func (ws *Workspace) AddRelation(srcID, dstID, srcName, dstName string) (rv *Rel
 func (ws *Workspace) Write(w io.Writer) {
 	var level int
 
-	slices.SortFunc(ws.systemsOrder[1:], cmp.Compare)
+	slices.Sort(ws.systemsOrder[1:])
 
 	putHeader(w, level, headerWorkspace)
 
@@ -145,8 +145,7 @@ func (ws *Workspace) writeRelations(w io.Writer, level int) {
 		for _, dstID := range dstOrder {
 			rel := dest[dstID]
 
-			putRelation(w, level, srcID, dstID)
-			rel.Write(w, level+1)
+			putRelation(w, level, srcID, dstID, rel.Tags)
 			putEnd(w, level)
 		}
 	}
@@ -196,6 +195,8 @@ func (ws *Workspace) writeViews(w io.Writer, level int) {
 		level--
 
 		putEnd(w, level) // container
+
+		system.WriteViews(w, level)
 	}
 
 	fmt.Fprintln(w, "")

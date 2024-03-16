@@ -103,5 +103,5 @@ func (n *Node) FormatMeta() (rv []string, ok bool) {
 		rv = append(rv, n.Meta.Repo)
 	}
 
-	return slices.Clip(rv), true
+	return slices.Clip(rv), len(rv) > 0
 }

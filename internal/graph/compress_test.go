@@ -12,10 +12,10 @@ import (
 )
 
 type testNamedBuilder struct {
-	Nodes      int
-	Edges      int
 	AddError   error
 	WriteError error
+	Nodes      int
+	Edges      int
 }
 
 func (b *testNamedBuilder) AddNode(n *node.Node) error {

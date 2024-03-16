@@ -1,5 +1,7 @@
 dist/
 vendor/
+.structurizr/
+workspace.*
 *.out
 *.png
 *.svg

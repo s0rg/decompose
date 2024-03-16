@@ -94,7 +94,11 @@ func (c *Compressor) Write(w io.Writer) (err error) {
 		}
 	}
 
-	log.Printf("nodes compressed %d -> %d", len(c.nodes), len(c.groups))
+	log.Printf("[compress] nodes %d -> %d %.02f%%",
+		len(c.nodes),
+		len(c.groups),
+		percentOf(len(c.nodes)-len(c.groups), len(c.nodes)),
+	)
 
 	var count int
 
@@ -114,7 +118,11 @@ func (c *Compressor) Write(w io.Writer) (err error) {
 		}
 	}
 
-	log.Printf("edges compressed %d -> %d", c.edges, count)
+	log.Printf("[compress] edges %d -> %d %.02f%%",
+		c.edges,
+		count,
+		percentOf(c.edges-count, c.edges),
+	)
 
 	if err = c.b.Write(w); err != nil {
 		return fmt.Errorf("compressor write [%s]: %w", c.b.Name(), err)

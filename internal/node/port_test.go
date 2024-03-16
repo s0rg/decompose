@@ -17,7 +17,7 @@ func makeTestPorts(vals ...*node.Port) (rv *node.Ports) {
 	return rv
 }
 
-func TestPortLabelID(t *testing.T) {
+func TestPortLabel(t *testing.T) {
 	t.Parallel()
 
 	const want = "100"
@@ -30,16 +30,6 @@ func TestPortLabelID(t *testing.T) {
 	}
 
 	if !strings.HasSuffix(l, p.Kind) {
-		t.Fail()
-	}
-
-	id := p.ID()
-
-	if !strings.HasSuffix(id, want) {
-		t.Fail()
-	}
-
-	if !strings.HasPrefix(id, p.Kind) {
 		t.Fail()
 	}
 }

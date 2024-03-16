@@ -76,12 +76,14 @@ decompose [flags]
 
 -cluster string
     json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
+-compress
+    compress graph
 -deep
     process-based introspection
 -follow string
     follow only this container by name(s), comma-separated or from @file
 -format string
-    output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
+    output format: csv, dot, json, puml, sdsl, stat, tree, yaml (default "json")
 -full
     extract full process info: (cmd, args, env) and volumes info
 -help
@@ -124,8 +126,12 @@ type Item struct {
         Cmd    []string          `json:"cmd"`
         Env    []string          `json:"env"`
         Labels map[string]string `json:"labels"`
-    } `json:"container"` // conatiner info
-    Listen     map[string][]string `json:"listen"` // ports with process names
+    } `json:"container"` // container info
+    Listen     map[string][]{
+        Kind   string            `json:"kind"`  // tcp / udp
+        Value  int               `json:"value"`
+        Local  bool              `json:"local"` // bound to loopback
+    } `json:"listen"` // ports with process names
     Networks   []string            `json:"networks"` // network names
     Tags       []string            `json:"tags"` // tags, if meta presents
     Volumes    []*struct{
@@ -154,7 +160,9 @@ Single node example with full info and metadata filled:
         ],
         "labels": {}
     },
-    "listen": {"foo": ["80/tcp"]},
+    "listen": {"foo": [
+        {"kind": "tcp", "value": 80}
+    ]},
     "networks": ["test-net"],
     "tags": ["some"],
     "volumes": [
@@ -170,7 +178,9 @@ Single node example with full info and metadata filled:
         }
     ],
     "connected": {
-        "bar-1": ["443/tcp"]
+        "bar-1": [
+            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": 443}}
+        ]
     }
 }
 ```

@@ -58,8 +58,13 @@ func putCommon(
 	desc, tech string,
 	tags []string,
 ) {
-	putKey(w, level, keyDescription, desc)
-	putKey(w, level, keyTechnology, tech)
+	if desc != "" {
+		putKey(w, level, keyDescription, desc)
+	}
+
+	if tech != "" {
+		putKey(w, level, keyTechnology, tech)
+	}
 
 	if ctags, ok := compactTags(tags); ok {
 		putKey(w, level, keyTags, strings.Join(ctags, ","))
@@ -80,9 +85,10 @@ func putRelation(
 	w io.Writer,
 	level int,
 	src, dst string,
+	tags []string,
 ) {
 	fmt.Fprint(w, strings.Repeat(tab, level))
-	fmt.Fprintf(w, "%s -> %s {\n", src, dst)
+	fmt.Fprintf(w, "%s -> %s \"%s\" {\n", src, dst, strings.Join(tags, ","))
 }
 
 func putEnd(w io.Writer, level int) {
@@ -90,10 +96,10 @@ func putEnd(w io.Writer, level int) {
 	fmt.Fprintln(w, "}")
 }
 
-func safeID(v string) (id string) {
+func SafeID(v string) (id string) {
 	return strings.Map(func(r rune) rune {
 		switch {
-		case unicode.IsSpace(r), r == '-', r == '.', r == ':':
+		case unicode.IsSpace(r), unicode.IsPunct(r):
 			return '_'
 		}
 

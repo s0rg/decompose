@@ -49,26 +49,6 @@ func (d *DOT) Name() string {
 }
 
 func (d *DOT) AddNode(n *node.Node) error {
-	var label, color string
-
-	if n.IsExternal() {
-		color = "red"
-		label = "external: " + n.Name
-	} else {
-		color = "black"
-		label = n.Name + dotLF + "image: " + n.Image + dotLF + "net: " + strings.Join(n.Networks, ", ")
-	}
-
-	if n.Meta != nil {
-		if lines, ok := n.FormatMeta(); ok {
-			label += dotLF + "info:" + dotLF + strings.Join(lines, dotLF)
-		}
-
-		if len(n.Meta.Tags) > 0 {
-			label += dotLF + "tags: " + strings.Join(n.Meta.Tags, ",")
-		}
-	}
-
 	g := d.g
 
 	if n.Cluster != "" {
@@ -82,20 +62,23 @@ func (d *DOT) AddNode(n *node.Node) error {
 		g = sg
 	}
 
+	label, color := renderNode(n)
+
 	rb := g.Node(n.ID).Attr(
 		"color", color,
 	).NewRecordBuilder()
 
 	rb.FieldWithId(label, outPort)
 
-	rb.Nesting(func() {
-		n.Ports.Iter(func(_ string, plist []*node.Port) {
-			for _, p := range plist {
-				rb.FieldWithId(p.Label(), p.ID())
-			}
+	if n.Ports.Len() > 0 {
+		rb.Nesting(func() {
+			n.Ports.Iter(func(process string, _ []*node.Port) {
+				rb.FieldWithId(process, "port_"+n.ID+"_"+process)
+			})
 		})
-	})
+	}
 
+	// this cannot return error, thus error case cannot be tested :(
 	_ = rb.Build()
 
 	return nil
@@ -118,23 +101,27 @@ func (d *DOT) getSrc(id string) (rv dot.Node, out string, ok bool) {
 	return rv, out, ok
 }
 
-func (d *DOT) getDst(id string, port *node.Port) (rv dot.Node, out string, ok bool) {
-	if rv, ok = d.g.FindNodeById(id); ok {
-		return rv, port.ID(), ok
+func (d *DOT) getDst(edge *node.Edge) (rv dot.Node, out string, ok bool) {
+	dstID := "port_" + edge.DstID + "_" + edge.DstName
+
+	if rv, ok = d.g.FindNodeById(dstID); ok {
+		return rv, dstID, ok
 	}
 
-	sg, ok := d.clusters[id]
+	if rv, ok = d.g.FindNodeById(edge.DstID); ok {
+		return rv, out, ok
+	}
+
+	sg, ok := d.clusters[edge.DstID]
 	if !ok {
 		return
 	}
 
-	out = id + "_" + port.ID()
-
-	if rv, ok = sg.FindNodeById(out); ok {
-		return rv, out, ok
+	if rv, ok = sg.FindNodeById(dstID); ok {
+		return rv, dstID, ok
 	}
 
-	return sg.Node(out).Label(port.Label()), out, true
+	return //sg.Node(out).Label(port.Label()), out, true
 }
 
 func (d *DOT) AddEdge(e *node.Edge) {
@@ -142,28 +129,32 @@ func (d *DOT) AddEdge(e *node.Edge) {
 		return
 	}
 
-	src, srcPort, ok := d.getSrc(e.SrcID)
-	if !ok {
-		return
-	}
+	/*
+		src, srcPort, ok := d.getSrc(e.SrcID)
+		if !ok {
+			return
+		}
 
-	dst, dstPort, ok := d.getDst(e.DstID, e.Port)
-	if !ok {
-		return
-	}
+		dst, dstPort, ok := d.getDst(e)
+		if !ok {
+			return
+		}
+	*/
 
-	label := e.Port.Label()
-	color := labelColor(label)
+	/*
+		label := e.Port.Label()
+		color := labelColor(label)
 
-	var edge dot.Edge
+		var edge dot.Edge
 
-	if srcPort != outPort {
-		edge = d.g.Edge(src, dst, label)
-	} else {
-		edge = d.g.EdgeWithPorts(src, dst, srcPort, dstPort, label)
-	}
+		if srcPort != outPort {
+			edge = d.g.Edge(src, dst, label)
+		} else {
+			edge = d.g.EdgeWithPorts(src, dst, srcPort, dstPort, label)
+		}
 
-	edge.Attr("color", color).Attr("fontcolor", color)
+		edge.Attr("color", color).Attr("fontcolor", color)
+	*/
 }
 
 func (d *DOT) Write(w io.Writer) error {
@@ -184,4 +175,53 @@ func labelColor(label string) (rv string) {
 	}
 
 	return colors[hash%len(colors)]
+}
+
+func renderNode(n *node.Node) (label, color string) {
+	var sb strings.Builder
+
+	if n.IsExternal() {
+		color = "gray"
+		sb.WriteString("external: ")
+	} else {
+		color = "black"
+	}
+
+	sb.WriteString(n.Name)
+	sb.WriteString(dotLF)
+
+	if n.Image != "" {
+		sb.WriteString("image: ")
+		sb.WriteString(n.Image)
+		sb.WriteString(dotLF)
+	}
+
+	if len(n.Networks) > 0 {
+		sb.WriteString("nets: ")
+		sb.WriteString(strings.Join(n.Networks, ", "))
+		sb.WriteString(dotLF)
+	}
+
+	if n.Meta != nil {
+		if lines, ok := n.FormatMeta(); ok {
+			sb.WriteString("meta: ")
+			sb.WriteString(dotLF)
+			sb.WriteString(strings.Join(lines, dotLF))
+			sb.WriteString(dotLF)
+		}
+
+		if len(n.Meta.Tags) > 0 {
+			sb.WriteString("tags: ")
+			sb.WriteString(strings.Join(n.Meta.Tags, ","))
+			sb.WriteString(dotLF)
+		}
+	}
+
+	/*
+		if len(n.Container.Labels) > 0 {
+
+		}
+	*/
+
+	return sb.String(), color
 }

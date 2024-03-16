@@ -77,26 +77,6 @@ func (ps *Ports) Sort() {
 	}
 }
 
-/*
-	func (ps *Ports) FlatList() (rv []*Port) {
-		for _, pl := range ps.ports {
-			rv = append(rv, pl...)
-		}
-
-		slices.SortFunc(rv, func(a, b *Port) int {
-			if a.Kind == b.Kind {
-				return cmp.Compare(a.Value, b.Value)
-			}
-
-			return cmp.Compare(a.Kind, b.Kind)
-		})
-
-		return slices.CompactFunc(rv, func(a, b *Port) bool {
-			return a.Equal(b)
-		})
-	}
-*/
-
 func (ps *Ports) HasAny(label ...string) (yes bool) {
 	if len(ps.ports) == 0 {
 		return
