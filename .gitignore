@@ -2,6 +2,7 @@ dist/
 vendor/
 .structurizr/
 workspace.*
+/*.json
 *.out
 *.png
 *.svg

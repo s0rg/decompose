@@ -4,45 +4,51 @@ workspace {
 	model {
 		default = softwareSystem "default" {
 		tags "3"
-			3 = container "3" {
+			node_3 = container "3" {
 				description "info 3"
 				technology "node-image"
 				tags "3,listen:1/tcp,listen:2/tcp,net:test-net"
+				node_3_ = component "" {
+					tags "listen:1/tcp,listen:2/tcp"
+				}
 			}
 		}
 		c1 = softwareSystem "c1" {
 		tags "1,2"
-			1 = container "1" {
+			node_1 = container "1" {
 				description "info 1 \
 docs-url \
 repo-url"
 				technology "node-image"
 				tags "1,listen:1/tcp,listen:2/tcp,net:test-net"
+				node_1_ = component "" {
+					tags "listen:1/tcp,listen:2/tcp"
+				}
 			}
-			2 = container "2" {
+			node_2 = container "2" {
 				description "info 2"
 				technology "node-image"
 				tags "2,listen:1/tcp,listen:2/tcp,net:test-net"
+				node_2_ = component "" {
+					tags "listen:1/tcp,listen:2/tcp"
+				}
 			}
 		}
 		c2 = softwareSystem "c2" {
 		tags "ext2"
 			ext2 = container "ext2" {
 				tags "external,listen:2/tcp"
+				ext2_ = component "" {
+					tags "listen:2/tcp"
+				}
 			}
 		}
 
-		c1 -> c2 {
-			description "c1 to c2 "
-			tags "0/"
+		c1 -> c2 "0/" {
 		}
-		c1 -> default {
-			description "c1 to default "
-			tags "0/"
+		c1 -> default "0/" {
 		}
-		default -> c2 {
-			description "default to c2 "
-			tags "0/"
+		default -> c2 "0/" {
 		}
 	}
 
@@ -57,6 +63,10 @@ repo-url"
 			include *
 			autoLayout
 		}
+		component node_3 "component_node_3" {
+			include *
+			autoLayout
+		}
 		systemContext c1 "systemContext_c1" {
 			include *
 			autoLayout
@@ -65,11 +75,23 @@ repo-url"
 			include *
 			autoLayout
 		}
+		component node_1 "component_node_1" {
+			include *
+			autoLayout
+		}
+		component node_2 "component_node_2" {
+			include *
+			autoLayout
+		}
 		systemContext c2 "systemContext_c2" {
 			include *
 			autoLayout
 		}
 		container c2 "container_c2" {
+			include *
+			autoLayout
+		}
+		component ext2 "component_ext2" {
 			include *
 			autoLayout
 		}

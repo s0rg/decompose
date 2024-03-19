@@ -9,55 +9,35 @@ import (
 	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
+	"github.com/s0rg/set"
+	"github.com/s0rg/trie"
 )
 
-const externalGroup = "external"
-
-type nodeGroup struct {
-	Node  *node.Node
-	Group string
-}
+const (
+	externalGroup = "external"
+	defaultGroup  = "core"
+	defaultDiff   = 3
+)
 
 type Compressor struct {
-	b      NamedBuilderWriter
-	nodes  map[string]*nodeGroup
-	groups map[string][]*node.Node
-	conns  map[string]map[string][]*node.Port
-	edges  int
+	b     NamedBuilderWriter
+	nodes map[string]*node.Node
+	conns map[string]map[string][]*node.Port
+	edges int
 }
 
 func NewCompressor(
 	bldr NamedBuilderWriter,
 ) *Compressor {
 	return &Compressor{
-		b:      bldr,
-		nodes:  make(map[string]*nodeGroup),
-		groups: make(map[string][]*node.Node),
-		conns:  make(map[string]map[string][]*node.Port),
+		b:     bldr,
+		nodes: make(map[string]*node.Node),
+		conns: make(map[string]map[string][]*node.Port),
 	}
 }
 
 func (c *Compressor) AddNode(n *node.Node) error {
-	var (
-		grp string
-		ok  bool
-	)
-
-	if n.IsExternal() {
-		grp, ok = externalGroup, true
-	} else {
-		grp, ok = c.find(n.Name)
-	}
-
-	if !ok {
-		grp = c.extract(n.Name)
-	}
-
-	c.groups[grp] = append(c.groups[grp], n)
-	c.nodes[n.ID] = &nodeGroup{
-		Group: grp,
-		Node:  n,
-	}
+	c.nodes[n.ID] = n
 
 	return nil
 }
@@ -73,13 +53,13 @@ func (c *Compressor) AddEdge(e *node.Edge) {
 		return
 	}
 
-	dmap, ok := c.conns[nsrc.Group]
+	dmap, ok := c.conns[nsrc.ID]
 	if !ok {
 		dmap = make(map[string][]*node.Port)
-		c.conns[nsrc.Group] = dmap
+		c.conns[nsrc.ID] = dmap
 	}
 
-	dmap[ndst.Group] = append(dmap[ndst.Group], e.Port)
+	dmap[ndst.ID] = append(dmap[ndst.ID], e.Port)
 	c.edges++
 }
 
@@ -88,21 +68,117 @@ func (c *Compressor) Name() string {
 }
 
 func (c *Compressor) Write(w io.Writer) (err error) {
-	for grp, nodes := range c.groups {
-		if err = c.b.AddNode(compressNodes(grp, nodes)); err != nil {
-			return fmt.Errorf("compressor add-node [%s]: %w", c.b.Name(), err)
+	index, err := c.buildGroups()
+	if err != nil {
+		return err
+	}
+
+	c.buildEdges(index)
+
+	if err = c.b.Write(w); err != nil {
+		return fmt.Errorf("compressor write [%s]: %w", c.b.Name(), err)
+	}
+
+	return nil
+}
+
+func (c *Compressor) buildGroups() (index map[string]string, err error) {
+	seen := make(set.Unordered[string])
+	t := trie.New[string]()
+
+	for _, node := range c.nodes {
+		seen.Add(node.ID)
+
+		if node.IsExternal() {
+			continue
+		}
+
+		t.Add(node.Name, node.ID)
+	}
+
+	comm := t.Common("", defaultDiff)
+	groups := make(map[string][]string)
+	index = make(map[string]string)
+
+	for _, key := range comm {
+		nodes := []string{}
+
+		t.Iter(key, func(_, nodeID string) {
+			nodes = append(nodes, nodeID)
+		})
+
+		grp := defaultGroup
+		if len(nodes) > 1 {
+			grp = cleanName(key)
+		}
+
+		for _, nodeID := range nodes {
+			index[nodeID] = grp
+
+			seen.Del(nodeID)
+		}
+
+		groups[grp] = nodes
+	}
+
+	seen.Iter(func(id string) (next bool) {
+		grp := defaultGroup
+
+		if c.nodes[id].IsExternal() {
+			grp = externalGroup
+		}
+
+		groups[grp] = append(groups[grp], id)
+		index[id] = grp
+
+		return true
+	})
+
+	for grp, nodes := range groups {
+		batch := make([]*node.Node, len(nodes))
+
+		for i, nodeID := range nodes {
+			batch[i] = c.nodes[nodeID]
+		}
+
+		if err = c.b.AddNode(compressNodes(grp, batch)); err != nil {
+			err = fmt.Errorf("compressor add-node [%s]: %w", c.b.Name(), err)
+
+			return nil, err
 		}
 	}
 
 	log.Printf("[compress] nodes %d -> %d %.02f%%",
 		len(c.nodes),
-		len(c.groups),
-		percentOf(len(c.nodes)-len(c.groups), len(c.nodes)),
+		len(groups),
+		percentOf(len(c.nodes)-len(groups), len(c.nodes)),
 	)
+
+	return index, nil
+}
+
+func (c *Compressor) buildEdges(index map[string]string) {
+	gconns := make(map[string]map[string][]*node.Port)
+
+	for src, dmap := range c.conns {
+		srcg := index[src]
+
+		gmap, ok := gconns[srcg]
+		if !ok {
+			gmap = make(map[string][]*node.Port)
+			gconns[srcg] = gmap
+		}
+
+		for dst, ports := range dmap {
+			dstg := index[dst]
+
+			gmap[dstg] = append(gmap[dstg], ports...)
+		}
+	}
 
 	var count int
 
-	for src, dmap := range c.conns {
+	for src, dmap := range gconns {
 		for dst, ports := range dmap {
 			ports = compressPorts(ports)
 
@@ -123,30 +199,10 @@ func (c *Compressor) Write(w io.Writer) (err error) {
 		count,
 		percentOf(c.edges-count, c.edges),
 	)
-
-	if err = c.b.Write(w); err != nil {
-		return fmt.Errorf("compressor write [%s]: %w", c.b.Name(), err)
-	}
-
-	return nil
 }
 
-func (c *Compressor) find(a string) (grp string, ok bool) {
-	for grp = range c.groups {
-		if c.match(grp, a) {
-			return grp, true
-		}
-	}
-
-	return
-}
-
-func (c *Compressor) match(a, b string) bool {
-	return strings.HasPrefix(b, a)
-}
-
-func (c *Compressor) extract(a string) string {
-	const cutset = "0123456789"
+func cleanName(a string) string {
+	const cutset = "0123456789-"
 
 	return strings.TrimRight(a, cutset)
 }
@@ -157,14 +213,19 @@ func compressNodes(id string, nodes []*node.Node) (rv *node.Node) {
 
 	for i, n := range nodes {
 		tags[i] = n.Name
-		ports.Join(n.Ports)
+
+		n.Ports.Iter(func(_ string, plist []*node.Port) {
+			for _, p := range plist {
+				ports.Add(n.Name, p)
+			}
+		})
 	}
 
-	ports.Sort()
+	ports.Compact()
 
 	name := id
-	if id != externalGroup {
-		name = "group-" + id
+	if name != externalGroup {
+		name = strings.ToUpper(name)
 	}
 
 	return &node.Node{

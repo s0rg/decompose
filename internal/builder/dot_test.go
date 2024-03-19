@@ -171,6 +171,18 @@ func TestDOTGolden(t *testing.T) {
 		Port:  &node.Port{Kind: "tcp", Value: 2},
 	})
 
+	bld.AddEdge(&node.Edge{
+		SrcID: "q",
+		DstID: "node-1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
+	bld.AddEdge(&node.Edge{
+		SrcID: "node-2",
+		DstID: "1",
+		Port:  &node.Port{Kind: "tcp", Value: 2},
+	})
+
 	var buf bytes.Buffer
 
 	bld.Write(&buf)

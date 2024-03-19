@@ -37,7 +37,7 @@ func (n *Node) Match(id string, o *Node) (rv float64) {
 
 func (n *Node) Merge(o *Node) {
 	n.Ports.Join(o.Ports)
-	n.Ports.Sort()
+	n.Ports.Compact()
 
 	n.Inbounds = set.Union(n.Inbounds, o.Inbounds)
 	n.Outbounds = set.Union(n.Outbounds, o.Outbounds)

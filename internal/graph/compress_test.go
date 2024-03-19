@@ -186,7 +186,7 @@ func TestCompressor(t *testing.T) {
 		t.Fail()
 	}
 
-	if tb.Edges != 5 || tb.Nodes != 5 {
+	if tb.Edges != 5 || tb.Nodes != 4 {
 		t.Fail()
 	}
 }

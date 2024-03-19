@@ -49,7 +49,7 @@ func (n *Node) ToJSON() (rv *JSON) {
 		rv.Image = &n.Image
 	}
 
-	n.Ports.Sort()
+	n.Ports.Compact()
 
 	n.Ports.Iter(func(name string, ports []*Port) {
 		rv.Listen[name] = ports

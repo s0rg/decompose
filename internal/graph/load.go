@@ -147,7 +147,7 @@ func (l *Loader) insert(n *node.JSON) {
 
 	l.cfg.Meta.Enrich(nod)
 
-	nod.Ports.Sort()
+	nod.Ports.Compact()
 
 	l.nodes[id] = nod
 	l.edges[id] = cons

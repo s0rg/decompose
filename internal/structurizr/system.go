@@ -32,7 +32,7 @@ func (s *System) AddContainer(id, name string) (c *Container, ok bool) {
 	}
 
 	c = &Container{
-		ID:   SafeID(name),
+		ID:   id,
 		Name: name,
 	}
 
