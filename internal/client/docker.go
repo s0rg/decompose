@@ -116,7 +116,7 @@ func (d *Docker) Containers(
 		}
 
 		if err := d.connections(ctx, doc.ID, proto, func(conn *graph.Connection) {
-			if !deep && conn.LocalIP.IsLoopback() {
+			if !deep && conn.IsLocal() {
 				return
 			}
 

@@ -255,3 +255,24 @@ func TestNodeToView(t *testing.T) {
 		}
 	}
 }
+
+func TestNodeFormatMeta(t *testing.T) {
+	t.Parallel()
+
+	n := node.Node{}
+
+	if _, ok := n.FormatMeta(); ok {
+		t.Fail()
+	}
+
+	n.Meta = &node.Meta{
+		Info: "foo",
+		Docs: "bar",
+		Repo: "baz",
+		Tags: []string{"a", "b"},
+	}
+
+	if _, ok := n.FormatMeta(); !ok {
+		t.Fail()
+	}
+}

@@ -17,7 +17,7 @@ func makeTestPorts(vals ...*node.Port) (rv *node.Ports) {
 	return rv
 }
 
-func TestPortLabelID(t *testing.T) {
+func TestPortLabel(t *testing.T) {
 	t.Parallel()
 
 	const want = "100"
@@ -30,16 +30,6 @@ func TestPortLabelID(t *testing.T) {
 	}
 
 	if !strings.HasSuffix(l, p.Kind) {
-		t.Fail()
-	}
-
-	id := p.ID()
-
-	if !strings.HasSuffix(id, want) {
-		t.Fail()
-	}
-
-	if !strings.HasPrefix(id, p.Kind) {
 		t.Fail()
 	}
 }
@@ -141,24 +131,6 @@ func TestPortsHasAny(t *testing.T) {
 
 	for _, tc := range testCases {
 		if tc.Ports.HasAny(tc.Labels...) != tc.Want {
-			t.Fail()
-		}
-	}
-}
-
-func TestParsePort(t *testing.T) {
-	t.Parallel()
-
-	cases := []string{
-		"",
-		"1/",
-		"tcp/1",
-		"-1/udp",
-		"66000/tcp",
-	}
-
-	for _, c := range cases {
-		if _, ok := node.ParsePort(c); ok {
 			t.Fail()
 		}
 	}

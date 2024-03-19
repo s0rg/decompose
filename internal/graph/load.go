@@ -147,7 +147,7 @@ func (l *Loader) insert(n *node.JSON) {
 
 	l.cfg.Meta.Enrich(nod)
 
-	nod.Ports.Sort()
+	nod.Ports.Compact()
 
 	l.nodes[id] = nod
 	l.edges[id] = cons
@@ -176,12 +176,7 @@ func (l *Loader) connect(
 		}
 
 		for _, c := range cl {
-			port, ok := node.ParsePort(c.Port)
-			if !ok {
-				continue
-			}
-
-			if !l.cfg.MatchProto(port.Kind) {
+			if !l.cfg.MatchProto(c.Port.Kind) {
 				continue
 			}
 
@@ -190,7 +185,7 @@ func (l *Loader) connect(
 				DstID:   dstID,
 				SrcName: c.Src,
 				DstName: c.Dst,
-				Port:    port,
+				Port:    c.Port,
 			})
 		}
 	}
@@ -198,13 +193,11 @@ func (l *Loader) connect(
 
 func loadListeners(
 	ports *node.Ports,
-	conns map[string][]string,
+	conns map[string][]*node.Port,
 ) {
 	for k, cl := range conns {
 		for _, p := range cl {
-			if res, ok := node.ParsePort(p); ok {
-				ports.Add(k, res)
-			}
+			ports.Add(k, p)
 		}
 	}
 }

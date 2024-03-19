@@ -1,7 +1,6 @@
 package srtructurizr
 
 import (
-	"cmp"
 	"io"
 	"slices"
 )
@@ -13,11 +12,12 @@ type System struct {
 	Name          string
 	Description   string
 	Tags          []string
+	order         []string
 }
 
 func NewSystem(name string) *System {
 	return &System{
-		ID:            safeID(name),
+		ID:            SafeID(name),
 		Name:          name,
 		containers:    make(map[string]*Container),
 		relationships: make(map[string]map[string]*Relation),
@@ -25,24 +25,26 @@ func NewSystem(name string) *System {
 }
 
 func (s *System) AddContainer(id, name string) (c *Container, ok bool) {
-	id = safeID(id)
+	id = SafeID(id)
 
 	if _, ok = s.containers[id]; ok {
 		return nil, false
 	}
 
 	c = &Container{
-		ID:   safeID(name),
+		ID:   id,
 		Name: name,
 	}
 
 	s.containers[id] = c
+	s.order = append(s.order, id)
+	slices.Sort(s.order)
 
 	return c, true
 }
 
 func (s *System) findRelation(src, dst string) (rv *Relation, found bool) {
-	src, dst = safeID(src), safeID(dst)
+	src, dst = SafeID(src), SafeID(dst)
 
 	if dest, ok := s.relationships[src]; ok {
 		if rel, ok := dest[dst]; ok {
@@ -60,12 +62,12 @@ func (s *System) findRelation(src, dst string) (rv *Relation, found bool) {
 }
 
 func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relation, ok bool) {
-	src, ok := s.containers[safeID(srcID)]
+	src, ok := s.containers[SafeID(srcID)]
 	if !ok {
 		return nil, false
 	}
 
-	dst, ok := s.containers[safeID(dstID)]
+	dst, ok := s.containers[SafeID(dstID)]
 	if !ok {
 		return nil, false
 	}
@@ -74,7 +76,7 @@ func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relatio
 		return rv, true
 	}
 
-	srcID, dstID = safeID(src.Name), safeID(dst.Name)
+	srcID, dstID = SafeID(src.Name), SafeID(dst.Name)
 
 	dest, ok := s.relationships[srcID]
 	if !ok {
@@ -101,15 +103,7 @@ func (s *System) WriteContainers(w io.Writer, level int) {
 
 	next := level + 1
 
-	contOrder := make([]string, 0, len(s.containers))
-
-	for cID := range s.containers {
-		contOrder = append(contOrder, cID)
-	}
-
-	slices.SortFunc(contOrder, cmp.Compare)
-
-	for _, cID := range contOrder {
+	for _, cID := range s.order {
 		cont := s.containers[cID]
 
 		putBlock(w, next, blockContainer, cont.ID, cont.Name)
@@ -118,11 +112,25 @@ func (s *System) WriteContainers(w io.Writer, level int) {
 	}
 }
 
+func (s *System) WriteViews(w io.Writer, level int) {
+	next := level + 1
+
+	for _, cID := range s.order {
+		cont := s.containers[cID]
+
+		putView(w, level, blockComponent, cont.ID)
+
+		putRaw(w, next, "include *")
+		putRaw(w, next, "autoLayout")
+
+		putEnd(w, level)
+	}
+}
+
 func (s *System) WriteRelations(w io.Writer, level int) {
 	for srcID, dest := range s.relationships {
 		for dstID, rel := range dest {
-			putRelation(w, level, srcID, dstID)
-			rel.Write(w, level+1)
+			putRelation(w, level, srcID, dstID, rel.Tags)
 			putEnd(w, level)
 		}
 	}

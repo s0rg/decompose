@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
@@ -61,7 +62,17 @@ func (c *CSV) Write(w io.Writer) error {
 func renderOutbounds(conns map[string][]*node.Connection) (rv string) {
 	var b strings.Builder
 
-	for k, v := range conns {
+	order := make([]string, 0, len(conns))
+
+	for k := range conns {
+		order = append(order, k)
+	}
+
+	slices.Sort(order)
+
+	for _, k := range order {
+		v := conns[k]
+
 		b.WriteString(k)
 		b.WriteString(": ")
 		b.WriteString(joinConnections(v, "; "))

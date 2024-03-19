@@ -152,6 +152,7 @@ func testClientWithEnv() graph.ContainerClient {
 	cli.Data[2].AddMany([]*graph.Connection{
 		{LocalPort: 3, Proto: graph.TCP},                                     // listen 3
 		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP},    // connected to node1:1
+		{RemoteIP: node2, LocalPort: 122, RemotePort: 22, Proto: graph.TCP},  // connected to node2:22
 		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Proto: graph.TCP}, // connected to external:3
 	})
 
@@ -174,7 +175,7 @@ func TestBuildSimple(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 
-	if bld.Nodes != 4 || bld.Edges != 6 {
+	if bld.Nodes != 4 || bld.Edges != 7 {
 		t.Fail()
 	}
 }
@@ -221,7 +222,7 @@ func TestBuildLocal(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 
-	if bld.Nodes != 3 || bld.Edges != 3 {
+	if bld.Nodes != 3 || bld.Edges != 4 {
 		t.Fail()
 	}
 }
@@ -230,7 +231,7 @@ func TestBuildNoNodes(t *testing.T) {
 	t.Parallel()
 
 	flw := make(set.Unordered[string])
-	flw.Add("4")
+	flw.Add("5")
 
 	cli := testClientWithEnv()
 	cfg := &graph.Config{
@@ -293,6 +294,7 @@ func TestBuildLoops(t *testing.T) {
 
 	node1 := net.ParseIP("1.1.1.1")
 	node2 := net.ParseIP("1.1.1.2")
+	local := net.ParseIP("127.0.0.1")
 
 	cli := &testClient{Data: []*graph.Container{
 		makeContainer("1", node1.String()),
@@ -308,6 +310,7 @@ func TestBuildLoops(t *testing.T) {
 	cli.Data[1].AddMany([]*graph.Connection{
 		{LocalPort: 2, Proto: graph.TCP},                                  // listen 2
 		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to node1:1
+		{RemoteIP: local, LocalPort: 11, RemotePort: 2, Proto: graph.TCP}, // connected to self:2
 	})
 
 	bld := &testBuilder{}
@@ -323,7 +326,7 @@ func TestBuildLoops(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 
-	if bld.Nodes != 2 || bld.Edges != 3 {
+	if bld.Nodes != 2 || bld.Edges != 4 {
 		t.Fail()
 	}
 

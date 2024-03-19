@@ -48,10 +48,23 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 
 	cont.Technology = n.Image
 
-	n.Ports.Iter(func(_ string, plist []*node.Port) {
-		for _, p := range plist {
-			cont.Tags = append(cont.Tags, "listen:"+p.Label())
+	n.Ports.Iter(func(process string, plist []*node.Port) {
+		com := &sdsl.Component{
+			ID:   sdsl.SafeID(n.ID + "_" + process),
+			Name: process,
 		}
+
+		for _, p := range plist {
+			tag := "listen:" + p.Label()
+
+			com.Tags = append(com.Tags, tag)
+
+			if !p.Local {
+				cont.Tags = append(cont.Tags, tag)
+			}
+		}
+
+		cont.Components = append(cont.Components, com)
 	})
 
 	for _, n := range n.Networks {
@@ -62,10 +75,14 @@ func (s *Structurizr) AddNode(n *node.Node) error {
 		cont.Tags = append(cont.Tags, "external")
 	}
 
-	if lines, ok := n.FormatMeta(); ok {
-		cont.Description = strings.Join(lines, " \\\n")
+	if n.Meta != nil {
+		if lines, ok := n.FormatMeta(); ok {
+			cont.Description = strings.Join(lines, " \\\n")
+		}
 
-		cont.Tags = append(cont.Tags, n.Meta.Tags...)
+		if len(n.Meta.Tags) > 0 {
+			cont.Tags = append(cont.Tags, n.Meta.Tags...)
+		}
 	}
 
 	return nil

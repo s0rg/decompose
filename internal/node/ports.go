@@ -61,14 +61,18 @@ func (ps *Ports) Len() (rv int) {
 	return rv
 }
 
-func (ps *Ports) Sort() {
-	for _, pl := range ps.ports {
+func (ps *Ports) Compact() {
+	for k, pl := range ps.ports {
 		slices.SortFunc(pl, func(a, b *Port) int {
 			if a.Kind == b.Kind {
 				return cmp.Compare(a.Value, b.Value)
 			}
 
 			return cmp.Compare(a.Kind, b.Kind)
+		})
+
+		ps.ports[k] = slices.CompactFunc(pl, func(a, b *Port) bool {
+			return a.Equal(b)
 		})
 	}
 }

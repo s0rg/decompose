@@ -49,7 +49,7 @@ func (j *JSON) AddEdge(e *node.Edge) {
 	src.Connected[dst.Name] = append(con, &node.Connection{
 		Src:  e.SrcName,
 		Dst:  e.DstName,
-		Port: e.Port.Label(),
+		Port: e.Port,
 	})
 }
 

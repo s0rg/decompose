@@ -46,7 +46,10 @@ func TestLoaderBuildError(t *testing.T) {
     "name": "test",
     "is_remote": false,
     "image": "test-image",
-    "listen": {"foo":["1/tcp", "2/udp"]},
+    "listen": {"foo":[
+        {"kind": "tcp", "value": 1},
+        {"kind": "udp", "value": 2}
+    ]},
     "connected": null
     }`)
 
@@ -82,7 +85,10 @@ func TestLoaderSingle(t *testing.T) {
     "name": "test",
     "is_remote": false,
     "image": "test-image",
-    "listen": {"foo": ["1/tcp", "2/udp"]},
+    "listen": {"foo": [
+        {"kind": "tcp", "value": 1},
+        {"kind": "udp", "value": 2}
+    ]},
     "connected": null
     }`)
 
@@ -116,7 +122,7 @@ func TestLoaderBadPorts(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test",
     "is_remote": true,
-    "listen": {"foo": ["#/a/b", "@/udp", ""]},
+    "listen": {},
     "connected": null
     }`)
 
@@ -149,13 +155,17 @@ func TestLoaderEdges(t *testing.T) {
 
 	buf := bytes.NewBufferString(`{
     "name": "test1",
-    "listen": {"foo": ["1/tcp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "tcp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
-    "listen": {"bar":["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/tcp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "tcp", "value": 1}}]}
     }`)
 
 	if err := ldr.FromReader(buf); err != nil {
@@ -188,8 +198,10 @@ func TestLoaderSeveral(t *testing.T) {
 	if err := ldr.FromReader(bytes.NewBufferString(`{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/tcp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "tcp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }`)); err != nil {
 		t.Fatal("load1 err=", err)
 	}
@@ -197,8 +209,10 @@ func TestLoaderSeveral(t *testing.T) {
 	if err := ldr.FromReader(bytes.NewBufferString(`{
     "name": "test2",
     "networks": ["foo"],
-    "listen": {"bar":["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/tcp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "tcp", "value": 1}}]}
     }`)); err != nil {
 		t.Fatal("load2 err=", err)
 	}
@@ -229,14 +243,18 @@ func TestLoaderEdgesProto(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
     "networks": ["foo"],
-    "listen": {"bar":["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }`)
 
 	if err := ldr.FromReader(buf); err != nil {
@@ -273,14 +291,18 @@ func TestLoaderEdgesFollowNone(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
     "networks": ["foo"],
-    "listen": {"bar":["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar":[
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }`)
 
 	if err := ldr.FromReader(buf); err != nil {
@@ -302,26 +324,33 @@ func TestLoaderEdgesFollowOne(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
     "connected": {
-        "test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}],
-        "test3":[{"src": "foo", "dst": "baz", "port": "3/udp"}]
+        "test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}],
+        "test3":[{"src": "foo", "dst": "baz", "port": {"kind": "udp", "value": 3}}]
       }
     }
     {
     "name": "test2",
     "networks": ["foo"],
-    "listen": {"bar":["2/tcp"]},
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
     "connected": {
-        "test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]
+        "test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]
       }
     }
     {
     "name": "test3",
     "networks": ["foo"],
-    "listen": {"bar":["3/tcp", "3/udp"]},
+    "listen": {"bar":[
+        {"kind": "tcp", "value": 3},
+        {"kind": "udp", "value": 3}
+    ]},
     "connected": {
-        "test1":[{"src": "baz", "dst": "foo", "port": "1/udp"}]
+        "test1":[{"src": "baz", "dst": "foo", "port": {"kind": "udp", "value": 1}}]
       }
     }`)
 
@@ -359,15 +388,19 @@ func TestLoaderLocal(t *testing.T) {
 	buf := bytes.NewBufferString(`{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
     "is_external": true,
     "networks": ["foo"],
-    "listen": {"bar": ["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }
     `)
 
@@ -403,15 +436,19 @@ func TestLoaderMeta(t *testing.T) {
     "name": "test1",
     "tags": ["test"],
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
     "is_external": true,
     "networks": ["foo"],
-    "listen": {"bar": ["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }`)
 
 	bldr := &testBuilder{}
@@ -447,15 +484,19 @@ func TestLoaderFull(t *testing.T) {
     "container": {"cmd": ["foo", "bar"], "env": ["A=B"], "labels": {}},
     "volumes": [{"type": "bind", "src": "", "dst": ""}],
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
-    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}]}
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
+    "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
     }
     {
     "name": "test2",
     "is_external": true,
     "networks": ["foo"],
-    "listen": {"bar": ["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }`)
 
 	bldr := &testBuilder{}
@@ -489,18 +530,22 @@ func TestLoaderLoops(t *testing.T) {
 	const rawJSON = `{
     "name": "test1",
     "networks": ["foo"],
-    "listen": {"foo": ["1/udp"]},
+    "listen": {"foo": [
+        {"kind": "udp", "value": 1}
+    ]},
     "connected": {
-        "test2":[{"src": "foo", "dst": "bar", "port": "2/tcp"}],
-        "test1":[{"src": "foo", "dst": "foo", "port": "1/udp"}]
+        "test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}],
+        "test1":[{"src": "foo", "dst": "foo", "port": {"kind": "udp", "value": 1}}]
       }
     }
     {
     "name": "test2",
     "is_external": true,
     "networks": ["foo"],
-    "listen": {"bar": ["2/tcp"]},
-    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": "1/udp"}]}
+    "listen": {"bar": [
+        {"kind": "tcp", "value": 2}
+    ]},
+    "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
     }`
 
 	bldr := &testBuilder{}

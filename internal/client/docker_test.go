@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"net"
 	"testing"
 
 	"github.com/docker/docker/api/types"
@@ -814,6 +815,81 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 	}
 }
 
+func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
+	t.Parallel()
+
+	cm := &clientMock{}
+
+	cm.OnList = func() (rv []types.Container) {
+		return []types.Container{
+			{
+				ID:    "1",
+				Names: []string{"test"},
+				Image: "test-image",
+				State: "running",
+				NetworkSettings: &types.SummaryNetworkSettings{
+					Networks: map[string]*network.EndpointSettings{
+						"test-net": {
+							EndpointID: "1",
+							IPAddress:  "1.1.1.1",
+						},
+						"empty-id": {
+							IPAddress: "1.1.1.2",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID"}
+		rv.Processes = [][]string{
+			{},
+			{"a"},
+			{"1"},
+		}
+
+		return rv
+	}
+
+	var count int
+
+	enter := func(_ int, _ graph.NetProto, _ func(
+		_ *graph.Connection,
+	)) error {
+		count++
+
+		return nil
+	}
+
+	cli, err := client.NewDocker(
+		client.WithClientCreator(func() (client.DockerClient, error) {
+			return cm, nil
+		}),
+		client.WithMode(client.LinuxNsenter),
+		client.WithNsEnter(enter),
+	)
+	if err != nil {
+		t.Fatal("client:", err)
+	}
+
+	if _, err = cli.Containers(
+		context.Background(),
+		graph.ALL,
+		false,
+		false,
+		nil,
+		voidProgress,
+	); err != nil {
+		t.Fatal()
+	}
+
+	if count != 1 {
+		t.Fail()
+	}
+}
+
 func TestDockerClientNsEnterOk(t *testing.T) {
 	t.Parallel()
 
@@ -879,5 +955,102 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 	)
 	if err != nil {
 		t.Fatal("containers:", err)
+	}
+}
+
+func TestDockerClientNsEnterLocal(t *testing.T) {
+	t.Parallel()
+
+	cm := &clientMock{}
+
+	cm.OnList = func() (rv []types.Container) {
+		return []types.Container{
+			{
+				ID:    "1",
+				Names: []string{"test"},
+				Image: "test-image",
+				State: "running",
+				NetworkSettings: &types.SummaryNetworkSettings{
+					Networks: map[string]*network.EndpointSettings{
+						"test-net": {
+							EndpointID: "1",
+							IPAddress:  "1.1.1.1",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID"}
+		rv.Processes = [][]string{
+			{"1"},
+		}
+
+		return rv
+	}
+
+	testEnter := func(_ int, _ graph.NetProto, fn func(*graph.Connection)) error {
+		loc := net.ParseIP("127.0.0.1")
+		nod := net.ParseIP("1.1.1.1")
+		rem := net.ParseIP("2.2.2.2")
+
+		fn(&graph.Connection{Process: "1", LocalPort: 1, RemotePort: 0, LocalIP: nod, Proto: graph.TCP})
+		fn(&graph.Connection{Process: "1", LocalPort: 10, RemotePort: 2, LocalIP: nod, RemoteIP: rem, Proto: graph.TCP})
+		fn(&graph.Connection{Process: "1", LocalPort: 5, LocalIP: loc, Proto: graph.TCP})
+
+		return nil
+	}
+
+	cli, err := client.NewDocker(
+		client.WithClientCreator(func() (client.DockerClient, error) {
+			return cm, nil
+		}),
+		client.WithMode(client.LinuxNsenter),
+		client.WithNsEnter(testEnter),
+	)
+	if err != nil {
+		t.Fatal("client:", err)
+	}
+
+	rv, err := cli.Containers(
+		context.Background(),
+		graph.ALL,
+		false,
+		false,
+		nil,
+		voidProgress,
+	)
+	if err != nil {
+		t.Fatal("containers:", err)
+	}
+
+	if len(rv) != 1 {
+		t.Fail()
+	}
+
+	if rv[0].ConnectionsCount() != 2 {
+		t.Fail()
+	}
+
+	rv, err = cli.Containers(
+		context.Background(),
+		graph.ALL,
+		false,
+		true,
+		nil,
+		voidProgress,
+	)
+	if err != nil {
+		t.Fatal("containers:", err)
+	}
+
+	if len(rv) != 1 {
+		t.Fail()
+	}
+
+	if rv[0].ConnectionsCount() != 3 {
+		t.Fail()
 	}
 }

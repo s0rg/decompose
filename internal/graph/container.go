@@ -108,6 +108,7 @@ func (c *Container) ToNode() (rv *node.Node) {
 
 	c.IterListeners(func(conn *Connection) {
 		rv.Ports.Add(conn.Process, &node.Port{
+			Local: conn.IsLocal(),
 			Kind:  conn.Proto.String(),
 			Value: int(conn.LocalPort),
 		})

@@ -129,27 +129,3 @@ func writeNode(w io.Writer, n *node.JSON, last bool) {
 		fmt.Fprintln(w, next)
 	}
 }
-
-func joinConnections(conns []*node.Connection, sep string) (rv string) {
-	raw := make([]string, 0, len(conns))
-
-	for _, c := range conns {
-		raw = append(raw, c.Port)
-	}
-
-	slices.Sort(raw)
-
-	return strings.Join(raw, sep)
-}
-
-func joinListeners(ports map[string][]string, sep string) (rv string) {
-	var tmp []string
-
-	for _, plist := range ports {
-		tmp = append(tmp, plist...)
-	}
-
-	slices.Sort(tmp)
-
-	return strings.Join(tmp, sep)
-}

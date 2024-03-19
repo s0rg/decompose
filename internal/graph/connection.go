@@ -24,6 +24,10 @@ func (c *Connection) IsInbound() bool {
 	return c.LocalPort < c.RemotePort
 }
 
+func (c *Connection) IsLocal() bool {
+	return c.LocalIP.IsLoopback()
+}
+
 func (c *Connection) UniqID() (id uint64, ok bool) {
 	var key string
 

@@ -20,6 +20,7 @@ Takes all network connections from your docker containers and exports them as:
 - [graphviz dot](https://www.graphviz.org/doc/info/lang.html)
 - [structurizr dsl](https://github.com/structurizr/dsl)
 - [compose yaml](https://github.com/compose-spec/compose-spec/blob/master/spec.md)
+- [plant uml](https://github.com/plantuml/plantuml)
 - pseudographical tree
 - json stream
 - statistics - nodes, connections and listen ports counts
@@ -53,6 +54,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - all output formats are sorted, thus can be placed to any `vcs` to observe changes
 - fast, scans ~470 containers with ~4000 connections in around 5 sec
 - auto-clusterization based on graph topology
+- deep inspection mode, in wich connections between procesess inside containers, also collected and shown
 - 100% test-coverage
 
 ## known limitations
@@ -74,12 +76,14 @@ decompose [flags]
 
 -cluster string
     json file with clusterization rules, or auto:<similarity> for auto-clustering, similarity is float in (0.0, 1.0] range
+-compress
+    compress graph
 -deep
     process-based introspection
 -follow string
     follow only this container by name(s), comma-separated or from @file
 -format string
-    output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl (default "json")
+    output format: csv, dot, json, puml, sdsl, stat, tree, yaml (default "json")
 -full
     extract full process info: (cmd, args, env) and volumes info
 -help
@@ -122,8 +126,12 @@ type Item struct {
         Cmd    []string          `json:"cmd"`
         Env    []string          `json:"env"`
         Labels map[string]string `json:"labels"`
-    } `json:"container"` // conatiner info
-    Listen     map[string][]string `json:"listen"` // ports with process names
+    } `json:"container"` // container info
+    Listen     map[string][]{
+        Kind   string            `json:"kind"`  // tcp / udp
+        Value  int               `json:"value"`
+        Local  bool              `json:"local"` // bound to loopback
+    } `json:"listen"` // ports with process names
     Networks   []string            `json:"networks"` // network names
     Tags       []string            `json:"tags"` // tags, if meta presents
     Volumes    []*struct{
@@ -152,7 +160,9 @@ Single node example with full info and metadata filled:
         ],
         "labels": {}
     },
-    "listen": {"foo": ["80/tcp"]},
+    "listen": {"foo": [
+        {"kind": "tcp", "value": 80}
+    ]},
     "networks": ["test-net"],
     "tags": ["some"],
     "volumes": [
@@ -168,7 +178,9 @@ Single node example with full info and metadata filled:
         }
     ],
     "connected": {
-        "bar-1": ["443/tcp"]
+        "bar-1": [
+            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": 443}}
+        ]
     }
 }
 ```

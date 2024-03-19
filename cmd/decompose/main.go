@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -44,14 +45,15 @@ var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
 	fFull, fNoLoops   bool
-	fDeep             bool
+	fDeep, fCompress  bool
 	fProto, fFormat   string
 	fOut, fFollow     string
 	fMeta, fCluster   string
 	fSkipEnv          string
 	fLoad             []string
 
-	ErrUnknown = errors.New("unknown")
+	knownBuilders string
+	ErrUnknown    = errors.New("unknown")
 )
 
 func version() string {
@@ -85,6 +87,8 @@ func setupFlags() {
 	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
 	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
+	flag.BoolVar(&fCompress, "compress", false, "compress graph")
+
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
 	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
@@ -97,12 +101,8 @@ func setupFlags() {
 			"similarity is float in (0.0, 1.0] range",
 	)
 
-	flag.StringVar(
-		&fFormat,
-		"format",
-		builder.KindJSON,
-		"output format: json, csv, dot, yaml, stat, tree or sdsl for structurizr dsl",
-	)
+	flag.StringVar(&fFormat, "format", builder.KindJSON, "output format: "+knownBuilders)
+
 	flag.StringVar(
 		&fSkipEnv,
 		"skip-env",
@@ -262,7 +262,7 @@ func prepareConfig() (
 			"%w format: %s known: %s",
 			ErrUnknown,
 			fFormat,
-			strings.Join(builder.Names(), ","),
+			knownBuilders,
 		)
 	}
 
@@ -288,6 +288,12 @@ func prepareConfig() (
 		}
 
 		bildr, nwr = cb, cb
+	}
+
+	if fCompress {
+		cmp := graph.NewCompressor(bildr)
+
+		bildr, nwr = cmp, cmp
 	}
 
 	skipKeys := []string{}
@@ -396,6 +402,9 @@ func doBuild(
 }
 
 func main() {
+	slices.Sort(builder.Names)
+	knownBuilders = strings.Join(builder.Names, ", ")
+
 	setupFlags()
 
 	flag.Parse()
