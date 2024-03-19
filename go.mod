@@ -9,7 +9,6 @@ require (
 	github.com/prometheus/procfs v0.13.0
 	github.com/s0rg/set v1.2.0
 	github.com/s0rg/trie v1.3.0
-	github.com/sergi/go-diff v1.3.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
