@@ -50,7 +50,6 @@ var (
 	fOut, fFollow     string
 	fMeta, fCluster   string
 	fSkipEnv          string
-	fSkipTag          string
 	fLoad             []string
 
 	knownBuilders string
@@ -109,13 +108,6 @@ func setupFlags() {
 		"skip-env",
 		"",
 		"environment variables name(s) to skip from output, case-independent, comma-separated",
-	)
-
-	flag.StringVar(
-		&fSkipTag,
-		"skip-tag",
-		"",
-		"tag(s) to skip from output, case-independent, comma-separated, mask allowed",
 	)
 
 	flag.Func("load", "load json stream, can be used multiple times", func(v string) error {
