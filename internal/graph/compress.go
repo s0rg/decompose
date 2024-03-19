@@ -8,9 +8,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/s0rg/decompose/internal/node"
 	"github.com/s0rg/set"
 	"github.com/s0rg/trie"
+
+	"github.com/s0rg/decompose/internal/node"
 )
 
 const (
@@ -83,8 +84,11 @@ func (c *Compressor) Write(w io.Writer) (err error) {
 }
 
 func (c *Compressor) buildGroups() (index map[string]string, err error) {
-	seen := make(set.Unordered[string])
+	index = make(map[string]string)
+	groups := make(map[string][]string)
+
 	t := trie.New[string]()
+	seen := make(set.Unordered[string])
 
 	for _, node := range c.nodes {
 		seen.Add(node.ID)
@@ -97,8 +101,6 @@ func (c *Compressor) buildGroups() (index map[string]string, err error) {
 	}
 
 	comm := t.Common("", defaultDiff)
-	groups := make(map[string][]string)
-	index = make(map[string]string)
 
 	for _, key := range comm {
 		nodes := []string{}
