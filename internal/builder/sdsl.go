@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/s0rg/decompose/internal/node"
@@ -109,8 +108,6 @@ func (s *Structurizr) AddEdge(e *node.Edge) {
 	}
 
 	if !ok {
-		log.Printf("not found: %+v", e)
-
 		return
 	}
 
