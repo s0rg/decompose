@@ -8,15 +8,16 @@ import (
 )
 
 func joinConnections(conns []*node.Connection, sep string) (rv string) {
-	raw := make([]string, 0, len(conns))
+	tmp := make([]string, 0, len(conns))
 
 	for _, c := range conns {
-		raw = append(raw, c.Port.Label())
+		tmp = append(tmp, c.Port.Label())
 	}
 
-	slices.Sort(raw)
+	slices.Sort(tmp)
+	tmp = slices.Compact(tmp)
 
-	return strings.Join(raw, sep)
+	return strings.Join(tmp, sep)
 }
 
 func joinListeners(ports map[string][]*node.Port, sep string) (rv string) {
@@ -29,6 +30,7 @@ func joinListeners(ports map[string][]*node.Port, sep string) (rv string) {
 	}
 
 	slices.Sort(tmp)
+	tmp = slices.Compact(tmp)
 
 	return strings.Join(tmp, sep)
 }

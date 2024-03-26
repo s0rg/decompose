@@ -1,38 +1,10 @@
 digraph  {
-	subgraph cluster_s1 {
-		label="c1";
-		n12[label="1/tcp"];
-		n2[label="out"];
-		n3[color="black",label="<out> 1&#92;nimage: node-image&#92;nnets: test-net&#92;nmeta: &#92;ninfo 1&#92;ndocs-url&#92;nrepo-url&#92;ntags: 1&#92;n|{<port_node-1_> }",shape="record"];
-		n4[color="black",label="<out> 2&#92;nimage: node-image&#92;nnets: test-net&#92;nmeta: &#92;ninfo 2&#92;ntags: 2&#92;n|{<port_node-2_> }",shape="record"];
-		
-	}
-	subgraph cluster_s8 {
-		label="c2";
-		n11[label="2/tcp"];
-		n10[color="gray",label="<out> external: 2&#92;n|{<port_2_> }",shape="record"];
-		n9[label="out"];
-		
-	}
-	subgraph cluster_s5 {
-		label="c3";
-		n6[label="out"];
-		n7[color="black",label="<out> 3&#92;nimage: node-image&#92;nnets: test-net&#92;nmeta: &#92;ninfo 3&#92;ntags: 3&#92;n|{<port_node-3_> }",shape="record"];
-		
-	}
-	concentrate=true;splines="spline";
-	n10:out->n3:node-1[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n10:out->n3:node-1[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n10:out->n3:node-1[color="#7570b3",fontcolor="#7570b3",label="3/tcp"];
-	n2->n11[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n2->n11[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n9->n12[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n9->n12[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n3:out->n10:2[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n3:out->n10:2[color="#7570b3",fontcolor="#7570b3",label="3/tcp"];
-	n3:out->n4:node-2[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n3:out->n4:node-2[color="#66a61e",fontcolor="#66a61e",label="1/tcp"];
-	n4:out->n3:node-1[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
-	n4:out->n3:node-1[color="#e7298a",fontcolor="#e7298a",label="2/tcp"];
+	
+	n4[color="gray",label="external: 2"];
+	n1[color="black",label="1"];
+	n2[color="black",label="2"];
+	n3[color="black",label="3"];
+	n4->n1[label="1/tcp,2/tcp,3/tcp,2/tcp,3/tcp"];
+	n1->n2[label="1/tcp,1/tcp,2/tcp,2/tcp"];
 	
 }
