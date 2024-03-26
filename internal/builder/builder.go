@@ -51,7 +51,7 @@ func Create(kind string) (b graph.NamedBuilderWriter, ok bool) {
 
 func SupportCluster(n string) (yes bool) {
 	switch n {
-	case KindDOT, KindStructurizr, KindSTAT, KindPlantUML:
+	case KindStructurizr, KindSTAT, KindPlantUML:
 		return true
 	}
 

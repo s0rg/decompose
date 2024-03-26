@@ -32,6 +32,7 @@ const (
 	autoPrefix    = "auto:"
 	defaultProto  = "all"
 	defaultOutput = "-"
+	defaultDiff   = 3
 )
 
 // build-time values.
@@ -291,7 +292,7 @@ func prepareConfig() (
 	}
 
 	if fCompress {
-		cmp := graph.NewCompressor(bildr)
+		cmp := graph.NewCompressor(bildr, defaultDiff, true)
 
 		bildr, nwr = cmp, cmp
 	}

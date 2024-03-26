@@ -3,12 +3,12 @@ module github.com/s0rg/decompose
 go 1.22
 
 require (
-	github.com/docker/docker v25.0.5+incompatible
+	github.com/docker/docker v26.0.0+incompatible
 	github.com/emicklei/dot v1.6.1
-	github.com/expr-lang/expr v1.16.1
+	github.com/expr-lang/expr v1.16.2
 	github.com/prometheus/procfs v0.13.0
 	github.com/s0rg/set v1.2.0
-	github.com/s0rg/trie v1.3.1
+	github.com/s0rg/trie v1.3.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -23,6 +23,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
