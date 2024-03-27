@@ -234,6 +234,11 @@ func (c *Compressor) forceCompress(
 ) {
 	dsts := make(map[string][]string)
 	drop := func(k, v string) {
+		sn := c.groups[k]
+		if dn, ok := c.groups[v]; ok {
+			sn.Meta.Tags = append(sn.Meta.Tags, dn.Name)
+		}
+
 		delete(c.groups, v)
 		delete(edges[k], v)
 		delete(edges, v)
