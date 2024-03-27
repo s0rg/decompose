@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/docker/docker v26.0.0+incompatible
 	github.com/emicklei/dot v1.6.1
-	github.com/expr-lang/expr v1.16.2
+	github.com/expr-lang/expr v1.16.3
 	github.com/prometheus/procfs v0.13.0
 	github.com/s0rg/set v1.2.0
 	github.com/s0rg/trie v1.3.3
@@ -15,7 +15,7 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/distribution/reference v0.5.0 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
