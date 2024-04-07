@@ -49,8 +49,8 @@ nfpms:
   - id: packages
     file_name_template: >-
       {{ .ProjectName }}_
-      {{ .Tag }}_
-      {{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+      {{- .Tag }}_
+      {{- .Arch }}{{- if .Arm }}v{{ .Arm }}{{ end }}
     homepage: https://github.com/s0rg/decompose
     description: Reverse-engineering tool for docker environments.
     maintainer: s0rg
