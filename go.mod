@@ -3,7 +3,7 @@ module github.com/s0rg/decompose
 go 1.22
 
 require (
-	github.com/docker/docker v26.0.0+incompatible
+	github.com/docker/docker v26.0.2+incompatible
 	github.com/emicklei/dot v1.6.1
 	github.com/expr-lang/expr v1.16.3
 	github.com/prometheus/procfs v0.13.0
