@@ -503,10 +503,9 @@ func TestLoaderFull(t *testing.T) {
 	ext := &testEnricher{}
 
 	cfg := &graph.Config{
-		Builder:  bldr,
-		Meta:     ext,
-		FullInfo: true,
-		Proto:    graph.ALL,
+		Builder: bldr,
+		Meta:    ext,
+		Proto:   graph.ALL,
 	}
 
 	ldr := graph.NewLoader(cfg)

@@ -49,7 +49,7 @@ func TestNodeMatchPorts(t *testing.T) {
 		Ports:     &node.Ports{},
 	}
 
-	a.Ports.Add("", &node.Port{Kind: "tcp", Value: 1})
+	a.Ports.Add("", &node.Port{Kind: "tcp", Value: "1"})
 
 	b := &cluster.Node{
 		Inbounds:  make(set.Unordered[string]),
@@ -57,8 +57,8 @@ func TestNodeMatchPorts(t *testing.T) {
 		Ports:     &node.Ports{},
 	}
 
-	b.Ports.Add("", &node.Port{Kind: "tcp", Value: 1})
-	b.Ports.Add("", &node.Port{Kind: "tcp", Value: 5})
+	b.Ports.Add("", &node.Port{Kind: "tcp", Value: "1"})
+	b.Ports.Add("", &node.Port{Kind: "tcp", Value: "5"})
 
 	a.Inbounds.Add("1")
 	a.Outbounds.Add("2")

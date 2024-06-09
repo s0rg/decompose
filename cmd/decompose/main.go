@@ -45,7 +45,7 @@ var (
 var (
 	fSilent, fVersion bool
 	fHelp, fLocal     bool
-	fFull, fNoLoops   bool
+	fUnix, fNoLoops   bool
 	fDeep, fCompress  bool
 	fProto, fFormat   string
 	fOut, fFollow     string
@@ -85,14 +85,14 @@ func setupFlags() {
 	flag.BoolVar(&fVersion, "version", false, "show version")
 	flag.BoolVar(&fHelp, "help", false, "show this help")
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
-	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
+	flag.BoolVar(&fUnix, "unix", false, "extract unix-sockets connection (requires linux/root mode)")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
 	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
 	flag.BoolVar(&fCompress, "compress", false, "compress graph")
 
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
-	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
+	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp, unix or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name(s), comma-separated or from @file")
 	flag.StringVar(
 		&fCluster,
@@ -191,7 +191,7 @@ func makeClusterizer(
 			high = 1.0
 		)
 
-		rv = cluster.NewLayers(b, min(high, max(low, simf)))
+		rv = cluster.NewLayers(b, min(high, max(low, simf)), "")
 	} else {
 		cr := cluster.NewRules(b, nil)
 
@@ -282,6 +282,12 @@ func prepareConfig() (
 		}
 	}
 
+	if fCompress {
+		cmp := graph.NewCompressor(bildr, "", defaultDiff, true)
+
+		bildr, nwr = cmp, cmp
+	}
+
 	if fCluster != "" {
 		cb, err := makeClusterizer(bildr, fFormat, fCluster)
 		if err != nil {
@@ -291,20 +297,10 @@ func prepareConfig() (
 		bildr, nwr = cb, cb
 	}
 
-	if fCompress {
-		cmp := graph.NewCompressor(bildr, defaultDiff, true)
-
-		bildr, nwr = cmp, cmp
-	}
-
 	skipKeys := []string{}
 
 	if fSkipEnv != "" {
-		if fFull {
-			skipKeys = strings.Split(fSkipEnv, ",")
-		} else {
-			log.Println("skip-env makes no sense without full info - ignoring")
-		}
+		skipKeys = strings.Split(fSkipEnv, ",")
 	}
 
 	cfg = &graph.Config{
@@ -313,9 +309,9 @@ func prepareConfig() (
 		Proto:     proto,
 		Follow:    loadSet(fFollow),
 		OnlyLocal: fLocal,
-		FullInfo:  fFull,
 		Deep:      fDeep,
 		NoLoops:   fNoLoops,
+		Unix:      fUnix,
 		SkipEnv:   skipKeys,
 	}
 
@@ -384,6 +380,10 @@ func doBuild(
 	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
 		opts = append(opts, client.WithNsEnter(client.Nsenter))
 		mode = client.LinuxNsenter
+	} else if cfg.Unix {
+		log.Println("unix-connections requested in non-root mode, ignoring")
+
+		cfg.Unix = false
 	}
 
 	cli, err := client.NewDocker(append(opts, client.WithMode(mode))...)

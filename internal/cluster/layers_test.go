@@ -17,7 +17,7 @@ func TestLayers(t *testing.T) {
 
 	const similarity = 0.6
 
-	ca := cluster.NewLayers(tb, similarity)
+	ca := cluster.NewLayers(tb, similarity, "foo")
 
 	if !strings.Contains(ca.Name(), strconv.FormatFloat(similarity, 'f', 1, 64)) {
 		t.Fail()
@@ -27,9 +27,9 @@ func TestLayers(t *testing.T) {
 		ID:   "6",
 		Name: "node-6",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 6},
-			{Kind: "tcp", Value: 1234},
-			{Kind: "tcp", Value: 8080},
+			{Kind: "tcp", Value: "6"},
+			{Kind: "tcp", Value: "1234"},
+			{Kind: "tcp", Value: "8080"},
 		}),
 	})
 
@@ -37,8 +37,8 @@ func TestLayers(t *testing.T) {
 		ID:   "1",
 		Name: "node-1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 80},
-			{Kind: "tcp", Value: 443},
+			{Kind: "tcp", Value: "80"},
+			{Kind: "tcp", Value: "443"},
 		}),
 	})
 
@@ -46,9 +46,9 @@ func TestLayers(t *testing.T) {
 		ID:   "2",
 		Name: "node-2",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 2},
-			{Kind: "tcp", Value: 1234},
-			{Kind: "tcp", Value: 8080},
+			{Kind: "tcp", Value: "2"},
+			{Kind: "tcp", Value: "1234"},
+			{Kind: "tcp", Value: "8080"},
 		}),
 	})
 
@@ -56,8 +56,8 @@ func TestLayers(t *testing.T) {
 		ID:   "3",
 		Name: "node-3",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "udp", Value: 53},
-			{Kind: "tcp", Value: 8080},
+			{Kind: "udp", Value: "53"},
+			{Kind: "tcp", Value: "8080"},
 		}),
 	})
 
@@ -65,7 +65,7 @@ func TestLayers(t *testing.T) {
 		ID:   "4",
 		Name: "node-4",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 9090},
+			{Kind: "tcp", Value: "9090"},
 		}),
 	})
 
@@ -73,8 +73,8 @@ func TestLayers(t *testing.T) {
 		ID:   "5",
 		Name: "node-5",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 1234},
-			{Kind: "tcp", Value: 8081},
+			{Kind: "tcp", Value: "1234"},
+			{Kind: "tcp", Value: "8081"},
 		}),
 	})
 
@@ -82,7 +82,7 @@ func TestLayers(t *testing.T) {
 		ID:   "R",
 		Name: "R",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 22},
+			{Kind: "tcp", Value: "22"},
 		}),
 	})
 
@@ -90,8 +90,8 @@ func TestLayers(t *testing.T) {
 		ID:   "5",
 		Name: "node-5",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 1234},
-			{Kind: "tcp", Value: 8081},
+			{Kind: "tcp", Value: "1234"},
+			{Kind: "tcp", Value: "8081"},
 		}),
 	})
 
@@ -104,55 +104,55 @@ func TestLayers(t *testing.T) {
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "2",
-		Port:  &node.Port{Kind: "tcp", Value: 1234},
+		Port:  &node.Port{Kind: "tcp", Value: "1234"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "3",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "6",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "2",
 		DstID: "4",
-		Port:  &node.Port{Kind: "tcp", Value: 9090},
+		Port:  &node.Port{Kind: "tcp", Value: "9090"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "2",
-		Port:  &node.Port{Kind: "tcp", Value: 9090},
+		Port:  &node.Port{Kind: "tcp", Value: "9090"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "4",
 		DstID: "3",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "5",
-		Port:  &node.Port{Kind: "tcp", Value: 8081},
+		Port:  &node.Port{Kind: "tcp", Value: "8081"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "5",
 		DstID: "4",
-		Port:  &node.Port{Kind: "tcp", Value: 9090},
+		Port:  &node.Port{Kind: "tcp", Value: "9090"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "5",
 		DstID: "R",
-		Port:  &node.Port{Kind: "tcp", Value: 22},
+		Port:  &node.Port{Kind: "tcp", Value: "22"},
 	})
 
 	if err := ca.Write(nil); err != nil {
@@ -188,7 +188,7 @@ func TestLayersWriteError(t *testing.T) {
 
 	const similarity = 0.5
 
-	ca := cluster.NewLayers(tb, similarity)
+	ca := cluster.NewLayers(tb, similarity, "")
 
 	if err := ca.Write(nil); !errors.Is(err, tb.Err) {
 		t.Fail()

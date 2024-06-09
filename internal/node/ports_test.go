@@ -15,7 +15,7 @@ func TestPortsGet(t *testing.T) {
 		t.Fail()
 	}
 
-	port := &node.Port{Kind: "tcp", Value: 1}
+	port := &node.Port{Kind: "tcp", Value: "1"}
 
 	ps.Add("foo", port)
 

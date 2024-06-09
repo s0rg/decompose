@@ -44,7 +44,7 @@ func TestNodeToJSON(t *testing.T) {
 	t.Parallel()
 
 	nodeMeta := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
-		{Kind: "udp", Value: 53},
+		{Kind: "udp", Value: "53"},
 	})
 
 	nodeMeta.Meta = &node.Meta{
@@ -53,7 +53,7 @@ func TestNodeToJSON(t *testing.T) {
 	}
 
 	nodeContainer := makeTestNode("test-id2", "test-name", "test-image", []*node.Port{
-		{Kind: "udp", Value: 53},
+		{Kind: "udp", Value: "53"},
 	})
 
 	nodeContainer.Container.Cmd = []string{"foo"}
@@ -70,21 +70,21 @@ func TestNodeToJSON(t *testing.T) {
 	}{
 		{
 			Node: makeTestNode("test-id", "test-name1", "", []*node.Port{
-				{Kind: "tcp", Value: 80},
-				{Kind: "udp", Value: 53},
+				{Kind: "tcp", Value: "80"},
+				{Kind: "udp", Value: "53"},
 			}),
 			Name: "test-name1",
 		},
 		{
 			Node: makeTestNode("test-id", "test-id", "", []*node.Port{
-				{Kind: "tcp", Value: 80},
+				{Kind: "tcp", Value: "80"},
 			}),
 			Name:     "test-id",
 			External: true,
 		},
 		{
 			Node: makeTestNode("test-id3", "test-name", "test-image", []*node.Port{
-				{Kind: "udp", Value: 53},
+				{Kind: "udp", Value: "53"},
 			}),
 			Name:  "test-name",
 			Image: "test-image",
@@ -159,7 +159,7 @@ func TestNodeToView(t *testing.T) {
 	t.Parallel()
 
 	nodeContainer := makeTestNode("test-id", "test-name", "test-image", []*node.Port{
-		{Kind: "udp", Value: 53},
+		{Kind: "udp", Value: "53"},
 	})
 
 	nodeContainer.Container.Cmd = []string{"foo", "-arg"}

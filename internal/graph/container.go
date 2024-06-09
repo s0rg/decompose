@@ -2,6 +2,7 @@ package graph
 
 import (
 	"slices"
+	"strconv"
 
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -98,7 +99,7 @@ func (c *Container) ToNode() (rv *node.Node) {
 		Name:     c.Name,
 		Image:    c.Image,
 		Ports:    &node.Ports{},
-		Volumes:  []*node.Volume{},
+		Volumes:  make([]*node.Volume, len(c.Volumes)),
 		Networks: make([]string, 0, len(c.Endpoints)),
 	}
 
@@ -107,22 +108,24 @@ func (c *Container) ToNode() (rv *node.Node) {
 	}
 
 	c.IterListeners(func(conn *Connection) {
+		value := conn.Path
+
+		if conn.Proto != UNIX {
+			value = strconv.Itoa(conn.SrcPort)
+		}
+
 		rv.Ports.Add(conn.Process, &node.Port{
 			Local: conn.IsLocal(),
 			Kind:  conn.Proto.String(),
-			Value: int(conn.LocalPort),
+			Value: value,
 		})
 	})
 
-	if len(c.Volumes) > 0 {
-		rv.Volumes = make([]*node.Volume, len(c.Volumes))
-
-		for idx, v := range c.Volumes {
-			rv.Volumes[idx] = &node.Volume{
-				Type: v.Type,
-				Src:  v.Src,
-				Dst:  v.Dst,
-			}
+	for idx, v := range c.Volumes {
+		rv.Volumes[idx] = &node.Volume{
+			Type: v.Type,
+			Src:  v.Src,
+			Dst:  v.Dst,
 		}
 	}
 

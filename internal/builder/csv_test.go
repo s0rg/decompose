@@ -20,8 +20,8 @@ func TestCSVGolden(t *testing.T) {
 		Image: "node-image",
 		Ports: makeTestPorts(
 			[]*node.Port{
-				{Kind: "tcp", Value: 1},
-				{Kind: "tcp", Value: 2},
+				{Kind: "tcp", Value: "1"},
+				{Kind: "tcp", Value: "2"},
 			}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -37,7 +37,7 @@ func TestCSVGolden(t *testing.T) {
 		ID:   "node-2",
 		Name: "2",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: "2"},
 		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -53,7 +53,7 @@ func TestCSVGolden(t *testing.T) {
 		ID:   "node-3",
 		Name: "3",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 3},
+			{Kind: "tcp", Value: "3"},
 		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -69,49 +69,49 @@ func TestCSVGolden(t *testing.T) {
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 1},
+		Port:  &node.Port{Kind: "tcp", Value: "1"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-3",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "node-3",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "node-2",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "3",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	var buf bytes.Buffer

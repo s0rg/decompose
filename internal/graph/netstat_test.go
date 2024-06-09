@@ -38,6 +38,13 @@ tcp        0      0 invalid                 172.20.4.198:3306       ESTABLISHED 
 tcp        0      0 172.20.4.198:3306       invalid                 ESTABLISHED -
 tcp        0      0 172.20.4.198:bad        172.20.4.198:3306       ESTABLISHED -
 tcp        0      0 invalid-ip:123          172.20.4.198:3306       ESTABLISHED -
+Active UNIX domain sockets (servers and established)
+Proto RefCnt Flags       Type       State         I-Node   PID/Program name     Path
+unix  3      [ ]         STREAM     CONNECTED     38047    1/init               /run/systemd/journal/stdout
+unix  3      [ ]         STREAM     CONNECTED     27351    4452/wireplumber
+unix  2      [ ACC ]     STREAM     LISTENING     23216    2645/Xorg            @/tmp/.X11-unix/X0
+unix  2      [ ]         DGRAM                    39148    4797/xdg-desktop-po
+
 some       garbage
 `)
 

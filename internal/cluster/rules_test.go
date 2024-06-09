@@ -78,41 +78,41 @@ func TestRulesMatch(t *testing.T) {
 	}{
 		{
 			Node: &node.Node{
-				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: 80}}),
+				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: "80"}}),
 			},
 			Want: "foo",
 		},
 		{
 			Node: &node.Node{
-				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: 22}}),
+				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: "22"}}),
 			},
 			Want: "bar",
 		},
 		{
 			Node: &node.Node{
-				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: 443}}),
+				Ports: makeTestPorts([]*node.Port{{Kind: "tcp", Value: "443"}}),
 			},
 			Want: "bar",
 		},
 		{
 			Node: &node.Node{Ports: makeTestPorts([]*node.Port{
-				{Kind: "tcp", Value: 22},
-				{Kind: "tcp", Value: 80},
-				{Kind: "tcp", Value: 443},
+				{Kind: "tcp", Value: "22"},
+				{Kind: "tcp", Value: "80"},
+				{Kind: "tcp", Value: "443"},
 			})},
 			Want: "foo",
 		},
 		{
 			Node: &node.Node{Ports: makeTestPorts([]*node.Port{
-				{Kind: "tcp", Value: 22},
-				{Kind: "tcp", Value: 80},
-				{Kind: "tcp", Value: 8080},
+				{Kind: "tcp", Value: "22"},
+				{Kind: "tcp", Value: "80"},
+				{Kind: "tcp", Value: "8080"},
 			})},
 			Want: "foo",
 		},
 		{
 			Node: &node.Node{Ports: makeTestPorts([]*node.Port{
-				{Kind: "sstp", Value: 5000},
+				{Kind: "sstp", Value: "5000"},
 			})},
 			Want: "",
 		},
@@ -157,9 +157,9 @@ func TestRulesMatchWeight(t *testing.T) {
 {"name": "bar", "if": "node.Listen.HasAny('22/tcp', '443/tcp')"}]`
 
 	testNode := &node.Node{Ports: makeTestPorts([]*node.Port{
-		{Kind: "tcp", Value: 22},
-		{Kind: "tcp", Value: 80},
-		{Kind: "tcp", Value: 8080},
+		{Kind: "tcp", Value: "22"},
+		{Kind: "tcp", Value: "80"},
+		{Kind: "tcp", Value: "8080"},
 	})}
 
 	ca := cluster.NewRules(nil, nil)
@@ -191,62 +191,62 @@ func TestRules(t *testing.T) {
 	ca.AddNode(&node.Node{
 		ID: "1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 80},
+			{Kind: "tcp", Value: "80"},
 		})})
 
 	ca.AddNode(&node.Node{
 		ID: "2",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 22},
+			{Kind: "tcp", Value: "22"},
 		})})
 
 	ca.AddNode(&node.Node{
 		ID: "3",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 443},
-			{Kind: "tcp", Value: 8080},
+			{Kind: "tcp", Value: "443"},
+			{Kind: "tcp", Value: "8080"},
 		})})
 
 	ca.AddNode(&node.Node{
 		ID: "4",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 8080},
+			{Kind: "tcp", Value: "8080"},
 		})})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "3",
-		Port:  &node.Port{Kind: "tcp", Value: 443},
+		Port:  &node.Port{Kind: "tcp", Value: "443"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "1",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "1",
-		Port:  &node.Port{Kind: "tcp", Value: 80},
+		Port:  &node.Port{Kind: "tcp", Value: "80"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "4",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "5",
 		DstID: "1",
-		Port:  &node.Port{Kind: "tcp", Value: 80},
+		Port:  &node.Port{Kind: "tcp", Value: "80"},
 	})
 
 	ca.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "5",
-		Port:  &node.Port{Kind: "tcp", Value: 80},
+		Port:  &node.Port{Kind: "tcp", Value: "80"},
 	})
 
 	if tb.Edges != 4 || tb.Nodes != 4 {
@@ -295,7 +295,7 @@ func TestRulesBuilderAddError(t *testing.T) {
 	err := ca.AddNode(&node.Node{
 		ID: "1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 80},
+			{Kind: "tcp", Value: "80"},
 		})})
 	if !errors.Is(err, myError) {
 		t.Fail()
@@ -328,7 +328,7 @@ func TestRulesBuilderWriteError(t *testing.T) {
 	ca.AddNode(&node.Node{
 		ID: "1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 80},
+			{Kind: "tcp", Value: "80"},
 		})})
 
 	tb.Err = errors.New("test-error")

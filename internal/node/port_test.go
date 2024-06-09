@@ -22,7 +22,7 @@ func TestPortLabel(t *testing.T) {
 
 	const want = "100"
 
-	p := node.Port{Value: 100, Kind: "tcp"}
+	p := node.Port{Value: "100", Kind: "tcp"}
 	l := p.Label()
 
 	if !strings.HasPrefix(l, want) {
@@ -55,7 +55,7 @@ func TestPortsHas(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 80,
+				Value: "80",
 			}),
 			Labels: []string{"80/tcp"},
 			Want:   true,
@@ -63,7 +63,7 @@ func TestPortsHas(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 81,
+				Value: "81",
 			}),
 			Labels: []string{"80/tcp"},
 			Want:   false,
@@ -71,7 +71,7 @@ func TestPortsHas(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 80,
+				Value: "80",
 			}),
 			Labels: []string{"80/tcp", "443/tcp"},
 			Want:   false,
@@ -106,7 +106,7 @@ func TestPortsHasAny(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 80,
+				Value: "80",
 			}),
 			Labels: []string{"80/tcp"},
 			Want:   true,
@@ -114,7 +114,7 @@ func TestPortsHasAny(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 81,
+				Value: "81",
 			}),
 			Labels: []string{"80/tcp"},
 			Want:   false,
@@ -122,7 +122,7 @@ func TestPortsHasAny(t *testing.T) {
 		{
 			Ports: makeTestPorts(&node.Port{
 				Kind:  "tcp",
-				Value: 80,
+				Value: "80",
 			}),
 			Labels: []string{"80/tcp", "443/tcp"},
 			Want:   true,

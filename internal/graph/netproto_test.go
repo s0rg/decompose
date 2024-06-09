@@ -17,6 +17,7 @@ func TestParseNetproto(t *testing.T) {
 		{Val: "tcp", Valid: true, Want: graph.TCP},
 		{Val: "udp", Valid: true, Want: graph.UDP},
 		{Val: "all", Valid: true, Want: graph.ALL},
+		{Val: "unix", Valid: true, Want: graph.UNIX},
 		{Val: "bad", Valid: false},
 	}
 
@@ -46,7 +47,8 @@ func TestNetprotoString(t *testing.T) {
 	}{
 		{Val: "tcp", Want: "t"},
 		{Val: "udp", Want: "u"},
-		{Val: "all", Want: "tu"},
+		{Val: "unix", Want: "x"},
+		{Val: "all", Want: "tux"},
 	}
 
 	for i, tc := range testCases {

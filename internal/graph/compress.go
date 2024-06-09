@@ -16,7 +16,6 @@ import (
 
 const (
 	externalGroup = "external"
-	defaultGroup  = "core"
 )
 
 type Compressor struct {
@@ -25,6 +24,7 @@ type Compressor struct {
 	groups map[string]*node.Node              // "compressed" nodes groupID -> node
 	index  map[string]string                  // index holds nodeID -> groupID mapping
 	conns  map[string]map[string][]*node.Port // "raw" connections nodeID -> nodeID -> []port
+	group  string
 	edges  int
 	diff   int
 	force  bool
@@ -32,6 +32,7 @@ type Compressor struct {
 
 func NewCompressor(
 	bldr NamedBuilderWriter,
+	group string,
 	diff int,
 	force bool,
 ) *Compressor {
@@ -39,6 +40,7 @@ func NewCompressor(
 		b:      bldr,
 		diff:   diff,
 		force:  force,
+		group:  group,
 		index:  make(map[string]string),
 		nodes:  make(map[string]*node.Node),
 		groups: make(map[string]*node.Node),
@@ -143,7 +145,7 @@ func (c *Compressor) buildGroups() {
 			nodes = append(nodes, nodeID)
 		})
 
-		grp := defaultGroup
+		grp := c.group
 		if len(nodes) > 1 {
 			grp = cleanName(key)
 		}
@@ -158,7 +160,7 @@ func (c *Compressor) buildGroups() {
 	}
 
 	seen.Iter(func(id string) (next bool) {
-		grp := defaultGroup
+		grp := c.group
 
 		if c.nodes[id].IsExternal() {
 			grp = externalGroup

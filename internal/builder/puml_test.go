@@ -19,9 +19,9 @@ func TestPumlGolden(t *testing.T) {
 		Image:   "node-image",
 		Cluster: "c1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 1},
-			{Kind: "tcp", Value: 2},
-			{Kind: "tcp", Value: 5, Local: true},
+			{Kind: "tcp", Value: "1"},
+			{Kind: "tcp", Value: "2"},
+			{Kind: "tcp", Value: "5", Local: true},
 		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -37,8 +37,8 @@ func TestPumlGolden(t *testing.T) {
 		Image:   "node-image",
 		Cluster: "c1",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 1},
-			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: "1"},
+			{Kind: "tcp", Value: "2"},
 		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -51,8 +51,8 @@ func TestPumlGolden(t *testing.T) {
 		Name:  "3",
 		Image: "node-image",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 1},
-			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: "1"},
+			{Kind: "tcp", Value: "2"},
 		}...),
 		Networks: []string{"test-net"},
 		Meta: &node.Meta{
@@ -66,7 +66,7 @@ func TestPumlGolden(t *testing.T) {
 		Name:    "ext2",
 		Cluster: "c2",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 2},
+			{Kind: "tcp", Value: "2"},
 		}...),
 	})
 
@@ -75,44 +75,44 @@ func TestPumlGolden(t *testing.T) {
 		Name:    "ext2",
 		Cluster: "c2",
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: 443},
+			{Kind: "tcp", Value: "443"},
 		}...),
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "ext2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 1},
+		Port:  &node.Port{Kind: "tcp", Value: "1"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 5, Local: true},
+		Port:  &node.Port{Kind: "tcp", Value: "5", Local: true},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "ext2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "ext2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "ext2",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "ext2",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
@@ -130,61 +130,61 @@ func TestPumlGolden(t *testing.T) {
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 1},
+		Port:  &node.Port{Kind: "tcp", Value: "1"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-2",
 		DstID: "node-3",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "node-3",
-		Port:  &node.Port{Kind: "tcp", Value: 3},
+		Port:  &node.Port{Kind: "tcp", Value: "3"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "node-2",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-1",
 		DstID: "c2",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-3",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 1},
+		Port:  &node.Port{Kind: "tcp", Value: "1"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "node-3",
 		DstID: "node-1",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{
 		SrcID: "c1",
 		DstID: "2",
-		Port:  &node.Port{Kind: "tcp", Value: 2},
+		Port:  &node.Port{Kind: "tcp", Value: "2"},
 	})
 
 	bld.AddEdge(&node.Edge{

@@ -30,8 +30,8 @@ func TestJSON(t *testing.T) {
 		Networks: []string{"test"},
 		Listen: map[string][]*node.Port{
 			"foo": {
-				&node.Port{Kind: "tcp", Value: 2},
-				&node.Port{Kind: "udp", Value: 1},
+				&node.Port{Kind: "tcp", Value: "2"},
+				&node.Port{Kind: "udp", Value: "1"},
 			},
 		},
 		Tags:      []string{},

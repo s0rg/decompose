@@ -85,10 +85,6 @@ func (l *Loader) createNode(id string, n *node.JSON) (rv *node.Node) {
 		rv.Networks = n.Networks
 	}
 
-	if !l.cfg.FullInfo {
-		return rv
-	}
-
 	if len(n.Volumes) > 0 {
 		rv.Volumes = n.Volumes
 	}

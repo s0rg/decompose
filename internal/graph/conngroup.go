@@ -71,7 +71,7 @@ func (cg *ConnGroup) Sort() {
 
 func compare(a, b *Connection) int {
 	if a.Proto == b.Proto {
-		return cmp.Compare(a.LocalPort, b.LocalPort)
+		return cmp.Compare(a.SrcPort, b.SrcPort)
 	}
 
 	return cmp.Compare(a.Proto, b.Proto)

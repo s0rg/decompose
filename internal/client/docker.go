@@ -21,15 +21,13 @@ import (
 
 const (
 	stateRunning = "running"
-	netstatCmd   = "netstat"
-	netstatArg   = "-apn"
 )
 
 var ErrModeNone = errors.New("mode not set")
 
 type (
 	createClient func() (DockerClient, error)
-	nsEnter      func(int, graph.NetProto, func(*graph.Connection)) error
+	nsEnter      func(int, graph.NetProto, func(int, *graph.Connection)) error
 )
 
 type DockerClient interface {
@@ -73,7 +71,7 @@ func (d *Docker) Mode() string {
 func (d *Docker) Containers(
 	ctx context.Context,
 	proto graph.NetProto,
-	detailed, deep bool,
+	unix, deep bool,
 	skipkeys []string,
 	progress func(int, int),
 ) (rv []*graph.Container, err error) {
@@ -90,51 +88,140 @@ func (d *Docker) Containers(
 
 	rv = make([]*graph.Container, 0, len(containers))
 
-	for i := 0; i < len(containers); i++ {
-		doc := &containers[i]
+	var inodes *InodesMap
 
-		if doc.State != stateRunning {
+	if unix {
+		if inodes, err = d.collectInodes(ctx, containers); err != nil {
+			return nil, fmt.Errorf("inodes: %w", err)
+		}
+	}
+
+	cmap := make(map[string]*graph.Container)
+
+	for i := 0; i < len(containers); i++ {
+		c := &containers[i]
+
+		if c.State != stateRunning {
 			continue
 		}
 
-		con := &graph.Container{
-			ID:        doc.ID,
-			Image:     doc.Image,
-			Name:      strings.TrimLeft(doc.Names[0], "/"),
-			Labels:    maps.Clone(doc.Labels),
-			Endpoints: extractEndpoints(doc.NetworkSettings.Networks),
+		con, cerr := d.extractInfo(ctx, c, proto, unix, deep, skeys, inodes)
+		if cerr != nil {
+			return nil, fmt.Errorf("container %s: %w", c.ID, cerr)
 		}
 
-		if detailed {
-			info, err := d.cli.ContainerInspect(ctx, doc.ID)
-			if err != nil {
-				return nil, fmt.Errorf("inspect: %w", err)
-			}
-
-			con.Volumes = extractVolumesInfo(info.Mounts)
-			con.Info = extractContainerInfo(&info, skeys)
-		}
-
-		if err := d.connections(ctx, doc.ID, proto, func(conn *graph.Connection) {
-			if !deep && conn.IsLocal() {
-				return
-			}
-
-			con.AddConnection(conn)
-		}); err != nil {
-			return nil, fmt.Errorf("container: %s connections: %w", doc.ID, err)
-		}
-
-		con.SortConnections()
+		cmap[c.ID] = con
 
 		rv = append(rv, con)
 
 		progress(i, len(containers))
 	}
 
+	if unix {
+		inodes.ResolveUnknown(func(srcCID, dstCID, srcName, _, path string) {
+			dst, ok := cmap[dstCID]
+			if !ok {
+				return
+			}
+
+			dst.AddConnection(&graph.Connection{
+				Proto:   graph.UNIX,
+				Process: srcName,
+				Path:    path,
+				DstID:   srcCID,
+			})
+		})
+	}
+
 	progress(len(containers), len(containers))
 
 	return slices.Clip(rv), nil
+}
+
+func (d *Docker) collectInodes(
+	ctx context.Context,
+	containers []types.Container,
+) (
+	inodes *InodesMap,
+	err error,
+) {
+	inodes = &InodesMap{}
+
+	for i := 0; i < len(containers); i++ {
+		c := &containers[i]
+
+		if c.State != stateRunning {
+			continue
+		}
+
+		err = d.processesContainer(ctx, c.ID, func(pid int, name string) (err error) {
+			inodes.AddProcess(c.ID, pid, name)
+
+			return Inodes(pid, func(inode uint64) {
+				inodes.AddInode(c.ID, pid, inode)
+			})
+		})
+		if err != nil {
+			return nil, fmt.Errorf("inodes %s: %w", c.ID, err)
+		}
+	}
+
+	return inodes, nil
+}
+
+func (d *Docker) extractInfo(
+	ctx context.Context,
+	c *types.Container,
+	proto graph.NetProto,
+	unix, deep bool,
+	skeys set.Unordered[string],
+	inodes *InodesMap,
+) (rv *graph.Container, err error) {
+	rv = &graph.Container{
+		ID:        c.ID,
+		Image:     c.Image,
+		Name:      strings.TrimLeft(c.Names[0], "/"),
+		Labels:    maps.Clone(c.Labels),
+		Endpoints: extractEndpoints(c.NetworkSettings.Networks),
+	}
+
+	info, err := d.cli.ContainerInspect(ctx, c.ID)
+	if err != nil {
+		return nil, fmt.Errorf("inspect: %w", err)
+	}
+
+	rv.Volumes = extractVolumesInfo(info.Mounts)
+	rv.Info = extractContainerInfo(&info, skeys)
+
+	if err := d.connections(ctx, c.ID, proto, func(pid int, conn *graph.Connection) {
+		if !deep && conn.IsLocal() {
+			return
+		}
+
+		if !unix && conn.Proto == graph.UNIX {
+			return
+		}
+
+		if conn.Proto == graph.UNIX {
+			if !inodes.Has(c.ID, pid, conn.Inode) {
+				inodes.MarkUnknown(c.ID, pid, conn.Inode)
+
+				return
+			}
+
+			if conn.Listen {
+				inodes.MarkListener(c.ID, pid, conn.Path)
+			}
+		}
+
+		rv.AddConnection(conn)
+	}); err != nil {
+		return nil, fmt.Errorf("connections: %w", err)
+	}
+
+	rv.SortConnections()
+
+	return rv, nil
 }
 
 func (d *Docker) Close() (err error) {
@@ -149,19 +236,21 @@ func (d *Docker) connections(
 	ctx context.Context,
 	cid string,
 	proto graph.NetProto,
-	cb func(*graph.Connection),
+	cb func(int, *graph.Connection),
 ) (err error) {
 	switch d.opt.Mode {
 	case InContainer:
 		err = d.connectionsContainer(ctx, cid, proto, func(r io.Reader) (err error) {
-			if err = graph.ParseNetstat(r, cb); err != nil {
+			if err = graph.ParseNetstat(r, func(c *graph.Connection) {
+				cb(1, c)
+			}); err != nil {
 				return fmt.Errorf("parse: %w", err)
 			}
 
 			return nil
 		})
 	case LinuxNsenter:
-		err = d.processesContainer(ctx, cid, func(pid int) (err error) {
+		err = d.processesContainer(ctx, cid, func(pid int, _ string) (err error) {
 			if err = d.opt.Nsenter(pid, proto, cb); err != nil {
 				return fmt.Errorf("nsenter: %w", err)
 			}
@@ -189,7 +278,7 @@ func (d *Docker) connectionsContainer(
 		Tty:          true,
 		AttachStdout: true,
 		Privileged:   true,
-		Cmd:          netstat(proto),
+		Cmd:          graph.NetstatCMD(proto),
 	})
 	if err != nil {
 		return fmt.Errorf("exec-create: %w", err)
@@ -214,9 +303,9 @@ func (d *Docker) connectionsContainer(
 func (d *Docker) processesContainer(
 	ctx context.Context,
 	cid string,
-	fun func(int) error,
+	fun func(int, string) error,
 ) (err error) {
-	ps, err := d.cli.ContainerTop(ctx, cid, []string{"-o pid"})
+	ps, err := d.cli.ContainerTop(ctx, cid, []string{"-o pid,cmd"})
 	if err != nil {
 		return fmt.Errorf("top: %w", err)
 	}
@@ -232,19 +321,14 @@ func (d *Docker) processesContainer(
 			continue
 		}
 
-		if err = fun(pid); err != nil {
+		cmd := strings.Fields(p[1])
+
+		if err = fun(pid, cmd[0]); err != nil {
 			return fmt.Errorf("[pid: %d] %w", pid, err)
 		}
 	}
 
 	return nil
-}
-
-func netstat(p graph.NetProto) []string {
-	return []string{
-		netstatCmd,
-		netstatArg + p.Flag(),
-	}
 }
 
 func extractContainerInfo(

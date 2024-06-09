@@ -11,26 +11,16 @@ linters:
   enable-all: true
   disable:
     - gochecknoglobals
-    - exhaustivestruct
     - nonamedreturns
-    - structcheck
     - tagliatelle
-    - nosnakecase
     - exhaustruct
     - inamedparam
     - exhaustive
-    - interfacer
     - varnamelen
-    - scopelint
-    - deadcode
     - depguard
-    - maligned
-    - varcheck
     - intrange
-    - ifshort
     - ireturn
     - gofumpt
-    - golint
     - gci
 
 linters-settings:
@@ -69,9 +59,9 @@ issues:
         - govet # fieldalignment issue, ignored for yaml readability
     - path: ._test\.go
       linters:
-        - goerr113
         - gocritic
         - errcheck
         - maintidx
+        - err113
         - funlen
         - dupl

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 
 	"github.com/s0rg/decompose/internal/node"
 )
@@ -52,7 +53,7 @@ func Build(
 	containers, err := cli.Containers(
 		context.Background(),
 		cfg.Proto,
-		cfg.FullInfo,
+		cfg.Unix,
 		cfg.Deep,
 		cfg.SkipEnv,
 		func(cur, total int) {
@@ -136,11 +137,11 @@ func createNodes(
 		skip = !cfg.MatchName(con.Name)
 
 		con.IterOutbounds(func(c *Connection) {
-			if c.RemoteIP.IsLoopback() {
+			if c.Proto == UNIX || c.DstIP.IsLoopback() {
 				return
 			}
 
-			rip := c.RemoteIP.String()
+			rip := c.DstIP.String()
 
 			if lc, ok := local[rip]; ok { // destination known
 				if skip && cfg.MatchName(lc.Name) {
@@ -163,7 +164,7 @@ func createNodes(
 
 			rem.Ports.Add(ProcessRemote, &node.Port{
 				Kind:  c.Proto.String(),
-				Value: int(c.RemotePort),
+				Value: strconv.Itoa(c.DstPort),
 			})
 		})
 
@@ -188,29 +189,41 @@ func buildEdges(
 		}
 
 		con.IterOutbounds(func(c *Connection) {
-			key := c.RemoteIP.String()
-			port := &node.Port{
-				Kind:  c.Proto.String(),
-				Value: int(c.RemotePort),
-			}
-
 			var (
-				ldst *Container
-				ok   bool
+				port = &node.Port{
+					Kind: c.Proto.String(),
+				}
+				dstID string
+				key   string
+				ok    bool
 			)
 
-			if c.RemoteIP.IsLoopback() {
-				ldst, ok = con, true
+			if c.Proto == UNIX {
+				port.Value = c.Path
+				dstID, ok = c.DstID, true
 			} else {
-				ldst, ok = local[key]
+				key = c.DstIP.String()
+				port.Value = strconv.Itoa(c.DstPort)
+
+				var ldst *Container
+
+				if c.DstIP.IsLoopback() {
+					ldst, ok = con, true
+				} else {
+					ldst, ok = local[key]
+				}
+
+				if ok {
+					dstID = ldst.ID
+				}
 			}
 
 			if ok {
-				if cfg.NoLoops && con.ID == ldst.ID {
+				if cfg.NoLoops && con.ID == dstID {
 					return
 				}
 
-				dst, found := nodes[ldst.ID]
+				dst, found := nodes[dstID]
 				if !found {
 					return
 				}
@@ -223,7 +236,7 @@ func buildEdges(
 				cfg.Builder.AddEdge(&node.Edge{
 					SrcID:   src.ID,
 					SrcName: c.Process,
-					DstID:   ldst.ID,
+					DstID:   dstID,
 					DstName: dname,
 					Port:    port,
 				})

@@ -14,25 +14,28 @@ import (
 )
 
 type Layers struct {
-	edges      map[string]map[string]*node.Ports
-	nodes      map[string]*node.Node
-	remotes    set.Unordered[string]
-	b          graph.NamedBuilderWriter
-	g          connGraph
-	similarity float64
+	b           graph.NamedBuilderWriter
+	edges       map[string]map[string]*node.Ports
+	nodes       map[string]*node.Node
+	remotes     set.Unordered[string]
+	g           connGraph
+	defaultName string
+	similarity  float64
 }
 
 func NewLayers(
 	b graph.NamedBuilderWriter,
 	s float64,
+	d string,
 ) *Layers {
 	return &Layers{
-		b:          NewRules(b, nil),
-		g:          make(connGraph),
-		edges:      make(map[string]map[string]*node.Ports),
-		nodes:      make(map[string]*node.Node),
-		remotes:    make(set.Unordered[string]),
-		similarity: s,
+		b:           NewRules(b, nil),
+		g:           make(connGraph),
+		edges:       make(map[string]map[string]*node.Ports),
+		nodes:       make(map[string]*node.Node),
+		remotes:     make(set.Unordered[string]),
+		similarity:  s,
+		defaultName: d,
 	}
 }
 
@@ -131,6 +134,7 @@ func (l *Layers) Write(w io.Writer) error {
 
 	// store remains
 	for _, n := range l.nodes {
+		n.Cluster = l.defaultName
 		_ = l.b.AddNode(n)
 	}
 

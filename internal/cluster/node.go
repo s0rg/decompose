@@ -79,7 +79,8 @@ func portsToProtos(ports *node.Ports) (rv map[string][]int) {
 
 	ports.Iter(func(_ string, pl []*node.Port) {
 		for _, p := range pl {
-			rv[p.Kind] = append(rv[p.Kind], p.Value)
+			_ = p
+			// rv[p.Kind] = append(rv[p.Kind], p.Value)
 		}
 	})
 

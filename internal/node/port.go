@@ -1,17 +1,13 @@
 package node
 
-import (
-	"strconv"
-)
-
 type Port struct {
 	Kind  string `json:"kind"`
-	Value int    `json:"value"`
+	Value string `json:"value"`
 	Local bool   `json:"local"`
 }
 
 func (p *Port) Label() string {
-	return strconv.Itoa(p.Value) + "/" + p.Kind
+	return p.Kind + ":" + p.Value
 }
 
 func (p *Port) Equal(v *Port) (yes bool) {

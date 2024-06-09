@@ -55,14 +55,18 @@ Closest analogs, i can find, that not suit my needs very well:
 - fast, scans ~470 containers with ~4000 connections in around 5 sec
 - auto-clusterization based on graph topology
 - deep inspection mode, in wich connections between procesess inside containers, also collected and shown
+- unix-sockets connections
 - 100% test-coverage
+
 
 ## known limitations
 
 - only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
 - `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
   or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
-- [gephi](https://github.com/gephi/gephi) fails to load edges from resulting graphviz, this can be fixed by any auto-replacement tool: `sed -i 's/->/ -> /g' myfile.dot`
+- [gephi](https://github.com/gephi/gephi) fails to load edges from resulting graphviz, this can be fixed by any auto-replacement
+  tool: `sed -i 's/->/ -> /g' myfile.dot`
+- unix-sockets works only in root mode on linux, this process involves inode matching to find correct connections
 
 ## installation
 
