@@ -263,19 +263,19 @@ func Nsenter(
 		return fmt.Errorf("procfs/net: %w", err)
 	}
 
-	if proto == graph.ALL || proto == graph.TCP {
+	if proto.Has(graph.TCP) {
 		if err = scanTCP(fs, name, connWithPid); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}
 
-	if proto == graph.ALL || proto == graph.UDP {
+	if proto.Has(graph.UDP) {
 		if err = scanUDP(fs, name, connWithPid); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}
 
-	if proto == graph.ALL || proto == graph.UNIX {
+	if proto.Has(graph.UNIX) {
 		if err = scanUNIX(fs, name, connWithPid); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}

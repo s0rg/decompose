@@ -61,7 +61,7 @@ func TestDockerClientContainersError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -92,7 +92,7 @@ func TestDockerClientContainersEmpty(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -131,7 +131,7 @@ func TestDockerClientContainersSingleExited(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -188,7 +188,7 @@ func TestDockerClientContainersExecCreateError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -241,7 +241,7 @@ func TestDockerClientContainersInspectError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -298,7 +298,7 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -360,7 +360,7 @@ func TestDockerClientContainersParseError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -440,7 +440,7 @@ func TestDockerClientContainersSingle(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -539,7 +539,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -620,7 +620,7 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		[]string{"BAZ"},
 		voidProgress,
 	)
@@ -728,7 +728,7 @@ func TestDockerClientNsEnterInspectError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -787,7 +787,7 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(failEnter),
+		client.WithNsenterFn(failEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -796,7 +796,7 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -859,7 +859,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(enter),
+		client.WithNsenterFn(enter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -868,7 +868,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 	if _, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	); err != nil {
@@ -929,7 +929,7 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(testEnter),
+		client.WithNsenterFn(testEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -938,7 +938,7 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 	_, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -997,7 +997,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(testEnter),
+		client.WithNsenterFn(testEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -1006,7 +1006,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 	rv, err := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, false,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -1025,7 +1025,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 	rv, err = cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false, true,
+		true,
 		nil,
 		voidProgress,
 	)

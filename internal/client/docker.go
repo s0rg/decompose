@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"maps"
 	"slices"
 	"strconv"
@@ -21,13 +22,15 @@ import (
 
 const (
 	stateRunning = "running"
+	runcLstatErr = "no such file or directory"
 )
 
 var ErrModeNone = errors.New("mode not set")
 
 type (
 	createClient func() (DockerClient, error)
-	nsEnter      func(int, graph.NetProto, func(int, *graph.Connection)) error
+	nsenter      func(int, graph.NetProto, func(int, *graph.Connection)) error
+	inodes       func(int, func(uint64)) error
 )
 
 type DockerClient interface {
@@ -71,7 +74,7 @@ func (d *Docker) Mode() string {
 func (d *Docker) Containers(
 	ctx context.Context,
 	proto graph.NetProto,
-	unix, deep bool,
+	deep bool,
 	skipkeys []string,
 	progress func(int, int),
 ) (rv []*graph.Container, err error) {
@@ -90,8 +93,19 @@ func (d *Docker) Containers(
 
 	var inodes *InodesMap
 
-	if unix {
-		if inodes, err = d.collectInodes(ctx, containers); err != nil {
+	if proto.Has(graph.UNIX) {
+		if inodes, err = d.collectInodes(ctx, containers, func(idx int, err error) (stop bool) {
+			if strings.Contains(err.Error(), runcLstatErr) {
+				c := &containers[idx]
+				c.State = ""
+
+				log.Printf("container: %s/%s in fault state", c.Names[0], c.ID)
+
+				return false
+			}
+
+			return true
+		}); err != nil {
 			return nil, fmt.Errorf("inodes: %w", err)
 		}
 	}
@@ -105,7 +119,7 @@ func (d *Docker) Containers(
 			continue
 		}
 
-		con, cerr := d.extractInfo(ctx, c, proto, unix, deep, skeys, inodes)
+		con, cerr := d.extractInfo(ctx, c, proto, deep, skeys, inodes)
 		if cerr != nil {
 			return nil, fmt.Errorf("container %s: %w", c.ID, cerr)
 		}
@@ -117,7 +131,7 @@ func (d *Docker) Containers(
 		progress(i, len(containers))
 	}
 
-	if unix {
+	if proto.Has(graph.UNIX) {
 		inodes.ResolveUnknown(func(srcCID, dstCID, srcName, _, path string) {
 			dst, ok := cmap[dstCID]
 			if !ok {
@@ -141,6 +155,7 @@ func (d *Docker) Containers(
 func (d *Docker) collectInodes(
 	ctx context.Context,
 	containers []types.Container,
+	errcb func(int, error) bool,
 ) (
 	inodes *InodesMap,
 	err error,
@@ -157,12 +172,17 @@ func (d *Docker) collectInodes(
 		err = d.processesContainer(ctx, c.ID, func(pid int, name string) (err error) {
 			inodes.AddProcess(c.ID, pid, name)
 
-			return Inodes(pid, func(inode uint64) {
+			ierr := d.opt.Inodes(pid, func(inode uint64) {
 				inodes.AddInode(c.ID, pid, inode)
 			})
+			if ierr != nil {
+				log.Printf("inodes fail for: %s error: %v", c.Names[0], ierr)
+			}
+
+			return nil
 		})
-		if err != nil {
-			return nil, fmt.Errorf("inodes %s: %w", c.ID, err)
+		if err != nil && errcb(i, err) {
+			return nil, fmt.Errorf("inodes %s: %w", c.Names[0], err)
 		}
 	}
 
@@ -173,7 +193,7 @@ func (d *Docker) extractInfo(
 	ctx context.Context,
 	c *types.Container,
 	proto graph.NetProto,
-	unix, deep bool,
+	deep bool,
 	skeys set.Unordered[string],
 	inodes *InodesMap,
 ) (rv *graph.Container, err error) {
@@ -195,10 +215,6 @@ func (d *Docker) extractInfo(
 
 	if err := d.connections(ctx, c.ID, proto, func(pid int, conn *graph.Connection) {
 		if !deep && conn.IsLocal() {
-			return
-		}
-
-		if !unix && conn.Proto == graph.UNIX {
 			return
 		}
 
@@ -324,7 +340,7 @@ func (d *Docker) processesContainer(
 		cmd := strings.Fields(p[1])
 
 		if err = fun(pid, cmd[0]); err != nil {
-			return fmt.Errorf("[pid: %d] %w", pid, err)
+			return fmt.Errorf("pid: %d: %w", pid, err)
 		}
 	}
 

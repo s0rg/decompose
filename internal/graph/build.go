@@ -22,7 +22,7 @@ const (
 var ErrNotEnough = errors.New("not enough items")
 
 type ContainerClient interface {
-	Containers(context.Context, NetProto, bool, bool, []string, func(int, int)) ([]*Container, error)
+	Containers(context.Context, NetProto, bool, []string, func(int, int)) ([]*Container, error)
 }
 
 type Builder interface {
@@ -53,7 +53,6 @@ func Build(
 	containers, err := cli.Containers(
 		context.Background(),
 		cfg.Proto,
-		cfg.Unix,
 		cfg.Deep,
 		cfg.SkipEnv,
 		func(cur, total int) {

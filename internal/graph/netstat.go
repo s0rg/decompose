@@ -16,10 +16,30 @@ const (
 	netstatArg       = "-apn"
 )
 
+func netstatArgFor(p NetProto) (rv string) {
+	if p.Has(TCP) {
+		rv += "t"
+	}
+
+	if p.Has(UDP) {
+		rv += "u"
+	}
+
+	/*
+		no unix sockets from netstat - it gives only internal pids
+
+		if p.Has(UNIX) {
+			rv += "x"
+		}
+	*/
+
+	return rv
+}
+
 func NetstatCMD(p NetProto) []string {
 	return []string{
 		netstatCmd,
-		netstatArg + p.Flag(),
+		netstatArg + netstatArgFor(p),
 	}
 }
 

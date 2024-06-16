@@ -37,25 +37,3 @@ func TestParseNetproto(t *testing.T) {
 		}
 	}
 }
-
-func TestNetprotoString(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Val  string
-		Want string
-	}{
-		{Val: "tcp", Want: "t"},
-		{Val: "udp", Want: "u"},
-		{Val: "unix", Want: "x"},
-		{Val: "all", Want: "tux"},
-	}
-
-	for i, tc := range testCases {
-		p, _ := graph.ParseNetProto(tc.Val)
-
-		if p.Flag() != tc.Want {
-			t.Fatalf("case[%d] failed for '%s' want: %s got: %s", i, tc.Val, tc.Want, p.Flag())
-		}
-	}
-}

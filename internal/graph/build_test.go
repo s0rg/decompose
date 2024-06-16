@@ -20,7 +20,7 @@ type testClient struct {
 func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
-	_, _ bool,
+	_ bool,
 	_ []string,
 	fn func(int, int),
 ) ([]*graph.Container, error) {

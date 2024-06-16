@@ -104,7 +104,7 @@ decompose [flags]
 -out string
     output: filename or "-" for stdout (default "-")
 -proto string
-    protocol to scan: tcp, udp or all (default "all")
+    protocol to scan: tcp,udp,unix or all (default "all")
 -silent
     suppress progress messages in stderr
 -skip-env string
@@ -274,10 +274,10 @@ Get `dot` file:
 decompose -format dot > connections.dot
 ```
 
-Get only tcp connections as `dot`:
+Get tcp and udp connections as `dot`:
 
 ```shell
-decompose -proto tcp -format dot > tcp.dot
+decompose -proto tcp,udp -format dot > tcp.dot
 ```
 
 Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:

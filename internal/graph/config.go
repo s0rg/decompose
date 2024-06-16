@@ -10,7 +10,6 @@ type Config struct {
 	Proto     NetProto
 	OnlyLocal bool
 	NoLoops   bool
-	Unix      bool
 	Deep      bool
 }
 
