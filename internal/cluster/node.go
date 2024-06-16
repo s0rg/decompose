@@ -79,8 +79,11 @@ func portsToProtos(ports *node.Ports) (rv map[string][]int) {
 
 	ports.Iter(func(_ string, pl []*node.Port) {
 		for _, p := range pl {
-			_ = p
-			// rv[p.Kind] = append(rv[p.Kind], p.Value)
+			if p.Kind == "unix" {
+				continue
+			}
+
+			rv[p.Kind] = append(rv[p.Kind], p.Number)
 		}
 	})
 

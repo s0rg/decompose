@@ -320,6 +320,8 @@ func (d *Docker) processesContainer(
 	cid string,
 	fun func(int, string) error,
 ) (err error) {
+	const minPsFields = 2
+
 	ps, err := d.cli.ContainerTop(ctx, cid, []string{"-o pid,cmd"})
 	if err != nil {
 		return fmt.Errorf("top: %w", err)
@@ -328,7 +330,7 @@ func (d *Docker) processesContainer(
 	var pid int
 
 	for _, p := range ps.Processes {
-		if len(p) < len(ps.Titles) {
+		if len(p) < minPsFields {
 			continue
 		}
 

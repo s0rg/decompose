@@ -279,6 +279,34 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{
+			{
+				Type:        "bind",
+				Source:      "src",
+				Destination: "dst",
+			},
+			{
+				Type:        "bind",
+				Source:      "src1",
+				Destination: "dst1",
+			},
+			{
+				Type:        "mount",
+				Source:      "src2",
+				Destination: "dst2",
+			},
+		}
+
+		return rv
+	}
+
 	cm.OnExecCreate = func() (rv types.IDResponse) {
 		cm.Err = testErr
 
@@ -443,6 +471,33 @@ func TestDockerClientContainersSingle(t *testing.T) {
 					},
 				},
 			}
+		},
+		OnInspect: func() (rv types.ContainerJSON) {
+			rv.ContainerJSONBase = &types.ContainerJSONBase{}
+			rv.State = &types.ContainerState{Pid: 1}
+			rv.Config = &container.Config{
+				Cmd: []string{"foo"},
+				Env: []string{"BAR=1"},
+			}
+			rv.Mounts = []types.MountPoint{
+				{
+					Type:        "bind",
+					Source:      "src",
+					Destination: "dst",
+				},
+				{
+					Type:        "bind",
+					Source:      "src1",
+					Destination: "dst1",
+				},
+				{
+					Type:        "mount",
+					Source:      "src2",
+					Destination: "dst2",
+				},
+			}
+
+			return rv
 		},
 		OnExecCreate: func() (rv types.IDResponse) {
 			return
@@ -795,10 +850,22 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
-			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
@@ -861,12 +928,25 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{},
 			{"a"},
 			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
@@ -904,6 +984,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 	}
 
 	if count != 1 {
+		t.Log("here")
 		t.Fail()
 	}
 }
@@ -933,6 +1014,18 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 				},
 			},
 		}
+	}
+
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
 	}
 
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {

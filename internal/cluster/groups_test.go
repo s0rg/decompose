@@ -27,9 +27,9 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
-			{Kind: "tcp", Value: "2"},
-			{Kind: "tcp", Value: "3"},
+			{Kind: "tcp", Value: "1", Number: 1},
+			{Kind: "tcp", Value: "2", Number: 2},
+			{Kind: "tcp", Value: "3", Number: 3},
 		}),
 	})
 
@@ -37,9 +37,9 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
-			{Kind: "tcp", Value: "2"},
-			{Kind: "tcp", Value: "3"},
+			{Kind: "tcp", Value: "1", Number: 1},
+			{Kind: "tcp", Value: "2", Number: 2},
+			{Kind: "tcp", Value: "3", Number: 3},
 		}),
 	})
 
@@ -47,8 +47,8 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "3"},
-			{Kind: "tcp", Value: "2"},
+			{Kind: "tcp", Value: "3", Number: 3},
+			{Kind: "tcp", Value: "2", Number: 2},
 		}),
 	})
 
@@ -56,8 +56,8 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
-			{Kind: "tcp", Value: "3"},
+			{Kind: "tcp", Value: "1", Number: 1},
+			{Kind: "tcp", Value: "3", Number: 3},
 		}),
 	})
 
@@ -65,8 +65,8 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
-			{Kind: "tcp", Value: "2"},
+			{Kind: "tcp", Value: "1", Number: 1},
+			{Kind: "tcp", Value: "2", Number: 2},
 		}),
 	})
 
@@ -74,9 +74,9 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
-			{Kind: "tcp", Value: "2"},
-			{Kind: "tcp", Value: "4"},
+			{Kind: "tcp", Value: "1", Number: 1},
+			{Kind: "tcp", Value: "2", Number: 2},
+			{Kind: "tcp", Value: "4", Number: 4},
 		}),
 	})
 
@@ -84,7 +84,7 @@ func TestAdd(t *testing.T) {
 		Inbounds:  make(set.Unordered[string]),
 		Outbounds: make(set.Unordered[string]),
 		Ports: makeTestPorts([]*node.Port{
-			{Kind: "tcp", Value: "1"},
+			{Kind: "tcp", Value: "1", Number: 1},
 		}),
 	})
 
