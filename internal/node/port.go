@@ -1,9 +1,10 @@
 package node
 
 type Port struct {
-	Kind  string `json:"kind"`
-	Value string `json:"value"`
-	Local bool   `json:"local"`
+	Kind   string `json:"kind"`
+	Value  string `json:"value"`
+	Number int    `json:"-"`
+	Local  bool   `json:"local"`
 }
 
 func (p *Port) Label() string {

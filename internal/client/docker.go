@@ -36,8 +36,8 @@ type (
 type DockerClient interface {
 	ContainerList(context.Context, container.ListOptions) ([]types.Container, error)
 	ContainerInspect(context.Context, string) (types.ContainerJSON, error)
-	ContainerExecCreate(context.Context, string, types.ExecConfig) (types.IDResponse, error)
-	ContainerExecAttach(context.Context, string, types.ExecStartCheck) (types.HijackedResponse, error)
+	ContainerExecCreate(context.Context, string, container.ExecOptions) (types.IDResponse, error)
+	ContainerExecAttach(context.Context, string, container.ExecStartOptions) (types.HijackedResponse, error)
 	ContainerTop(ctx context.Context, containerID string, arguments []string) (container.ContainerTopOKBody, error)
 	Close() error
 }
@@ -172,11 +172,10 @@ func (d *Docker) collectInodes(
 		err = d.processesContainer(ctx, c.ID, func(pid int, name string) (err error) {
 			inodes.AddProcess(c.ID, pid, name)
 
-			ierr := d.opt.Inodes(pid, func(inode uint64) {
+			if err = d.opt.Inodes(pid, func(inode uint64) {
 				inodes.AddInode(c.ID, pid, inode)
-			})
-			if ierr != nil {
-				log.Printf("inodes fail for: %s error: %v", c.Names[0], ierr)
+			}); err != nil {
+				return fmt.Errorf("%s/%d: %w", name, pid, err)
 			}
 
 			return nil
@@ -268,7 +267,7 @@ func (d *Docker) connections(
 	case LinuxNsenter:
 		err = d.processesContainer(ctx, cid, func(pid int, _ string) (err error) {
 			if err = d.opt.Nsenter(pid, proto, cb); err != nil {
-				return fmt.Errorf("nsenter: %w", err)
+				return fmt.Errorf("pid: %d: %w", pid, err)
 			}
 
 			return nil
@@ -290,7 +289,7 @@ func (d *Docker) connectionsContainer(
 ) (
 	err error,
 ) {
-	exe, err := d.cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
+	exe, err := d.cli.ContainerExecCreate(ctx, containerID, container.ExecOptions{
 		Tty:          true,
 		AttachStdout: true,
 		Privileged:   true,
@@ -300,7 +299,7 @@ func (d *Docker) connectionsContainer(
 		return fmt.Errorf("exec-create: %w", err)
 	}
 
-	resp, err := d.cli.ContainerExecAttach(ctx, exe.ID, types.ExecStartCheck{
+	resp, err := d.cli.ContainerExecAttach(ctx, exe.ID, container.ExecStartOptions{
 		Tty: true,
 	})
 	if err != nil {

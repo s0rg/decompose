@@ -162,8 +162,9 @@ func createNodes(
 			}
 
 			rem.Ports.Add(ProcessRemote, &node.Port{
-				Kind:  c.Proto.String(),
-				Value: strconv.Itoa(c.DstPort),
+				Kind:   c.Proto.String(),
+				Value:  strconv.Itoa(c.DstPort),
+				Number: c.DstPort,
 			})
 		})
 
@@ -203,6 +204,7 @@ func buildEdges(
 			} else {
 				key = c.DstIP.String()
 				port.Value = strconv.Itoa(c.DstPort)
+				port.Number = c.DstPort
 
 				var ldst *Container
 
