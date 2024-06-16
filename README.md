@@ -58,7 +58,6 @@ Closest analogs, i can find, that not suit my needs very well:
 - unix-sockets connections
 - 100% test-coverage
 
-
 ## known limitations
 
 - only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
@@ -89,8 +88,6 @@ decompose [flags]
     follow only this container by name(s), comma-separated or from @file
 -format string
     output format: csv, dot, json, puml, sdsl, stat, tree, yaml (default "json")
--full
-    extract full process info: (cmd, args, env) and volumes info
 -help
     show this help
 -load value
@@ -265,7 +262,7 @@ a float in `(0.0, 1.0]` range, representing how much similar ports nodes must ha
 Save full json stream:
 
 ```shell
-decompose -full > nodes-1.json
+sudo decompose > nodes-1.json
 ```
 
 Get `dot` file:
