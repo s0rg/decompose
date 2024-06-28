@@ -99,7 +99,7 @@ func (d *Docker) Containers(
 				c := &containers[idx]
 				c.State = ""
 
-				log.Printf("container: %s/%s in fault state", c.Names[0], c.ID)
+				log.Printf("container: %s %s has invalid state", c.Names[0], c.ID)
 
 				return false
 			}
@@ -121,7 +121,9 @@ func (d *Docker) Containers(
 
 		con, cerr := d.extractInfo(ctx, c, proto, deep, skeys, inodes)
 		if cerr != nil {
-			return nil, fmt.Errorf("container %s: %w", c.ID, cerr)
+			log.Printf("container: %s %s error: %v", c.Names[0], c.ID, cerr)
+
+			continue
 		}
 
 		cmap[c.ID] = con

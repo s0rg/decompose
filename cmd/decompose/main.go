@@ -43,15 +43,15 @@ var (
 )
 
 var (
-	fSilent, fVersion bool
-	fHelp, fLocal     bool
-	fNoLoops          bool
-	fDeep, fCompress  bool
-	fProto, fFormat   string
-	fOut, fFollow     string
-	fMeta, fCluster   string
-	fSkipEnv          string
-	fLoad             []string
+	fSilent, fVersion    bool
+	fHelp, fLocal        bool
+	fNoLoops, fNoOrphans bool
+	fDeep, fCompress     bool
+	fProto, fFormat      string
+	fOut, fFollow        string
+	fMeta, fCluster      string
+	fSkipEnv             string
+	fLoad                []string
 
 	knownBuilders string
 	ErrUnknown    = errors.New("unknown")
@@ -86,6 +86,7 @@ func setupFlags() {
 	flag.BoolVar(&fHelp, "help", false, "show this help")
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
+	flag.BoolVar(&fNoOrphans, "no-orphans", false, "remove orphaned (not connected) nodes from output")
 	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
 	flag.BoolVar(&fCompress, "compress", false, "compress graph")
 
@@ -292,6 +293,12 @@ func prepareConfig() (
 		if err != nil {
 			return nil, nil, fmt.Errorf("cluster: %w", err)
 		}
+
+		bildr, nwr = cb, cb
+	}
+
+	if fNoOrphans {
+		cb := graph.NewOrphansInspector(bildr)
 
 		bildr, nwr = cb, cb
 	}

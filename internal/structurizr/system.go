@@ -76,7 +76,7 @@ func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relatio
 		return rv, true
 	}
 
-	srcID, dstID = SafeID(src.Name), SafeID(dst.Name)
+	srcID, dstID = SafeID(src.ID), SafeID(dst.ID)
 
 	dest, ok := s.relationships[srcID]
 	if !ok {

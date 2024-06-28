@@ -97,7 +97,7 @@ func Build(
 
 	log.Println("Building edges")
 
-	buildEdges(cfg, containers, neighbours, nodes)
+	log.Printf("Found %d edges", buildEdges(cfg, containers, neighbours, nodes))
 
 	return nil
 }
@@ -181,7 +181,7 @@ func buildEdges(
 	cntrs []*Container,
 	local map[string]*Container,
 	nodes map[string]*node.Node,
-) {
+) (total int) {
 	for _, con := range cntrs {
 		src, ok := nodes[con.ID]
 		if !ok {
@@ -241,6 +241,7 @@ func buildEdges(
 					DstName: dname,
 					Port:    port,
 				})
+				total++
 
 				return
 			}
@@ -257,11 +258,14 @@ func buildEdges(
 					DstName: ProcessRemote,
 					Port:    port,
 				})
+				total++
 
 				return
 			}
 		})
 	}
+
+	return total
 }
 
 func percentOf(a, b int) float64 {
