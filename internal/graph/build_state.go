@@ -6,12 +6,14 @@ import (
 	"strconv"
 
 	"github.com/s0rg/decompose/internal/node"
+	"github.com/s0rg/set"
 )
 
 type builderState struct {
 	Config     *Config
 	KnownIP    map[string]*Container
 	Nodes      map[string]*node.Node
+	Remotes    set.Unordered[string]
 	Containers []*Container
 }
 
@@ -24,6 +26,7 @@ func newBuilderState(
 		Containers: cntrs,
 		KnownIP:    make(map[string]*Container, len(cntrs)),
 		Nodes:      make(map[string]*node.Node, len(cntrs)),
+		Remotes:    make(set.Unordered[string]),
 	}
 
 	for _, it := range cntrs {
@@ -62,7 +65,23 @@ func (bs *builderState) BuildNodes() (total int, err error) {
 		total++
 	}
 
-	return total, nil
+	if !bs.Config.OnlyLocal {
+		bs.Remotes.Iter(func(rip string) bool {
+			n := bs.Nodes[rip]
+
+			if err = bs.Config.Builder.AddNode(n); err != nil {
+				err = fmt.Errorf("node '%s': %w", n.Name, err)
+
+				return false
+			}
+
+			total++
+
+			return true
+		})
+	}
+
+	return total, err
 }
 
 func (bs *builderState) BuildEdges() (total int) {
@@ -104,7 +123,7 @@ func (bs *builderState) matchContainer(cn *Container) (yes bool) {
 			return
 		}
 
-		if bs.Config.OnlyLocal || !yes {
+		if bs.Config.OnlyLocal && !yes {
 			return
 		}
 
@@ -113,6 +132,7 @@ func (bs *builderState) matchContainer(cn *Container) (yes bool) {
 		if !ok {
 			rem = node.External(rip)
 			bs.Nodes[rip] = rem
+			bs.Remotes.Add(rip)
 		}
 
 		rem.Ports.Add(ProcessRemote, &node.Port{
@@ -174,7 +194,7 @@ func (bs *builderState) findEdge(cid, cname string, conn *Connection) (rv *node.
 		return rv, true
 	}
 
-	if !bs.Config.MatchName(cname) {
+	if !bs.Config.MatchName(cname) || bs.Config.OnlyLocal {
 		return nil, false
 	}
 

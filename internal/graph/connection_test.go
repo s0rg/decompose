@@ -11,13 +11,13 @@ func TestConnectionIsListener(t *testing.T) {
 
 	c := graph.Connection{}
 
-	if !c.IsListener() {
+	if c.IsListener() {
 		t.Fail()
 	}
 
-	c.DstPort = 1
+	c.Listen = true
 
-	if c.IsListener() {
+	if !c.IsListener() {
 		t.Fail()
 	}
 }

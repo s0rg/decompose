@@ -25,14 +25,6 @@ func netstatArgFor(p NetProto) (rv string) {
 		rv += "u"
 	}
 
-	/*
-		no unix sockets from netstat - it gives only internal pids
-
-		if p.Has(UNIX) {
-			rv += "x"
-		}
-	*/
-
 	return rv
 }
 
@@ -104,10 +96,14 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		nProcField = 6
 
 		switch parts[5] {
-		case stateListen, stateEstablished:
+		case stateListen:
+			conn.Listen = true
+		case stateEstablished:
 		default: // skip all other states
 			return nil, false
 		}
+	} else {
+		conn.Listen = (conn.DstPort > 0 && conn.SrcPort < conn.DstPort) || conn.DstPort == 0
 	}
 
 	if conn.Process, ok = splitName(parts[nProcField]); !ok {

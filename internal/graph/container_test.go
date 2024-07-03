@@ -14,9 +14,9 @@ var testCases = []struct {
 }{
 	{
 		Conns: []*graph.Connection{
-			{SrcPort: 1, DstPort: 2}, // inbound
-			{SrcPort: 1, DstPort: 0}, // listener
-			{SrcPort: 2, DstPort: 1}, // outbound
+			{SrcPort: 1, DstPort: 2},   // inbound
+			{SrcPort: 1, Listen: true}, // listener
+			{SrcPort: 2, DstPort: 1},   // outbound
 		},
 		Listeners: 1,
 		Outbounds: 1,
@@ -33,8 +33,8 @@ var testCases = []struct {
 	},
 	{
 		Conns: []*graph.Connection{
-			{SrcPort: 1, DstPort: 2}, // inbound
-			{SrcPort: 1, DstPort: 0}, // listener
+			{SrcPort: 1, DstPort: 2},   // inbound
+			{SrcPort: 1, Listen: true}, // listener
 		},
 		Listeners: 1,
 		Outbounds: 0,

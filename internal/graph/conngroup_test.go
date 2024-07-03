@@ -75,12 +75,12 @@ func TestConnGroupSort(t *testing.T) {
 
 	cg := &graph.ConnGroup{}
 
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 1})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 1})
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 2})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 2})
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 3})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 3})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 1, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 1, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 2, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 2, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 3, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 3, Listen: true})
 
 	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, SrcPort: 2, DstPort: 1})
 	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, SrcPort: 3, DstPort: 1})

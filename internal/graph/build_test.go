@@ -3,6 +3,7 @@ package graph_test
 import (
 	"context"
 	"errors"
+	"log"
 	"net"
 	"testing"
 
@@ -47,7 +48,9 @@ type testBuilder struct {
 	Edges int
 }
 
-func (tb *testBuilder) AddNode(_ *node.Node) error {
+func (tb *testBuilder) AddNode(n *node.Node) error {
+	log.Printf("%+v", n)
+
 	if tb.Err != nil {
 		return tb.Err
 	}
@@ -57,7 +60,9 @@ func (tb *testBuilder) AddNode(_ *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(_ *node.Edge) {
+func (tb *testBuilder) AddEdge(e *node.Edge) {
+
+	log.Printf("%+v", e)
 	tb.Edges++
 }
 
@@ -136,21 +141,21 @@ func testClientWithEnv() graph.ContainerClient {
 
 	// node 1
 	cli.Data[0].AddMany([]*graph.Connection{
-		{SrcPort: 1, Proto: graph.TCP},                               // listen 1
+		{SrcPort: 1, Proto: graph.TCP, Listen: true},                 // listen 1
 		{DstIP: node2, SrcPort: 10, DstPort: 2, Proto: graph.TCP},    // connected to node2:2
 		{DstIP: external, SrcPort: 10, DstPort: 1, Proto: graph.TCP}, // connected to external:1
 	})
 
 	// node 2
 	cli.Data[1].AddMany([]*graph.Connection{
-		{SrcPort: 2, Proto: graph.TCP},                               // listen 2
+		{SrcPort: 2, Proto: graph.TCP, Listen: true},                 // listen 2
 		{DstIP: node3, SrcPort: 10, DstPort: 3, Proto: graph.TCP},    // connected to node3:3
 		{DstIP: external, SrcPort: 10, DstPort: 2, Proto: graph.TCP}, // connected to external:2
 	})
 
 	// node 3
 	cli.Data[2].AddMany([]*graph.Connection{
-		{SrcPort: 3, Proto: graph.TCP},                               // listen 3
+		{SrcPort: 3, Proto: graph.TCP, Listen: true},                 // listen 3
 		{DstIP: node1, SrcPort: 10, DstPort: 1, Proto: graph.TCP},    // connected to node1:1
 		{DstIP: node2, SrcPort: 122, DstPort: 22, Proto: graph.TCP},  // connected to node2:22
 		{DstIP: external, SrcPort: 10, DstPort: 3, Proto: graph.TCP}, // connected to external:3
@@ -235,8 +240,9 @@ func TestBuildNoNodes(t *testing.T) {
 
 	cli := testClientWithEnv()
 	cfg := &graph.Config{
-		Follow: flw,
-		Proto:  graph.ALL,
+		Follow:    flw,
+		OnlyLocal: true,
+		Proto:     graph.ALL,
 	}
 
 	if err := graph.Build(cfg, cli); err == nil {

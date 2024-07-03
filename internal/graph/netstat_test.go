@@ -32,7 +32,8 @@ tcp6       0      0 :::1234                 :::*                    LISTEN 1/foo
 tcp6       0      0 127.0.0.1:6501          127.0.0.1:43706         ESTABLISHED 2/bar
 tcp        1      0 172.20.4.209:43634      172.20.4.129:53         ESTABLISHED bar/
 tcp        1      0 172.20.4.209:43634      172.20.4.129:53         ESTABLISHED bar
-udp        0      0 127.0.0.11:56688        0.0.0.0:*                           -
+udp        0      0 127.0.0.1:56688         10.10.0.1:54                        11/ntpd
+udp        0      0 0.0.0.0:455             0.0.0.0:*                           10/ntpd
 bgp        1      1 127.0.0.11:56689        0.0.0.0:*               LISTEN 1/foo
 tcp        0      0 invalid                 172.20.4.198:3306       ESTABLISHED -
 tcp        0      0 172.20.4.198:3306       invalid                 ESTABLISHED -
@@ -56,7 +57,7 @@ some       garbage
 		t.Fatal(err)
 	}
 
-	if con.ConnectionsCount() != 5 {
+	if con.ConnectionsCount() != 7 {
 		t.Log("total:", con.ConnectionsCount())
 		t.Fail()
 	}
@@ -70,7 +71,7 @@ some       garbage
 		noutbound++
 	})
 
-	if nlisten != 4 || noutbound != 1 {
+	if nlisten != 5 || noutbound != 2 {
 		t.Log("listen/outbound:", nlisten, noutbound)
 		t.Fail()
 	}
