@@ -3,7 +3,6 @@ package graph_test
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"testing"
 
@@ -48,9 +47,7 @@ type testBuilder struct {
 	Edges int
 }
 
-func (tb *testBuilder) AddNode(n *node.Node) error {
-	log.Printf("%+v", n)
-
+func (tb *testBuilder) AddNode(_ *node.Node) error {
 	if tb.Err != nil {
 		return tb.Err
 	}
@@ -60,9 +57,7 @@ func (tb *testBuilder) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (tb *testBuilder) AddEdge(e *node.Edge) {
-
-	log.Printf("%+v", e)
+func (tb *testBuilder) AddEdge(_ *node.Edge) {
 	tb.Edges++
 }
 
