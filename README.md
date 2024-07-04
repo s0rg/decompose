@@ -98,6 +98,8 @@ decompose [flags]
     json file with metadata for enrichment
 -no-loops
     remove connection loops (node to itself) from output
+-no-orphans
+    remove orphaned (not connected) nodes from output
 -out string
     output: filename or "-" for stdout (default "-")
 -proto string
@@ -130,8 +132,8 @@ type Item struct {
         Labels map[string]string `json:"labels"`
     } `json:"container"` // container info
     Listen     map[string][]{
-        Kind   string            `json:"kind"`  // tcp / udp
-        Value  int               `json:"value"`
+        Kind   string            `json:"kind"`  // tcp / udp / unix
+        Value  string            `json:"value"`
         Local  bool              `json:"local"` // bound to loopback
     } `json:"listen"` // ports with process names
     Networks   []string            `json:"networks"` // network names
@@ -163,7 +165,7 @@ Single node example with full info and metadata filled:
         "labels": {}
     },
     "listen": {"foo": [
-        {"kind": "tcp", "value": 80}
+        {"kind": "tcp", "value": "80"}
     ]},
     "networks": ["test-net"],
     "tags": ["some"],
@@ -181,7 +183,7 @@ Single node example with full info and metadata filled:
     ],
     "connected": {
         "bar-1": [
-            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": 443}}
+            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": "443"}}
         ]
     }
 }
