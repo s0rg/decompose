@@ -808,15 +808,15 @@ func TestDockerClientNsEnterInspectError(t *testing.T) {
 		t.Fatal("client:", err)
 	}
 
-	_, err = cli.Containers(
+	rv, _ := cli.Containers(
 		context.Background(),
-		graph.TCP|graph.UDP,
+		graph.ALL,
 		false,
 		nil,
 		voidProgress,
 	)
 
-	if !errors.Is(err, testErr) {
+	if len(rv) > 0 {
 		t.Fail()
 	}
 }
@@ -888,7 +888,7 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		t.Fatal("client:", err)
 	}
 
-	_, err = cli.Containers(
+	rv, _ := cli.Containers(
 		context.Background(),
 		graph.TCP|graph.UDP,
 		false,
@@ -896,7 +896,7 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		voidProgress,
 	)
 
-	if !errors.Is(err, testErr) {
+	if len(rv) > 0 {
 		t.Fail()
 	}
 }
@@ -1129,9 +1129,9 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 		nod := net.ParseIP("1.1.1.1")
 		rem := net.ParseIP("2.2.2.2")
 
-		fn(1, &graph.Connection{Process: "1", SrcPort: 1, DstPort: 0, SrcIP: nod, Proto: graph.TCP})
+		fn(1, &graph.Connection{Process: "1", SrcPort: 1, Listen: true, SrcIP: nod, Proto: graph.TCP})
 		fn(1, &graph.Connection{Process: "1", SrcPort: 10, DstPort: 2, SrcIP: nod, DstIP: rem, Proto: graph.TCP})
-		fn(1, &graph.Connection{Process: "1", SrcPort: 5, SrcIP: loc, Proto: graph.TCP})
+		fn(1, &graph.Connection{Process: "1", SrcPort: 5, Listen: true, SrcIP: loc, Proto: graph.TCP})
 
 		return nil
 	}

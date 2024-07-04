@@ -268,8 +268,8 @@ func (d *Docker) connections(
 		})
 	case LinuxNsenter:
 		err = d.processesContainer(ctx, cid, func(pid int, _ string) (err error) {
-			if err = d.opt.Nsenter(pid, proto, cb); err != nil {
-				return fmt.Errorf("pid: %d: %w", pid, err)
+			if err := d.opt.Nsenter(pid, proto, cb); err != nil {
+				return err
 			}
 
 			return nil
