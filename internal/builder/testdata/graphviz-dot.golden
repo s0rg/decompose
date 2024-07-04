@@ -4,7 +4,7 @@ digraph  {
 	n1[color="black",label="1"];
 	n2[color="black",label="2"];
 	n3[color="black",label="3"];
-	n4->n1[label="1/tcp,2/tcp,3/tcp,2/tcp,3/tcp"];
-	n1->n2[label="1/tcp,1/tcp,2/tcp,2/tcp"];
+	n4->n1[label="tcp:1,tcp:2,tcp:3,tcp:2,tcp:3"];
+	n1->n2[label="tcp:1,tcp:1,tcp:2,tcp:2"];
 	
 }

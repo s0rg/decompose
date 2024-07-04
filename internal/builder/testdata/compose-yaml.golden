@@ -2,8 +2,8 @@ services:
     "1":
         image: node-image
         expose:
-            - "1/tcp"
-            - "2/tcp"
+            - "tcp:1"
+            - "tcp:2"
         links:
             - "2"
         volumes:
@@ -18,8 +18,8 @@ services:
     "2":
         image: node-image
         expose:
-            - "1/tcp"
-            - "2/tcp"
+            - "tcp:1"
+            - "tcp:2"
         links:
             - "1"
         volumes:

@@ -7,9 +7,9 @@ workspace {
 			node_3 = container "3" {
 				description "info 3"
 				technology "node-image"
-				tags "3,listen:1/tcp,listen:2/tcp,net:test-net"
+				tags "3,listen:tcp:1,listen:tcp:2,net:test-net"
 				node_3_ = component "" {
-					tags "listen:1/tcp,listen:2/tcp"
+					tags "listen:tcp:1,listen:tcp:2"
 				}
 			}
 		}
@@ -20,35 +20,35 @@ workspace {
 docs-url \
 repo-url"
 				technology "node-image"
-				tags "1,listen:1/tcp,listen:2/tcp,net:test-net"
+				tags "1,listen:tcp:1,listen:tcp:2,net:test-net"
 				node_1_ = component "" {
-					tags "listen:1/tcp,listen:2/tcp"
+					tags "listen:tcp:1,listen:tcp:2"
 				}
 			}
 			node_2 = container "2" {
 				description "info 2"
 				technology "node-image"
-				tags "2,listen:1/tcp,listen:2/tcp,net:test-net"
+				tags "2,listen:tcp:1,listen:tcp:2,net:test-net"
 				node_2_ = component "" {
-					tags "listen:1/tcp,listen:2/tcp"
+					tags "listen:tcp:1,listen:tcp:2"
 				}
 			}
 		}
 		c2 = softwareSystem "c2" {
 		tags "ext2"
 			ext2 = container "ext2" {
-				tags "external,listen:2/tcp"
+				tags "external,listen:tcp:2"
 				ext2_ = component "" {
-					tags "listen:2/tcp"
+					tags "listen:tcp:2"
 				}
 			}
 		}
 
-		c1 -> c2 "0/" {
+		c1 -> c2 ":" {
 		}
-		c1 -> default "0/" {
+		c1 -> default ":" {
 		}
-		default -> c2 "0/" {
+		default -> c2 ":" {
 		}
 	}
 

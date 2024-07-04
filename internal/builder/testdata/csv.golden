@@ -1,9 +1,9 @@
 service,listen,outbounds
-1,"1/tcp
-2/tcp","2: 2/tcp
-3: 3/tcp
+1,"tcp:1
+tcp:2","2: tcp:2
+3: tcp:3
 "
-2,2/tcp,"1: 1/tcp; 2/tcp; 3/tcp
-3: 3/tcp
+2,tcp:2,"1: tcp:1; tcp:2; tcp:3
+3: tcp:3
 "
-3,3/tcp,
+3,tcp:3,
