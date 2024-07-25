@@ -21,6 +21,8 @@ func TestInodes(t *testing.T) {
 
 	// client
 	m.AddProcess("2", 2, "app2")
+
+	// inodes
 	m.MarkUnknown("2", 2, 101)
 	m.MarkListener("1", 1, "/some/sock")
 

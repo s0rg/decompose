@@ -72,7 +72,7 @@ func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relatio
 		return nil, false
 	}
 
-	if rv, ok = s.findRelation(src.Name, dst.Name); ok {
+	if rv, ok = s.findRelation(src.ID, dst.ID); ok {
 		return rv, true
 	}
 

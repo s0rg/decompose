@@ -1186,3 +1186,100 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestDockerClientUnixSockets(t *testing.T) {
+	t.Parallel()
+
+	cm := &clientMock{}
+
+	cm.OnList = func() (rv []types.Container) {
+		return []types.Container{
+			{
+				ID:    "1",
+				Names: []string{"test1"},
+				Image: "test-image",
+				State: "running",
+				NetworkSettings: &types.SummaryNetworkSettings{
+					Networks: map[string]*network.EndpointSettings{
+						"test-net": {
+							EndpointID: "1",
+							IPAddress:  "1.1.1.1",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID,CMD"}
+		rv.Processes = [][]string{
+			{"1", "test"},
+		}
+
+		return rv
+	}
+
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
+	const myTestInode uint64 = 12345
+
+	testInodes := func(_ int, cb func(uint64)) error {
+		cb(myTestInode)
+
+		return nil
+	}
+
+	testEnter := func(_ int, _ graph.NetProto, fn func(int, *graph.Connection)) error {
+		fn(1, &graph.Connection{
+			Process: "1",
+			Listen:  true,
+			Path:    "/test/unix",
+			Proto:   graph.UNIX,
+			Inode:   myTestInode,
+		})
+
+		return nil
+	}
+
+	cli, err := client.NewDocker(
+		client.WithClientCreator(func() (client.DockerClient, error) {
+			return cm, nil
+		}),
+		client.WithMode(client.LinuxNsenter),
+		client.WithNsenterFn(testEnter),
+		client.WithInodesFn(testInodes),
+	)
+	if err != nil {
+		t.Fatal("client:", err)
+	}
+
+	rv, err := cli.Containers(
+		context.Background(),
+		graph.UNIX,
+		true,
+		nil,
+		voidProgress,
+	)
+	if err != nil {
+		t.Fatal("containers:", err)
+	}
+
+	if len(rv) != 1 {
+		t.Fail()
+	}
+
+	if rv[0].ConnectionsCount() != 1 {
+		t.Fail()
+	}
+}
