@@ -1,44 +1,71 @@
 package graph
 
-type NetProto byte
+import "strings"
+
+type NetProto int16
 
 const (
-	ALL NetProto = 0
-	TCP NetProto = 1
-	UDP NetProto = 2
-)
+	TCP  NetProto = 1 << iota
+	UDP  NetProto = 1 << iota
+	UNIX NetProto = 1 << iota
+	NONE NetProto = 0
+	ALL  NetProto = TCP | UDP | UNIX
+	pMAX          = 3
 
-var (
-	netKindNames = []string{
-		ALL: "tcp+udp",
-		TCP: "tcp",
-		UDP: "udp",
-	}
-
-	netKindFlags = []string{
-		ALL: "tu",
-		TCP: "t",
-		UDP: "u",
-	}
+	sNONE = "none"
+	sTCP  = "tcp"
+	sUDP  = "udp"
+	sUNIX = "unix"
+	sALL  = "all"
 )
 
 func (p NetProto) String() string {
-	return netKindNames[p]
+	buf := make([]string, 0, pMAX)
+
+	if p.Has(TCP) {
+		buf = append(buf, sTCP)
+	}
+
+	if p.Has(UDP) {
+		buf = append(buf, sUDP)
+	}
+
+	if p.Has(UNIX) {
+		buf = append(buf, sUNIX)
+	}
+
+	if len(buf) == 0 {
+		buf = append(buf, sNONE)
+	}
+
+	return strings.Join(buf, ",")
 }
 
-func (p NetProto) Flag() string {
-	return netKindFlags[p]
+func (p *NetProto) Set(mask NetProto) {
+	*p |= mask
+}
+
+func (p NetProto) Has(mask NetProto) bool {
+	return (p & mask) == mask
 }
 
 func ParseNetProto(val string) (p NetProto, ok bool) {
-	switch val {
-	case "all":
-		return ALL, true
-	case "tcp":
-		return TCP, true
-	case "udp":
-		return UDP, true
+	items := strings.Split(val, ",")
+
+	for _, v := range items {
+		switch v {
+		case sALL:
+			p.Set(ALL)
+		case sTCP:
+			p.Set(TCP)
+		case sUDP:
+			p.Set(UDP)
+		case sUNIX:
+			p.Set(UNIX)
+		default:
+			return
+		}
 	}
 
-	return
+	return p, true
 }

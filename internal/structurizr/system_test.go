@@ -43,7 +43,7 @@ func TestSystemRelation(t *testing.T) {
 
 	s.WriteRelations(&b, 0)
 
-	if strings.Count(b.String(), "name1 -> name2") != 1 {
+	if strings.Count(b.String(), "id1 -> id2") != 1 {
 		t.Fail()
 	}
 }

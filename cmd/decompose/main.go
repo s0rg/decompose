@@ -43,15 +43,15 @@ var (
 )
 
 var (
-	fSilent, fVersion bool
-	fHelp, fLocal     bool
-	fFull, fNoLoops   bool
-	fDeep, fCompress  bool
-	fProto, fFormat   string
-	fOut, fFollow     string
-	fMeta, fCluster   string
-	fSkipEnv          string
-	fLoad             []string
+	fSilent, fVersion    bool
+	fHelp, fLocal        bool
+	fNoLoops, fNoOrphans bool
+	fDeep, fCompress     bool
+	fProto, fFormat      string
+	fOut, fFollow        string
+	fMeta, fCluster      string
+	fSkipEnv             string
+	fLoad                []string
 
 	knownBuilders string
 	ErrUnknown    = errors.New("unknown")
@@ -85,14 +85,14 @@ func setupFlags() {
 	flag.BoolVar(&fVersion, "version", false, "show version")
 	flag.BoolVar(&fHelp, "help", false, "show this help")
 	flag.BoolVar(&fLocal, "local", false, "skip external hosts")
-	flag.BoolVar(&fFull, "full", false, "extract full process info: (cmd, args, env) and volumes info")
 	flag.BoolVar(&fNoLoops, "no-loops", false, "remove connection loops (node to itself) from output")
+	flag.BoolVar(&fNoOrphans, "no-orphans", false, "remove orphaned (not connected) nodes from output")
 	flag.BoolVar(&fDeep, "deep", false, "process-based introspection")
 	flag.BoolVar(&fCompress, "compress", false, "compress graph")
 
 	flag.StringVar(&fOut, "out", defaultOutput, "output: filename or \"-\" for stdout")
 	flag.StringVar(&fMeta, "meta", "", "json file with metadata for enrichment")
-	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp, udp or all")
+	flag.StringVar(&fProto, "proto", defaultProto, "protocol to scan: tcp,udp,unix or all")
 	flag.StringVar(&fFollow, "follow", "", "follow only this container by name(s), comma-separated or from @file")
 	flag.StringVar(
 		&fCluster,
@@ -173,7 +173,7 @@ func makeClusterizer(
 	f, v string,
 ) (rv graph.NamedBuilderWriter, err error) {
 	if !builder.SupportCluster(f) {
-		log.Println(b.Name(), "cannot handle graph clusters - ignoring")
+		log.Println("[-]", b.Name(), "cannot handle graph clusters - ignoring")
 
 		return b, nil
 	}
@@ -191,7 +191,7 @@ func makeClusterizer(
 			high = 1.0
 		)
 
-		rv = cluster.NewLayers(b, min(high, max(low, simf)))
+		rv = cluster.NewLayers(b, min(high, max(low, simf)), "")
 	} else {
 		cr := cluster.NewRules(b, nil)
 
@@ -282,6 +282,12 @@ func prepareConfig() (
 		}
 	}
 
+	if fCompress {
+		cmp := graph.NewCompressor(bildr, "", defaultDiff, true)
+
+		bildr, nwr = cmp, cmp
+	}
+
 	if fCluster != "" {
 		cb, err := makeClusterizer(bildr, fFormat, fCluster)
 		if err != nil {
@@ -291,20 +297,16 @@ func prepareConfig() (
 		bildr, nwr = cb, cb
 	}
 
-	if fCompress {
-		cmp := graph.NewCompressor(bildr, defaultDiff, true)
+	if fNoOrphans {
+		cb := graph.NewOrphansInspector(bildr)
 
-		bildr, nwr = cmp, cmp
+		bildr, nwr = cb, cb
 	}
 
 	skipKeys := []string{}
 
 	if fSkipEnv != "" {
-		if fFull {
-			skipKeys = strings.Split(fSkipEnv, ",")
-		} else {
-			log.Println("skip-env makes no sense without full info - ignoring")
-		}
+		skipKeys = strings.Split(fSkipEnv, ",")
 	}
 
 	cfg = &graph.Config{
@@ -313,7 +315,6 @@ func prepareConfig() (
 		Proto:     proto,
 		Follow:    loadSet(fFollow),
 		OnlyLocal: fLocal,
-		FullInfo:  fFull,
 		Deep:      fDeep,
 		NoLoops:   fNoLoops,
 		SkipEnv:   skipKeys,
@@ -382,8 +383,15 @@ func doBuild(
 	mode := client.InContainer
 
 	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
-		opts = append(opts, client.WithNsEnter(client.Nsenter))
 		mode = client.LinuxNsenter
+		opts = append(opts,
+			client.WithNsenterFn(client.Nsenter),
+			client.WithInodesFn(client.Inodes),
+		)
+	} else if cfg.Proto.Has(graph.UNIX) {
+		log.Println("[-] Unix-connections requested in non-root mode, ignoring")
+
+		cfg.Proto ^= graph.UNIX
 	}
 
 	cli, err := client.NewDocker(append(opts, client.WithMode(mode))...)
@@ -393,7 +401,14 @@ func doBuild(
 
 	defer cli.Close()
 
-	log.Println("Starting with method:", cli.Mode())
+	method := cli.Mode()
+
+	if cfg.Deep {
+		method += " / deep"
+	}
+
+	log.Println("Starting with method:", method)
+	log.Println("Scanning for:", cfg.Proto.String())
 
 	if err = graph.Build(cfg, cli); err != nil {
 		return fmt.Errorf("graph: %w", err)

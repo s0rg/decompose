@@ -4,7 +4,8 @@ type Option func(*options)
 
 type options struct {
 	Create  createClient
-	Nsenter nsEnter
+	Nsenter nsenter
+	Inodes  inodes
 	Mode    mode
 }
 
@@ -20,8 +21,14 @@ func WithClientCreator(c createClient) Option {
 	}
 }
 
-func WithNsEnter(e nsEnter) Option {
+func WithNsenterFn(f nsenter) Option {
 	return func(o *options) {
-		o.Nsenter = e
+		o.Nsenter = f
+	}
+}
+
+func WithInodesFn(f inodes) Option {
+	return func(o *options) {
+		o.Inodes = f
 	}
 }

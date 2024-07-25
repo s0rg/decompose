@@ -15,11 +15,11 @@ func TestConnGroupListeners(t *testing.T) {
 		t.Fail()
 	}
 
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, LocalPort: 1})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, LocalPort: 1})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 1})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 1})
 
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, LocalPort: 1})  // duplicate
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, RemotePort: 1}) // invalid
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 1}) // duplicate
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, DstPort: 1}) // invalid
 
 	if cg.Len() != 2 {
 		t.Fail()
@@ -32,7 +32,7 @@ func TestConnGroupListeners(t *testing.T) {
 	})
 
 	cg.IterListeners(func(c *graph.Connection) {
-		if c.LocalPort != 1 {
+		if c.SrcPort != 1 {
 			t.Fail()
 		}
 	})
@@ -47,11 +47,11 @@ func TestConnGroupOutbounds(t *testing.T) {
 		t.Fail()
 	}
 
-	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, LocalPort: 2, RemotePort: 1})
-	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, LocalPort: 3, RemotePort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, SrcPort: 2, DstPort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, SrcPort: 3, DstPort: 1})
 
-	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, LocalPort: 2, RemotePort: 1})
-	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, RemotePort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, SrcPort: 2, DstPort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, DstPort: 1})
 
 	if cg.Len() != 2 {
 		t.Fail()
@@ -64,7 +64,7 @@ func TestConnGroupOutbounds(t *testing.T) {
 	})
 
 	cg.IterOutbounds(func(c *graph.Connection) {
-		if c.RemotePort != 1 {
+		if c.DstPort != 1 {
 			t.Fail()
 		}
 	})
@@ -75,17 +75,17 @@ func TestConnGroupSort(t *testing.T) {
 
 	cg := &graph.ConnGroup{}
 
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, LocalPort: 1})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, LocalPort: 1})
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, LocalPort: 2})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, LocalPort: 2})
-	cg.AddListener(&graph.Connection{Proto: graph.TCP, LocalPort: 3})
-	cg.AddListener(&graph.Connection{Proto: graph.UDP, LocalPort: 3})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 1, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 1, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 2, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 2, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.TCP, SrcPort: 3, Listen: true})
+	cg.AddListener(&graph.Connection{Proto: graph.UDP, SrcPort: 3, Listen: true})
 
-	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, LocalPort: 2, RemotePort: 1})
-	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, LocalPort: 3, RemotePort: 1})
-	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, LocalPort: 4, RemotePort: 2})
-	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, LocalPort: 5, RemotePort: 2})
+	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, SrcPort: 2, DstPort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, SrcPort: 3, DstPort: 1})
+	cg.AddOutbound(&graph.Connection{Proto: graph.TCP, SrcPort: 4, DstPort: 2})
+	cg.AddOutbound(&graph.Connection{Proto: graph.UDP, SrcPort: 5, DstPort: 2})
 
 	cg.Sort()
 

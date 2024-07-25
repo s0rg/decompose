@@ -14,9 +14,9 @@ var testCases = []struct {
 }{
 	{
 		Conns: []*graph.Connection{
-			{LocalPort: 1, RemotePort: 2}, // inbound
-			{LocalPort: 1, RemotePort: 0}, // listener
-			{LocalPort: 2, RemotePort: 1}, // outbound
+			{SrcPort: 1, DstPort: 2},   // inbound
+			{SrcPort: 1, Listen: true}, // listener
+			{SrcPort: 2, DstPort: 1},   // outbound
 		},
 		Listeners: 1,
 		Outbounds: 1,
@@ -24,8 +24,8 @@ var testCases = []struct {
 	},
 	{
 		Conns: []*graph.Connection{
-			{LocalPort: 1, RemotePort: 2}, // inbound
-			{LocalPort: 2, RemotePort: 1}, // outbound
+			{SrcPort: 1, DstPort: 2}, // inbound
+			{SrcPort: 2, DstPort: 1}, // outbound
 		},
 		Listeners: 0,
 		Outbounds: 1,
@@ -33,8 +33,8 @@ var testCases = []struct {
 	},
 	{
 		Conns: []*graph.Connection{
-			{LocalPort: 1, RemotePort: 2}, // inbound
-			{LocalPort: 1, RemotePort: 0}, // listener
+			{SrcPort: 1, DstPort: 2},   // inbound
+			{SrcPort: 1, Listen: true}, // listener
 		},
 		Listeners: 1,
 		Outbounds: 0,
@@ -42,7 +42,7 @@ var testCases = []struct {
 	},
 	{
 		Conns: []*graph.Connection{
-			{LocalPort: 1, RemotePort: 2}, // inbound
+			{SrcPort: 1, DstPort: 2}, // inbound
 		},
 		Listeners: 0,
 		Outbounds: 0,

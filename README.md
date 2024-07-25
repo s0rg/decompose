@@ -55,6 +55,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - fast, scans ~470 containers with ~4000 connections in around 5 sec
 - auto-clusterization based on graph topology
 - deep inspection mode, in wich connections between procesess inside containers, also collected and shown
+- unix-sockets connections
 - 100% test-coverage
 
 ## known limitations
@@ -62,7 +63,9 @@ Closest analogs, i can find, that not suit my needs very well:
 - only established and listen connections are listed (but script like [snapshots.sh](examples/snapshots.sh) can beat this)
 - `composer-yaml` is not intended to be working out from the box, it can lack some of crucial information (even in `-full` mode),
   or may contains cycles between nodes (removing `links` section in services may help), its main purpose is for system overview
-- [gephi](https://github.com/gephi/gephi) fails to load edges from resulting graphviz, this can be fixed by any auto-replacement tool: `sed -i 's/->/ -> /g' myfile.dot`
+- [gephi](https://github.com/gephi/gephi) fails to load edges from resulting graphviz, this can be fixed by any auto-replacement
+  tool: `sed -i 's/->/ -> /g' myfile.dot`
+- unix-sockets works only in root mode on linux, this process involves inode matching to find correct connections
 
 ## installation
 
@@ -85,8 +88,6 @@ decompose [flags]
     follow only this container by name(s), comma-separated or from @file
 -format string
     output format: csv, dot, json, puml, sdsl, stat, tree, yaml (default "json")
--full
-    extract full process info: (cmd, args, env) and volumes info
 -help
     show this help
 -load value
@@ -97,10 +98,12 @@ decompose [flags]
     json file with metadata for enrichment
 -no-loops
     remove connection loops (node to itself) from output
+-no-orphans
+    remove orphaned (not connected) nodes from output
 -out string
     output: filename or "-" for stdout (default "-")
 -proto string
-    protocol to scan: tcp, udp or all (default "all")
+    protocol to scan: tcp,udp,unix or all (default "all")
 -silent
     suppress progress messages in stderr
 -skip-env string
@@ -129,8 +132,8 @@ type Item struct {
         Labels map[string]string `json:"labels"`
     } `json:"container"` // container info
     Listen     map[string][]{
-        Kind   string            `json:"kind"`  // tcp / udp
-        Value  int               `json:"value"`
+        Kind   string            `json:"kind"`  // tcp / udp / unix
+        Value  string            `json:"value"`
         Local  bool              `json:"local"` // bound to loopback
     } `json:"listen"` // ports with process names
     Networks   []string            `json:"networks"` // network names
@@ -162,7 +165,7 @@ Single node example with full info and metadata filled:
         "labels": {}
     },
     "listen": {"foo": [
-        {"kind": "tcp", "value": 80}
+        {"kind": "tcp", "value": "80"}
     ]},
     "networks": ["test-net"],
     "tags": ["some"],
@@ -180,7 +183,7 @@ Single node example with full info and metadata filled:
     ],
     "connected": {
         "bar-1": [
-            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": 443}}
+            {"src": "foo", "dst": "[remote]", "port": {"kind": "tcp", "value": "443"}}
         ]
     }
 }
@@ -261,7 +264,7 @@ a float in `(0.0, 1.0]` range, representing how much similar ports nodes must ha
 Save full json stream:
 
 ```shell
-decompose -full > nodes-1.json
+sudo decompose > nodes-1.json
 ```
 
 Get `dot` file:
@@ -270,10 +273,10 @@ Get `dot` file:
 decompose -format dot > connections.dot
 ```
 
-Get only tcp connections as `dot`:
+Get tcp and udp connections as `dot`:
 
 ```shell
-decompose -proto tcp -format dot > tcp.dot
+decompose -proto tcp,udp -format dot > tcp.dot
 ```
 
 Merge graphs from json streams, filter by protocol, skip remote hosts and save as `dot`:

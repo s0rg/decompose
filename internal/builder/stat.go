@@ -12,7 +12,8 @@ import (
 )
 
 const minClusters = 2
-const defaultName = "default"
+
+// const defaultName = "default"
 
 type stat struct {
 	Name  string
@@ -57,13 +58,7 @@ func (s *Stat) AddNode(n *node.Node) error {
 	})
 
 	s.conns[n.ID] = make(set.Unordered[string])
-
-	cluster := n.Cluster
-	if cluster == "" {
-		cluster = defaultName
-	}
-
-	s.clusters[cluster]++
+	s.clusters[n.Cluster]++
 
 	return nil
 }

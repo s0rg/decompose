@@ -6,23 +6,23 @@
   },
   {
     "name": "ingress",
-    "if": "node.Listen.HasAny('80/tcp', '443/tcp')"
+    "if": "node.Listen.HasAny('tcp:80', 'tcp:443')"
   },
   {
     "name": "backend",
-    "if": "node.Name startsWith 'back' && node.Listen.Has('8080/tcp', '8081/tcp')",
+    "if": "node.Name startsWith 'back' && node.Listen.Has('tcp:8080', 'tcp:8081')",
     "weight": 2
   },
   {
     "name": "store",
-    "if": "node.Listen.HasAny('3306/tcp', '5432/tcp')"
+    "if": "node.Listen.HasAny('tcp:3306', 'tcp:5432')"
   },
   {
     "name": "redis",
-    "if": "node.Listen.Has('6379/tcp')"
+    "if": "node.Listen.Has('tcp:6379')"
   },
   {
     "name": "queue",
-    "if": "node.Listen.HasAny('9092/tcp', '4222/tcp')"
+    "if": "node.Listen.HasAny('tcp:9092', 'tcp:4222')"
   }
 ]

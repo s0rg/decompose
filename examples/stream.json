@@ -1,45 +1,45 @@
 {
     "name": "nginx1",
-    "listen": {"nginx": [{"kind": "tcp", "value": 80}]},
+    "listen": {"nginx": [{"kind": "tcp", "value": "80"}]},
     "connected": {
-      "back1": [{"src": "nginx", "dst": "app", "port": {"kind": "tcp", "value": 8080}}],
-      "back2": [{"src": "nginx", "dst": "app", "port": {"kind": "tcp", "value": 8081}}]
+      "back1": [{"src": "nginx", "dst": "app", "port": {"kind": "tcp", "value": "8080"}}],
+      "back2": [{"src": "nginx", "dst": "app", "port": {"kind": "tcp", "value": "8081"}}]
     }
 }
 {
     "name": "db1",
-    "listen": {"postgres": [{"kind": "tcp", "value": 5432}]},
+    "listen": {"postgres": [{"kind": "tcp", "value": "5432"}]},
     "connected": {}
 }
 {
     "name": "back1",
     "listen": {"app": [
-      {"kind": "tcp", "value": 8080},
-      {"kind": "tcp", "value": 8081},
-      {"kind": "tcp", "value": 9000}
+      {"kind": "tcp", "value": "8080"},
+      {"kind": "tcp", "value": "8081"},
+      {"kind": "tcp", "value": "9000"}
     ]},
     "connected": {
-        "db1": [{"src": "app", "dst": "postgres", "port": {"kind": "tcp", "value": 5432}}]
+        "db1": [{"src": "app", "dst": "postgres", "port": {"kind": "tcp", "value": "5432"}}]
     }
 }
 {
     "name": "back2",
     "listen": {"app": [
-      {"kind": "tcp", "value": 8080},
-      {"kind": "tcp", "value": 8081}
+      {"kind": "tcp", "value": "8080"},
+      {"kind": "tcp", "value": "8081"}
     ]},
     "connected": {
-        "db1": [{"src": "app", "dst": "postgres", "port": {"kind": "tcp", "value": 5432}}],
-        "foo1": [{"src": "app", "dst": "[remote]", "port": {"kind": "tcp", "value": 9500}}]
+        "db1": [{"src": "app", "dst": "postgres", "port": {"kind": "tcp", "value": "5432"}}],
+        "foo1": [{"src": "app", "dst": "[remote]", "port": {"kind": "tcp", "value": "9500"}}]
     }
 }
 {
     "name": "foo1",
     "is_external": true,
-    "listen": {"[remote]": [{"kind": "tcp", "value": 9500}]},
+    "listen": {"[remote]": [{"kind": "tcp", "value": "9500"}]},
     "connected": {
         "back1": [
-          {"src": "[remote]", "dst": "app", "port": {"kind": "tcp", "value": 9000}}
+          {"src": "[remote]", "dst": "app", "port": {"kind": "tcp", "value": "9000"}}
         ]
     }
 }

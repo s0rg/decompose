@@ -9,7 +9,6 @@ type Config struct {
 	SkipEnv   []string
 	Proto     NetProto
 	OnlyLocal bool
-	FullInfo  bool
 	NoLoops   bool
 	Deep      bool
 }

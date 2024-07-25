@@ -109,7 +109,7 @@ func SafeID(v string) (id string) {
 
 func compactTags(tags []string) (rv []string, ok bool) {
 	if len(tags) == 0 {
-		return nil, false
+		return
 	}
 
 	rv = slices.DeleteFunc(tags, func(v string) bool {
@@ -121,11 +121,9 @@ func compactTags(tags []string) (rv []string, ok bool) {
 		return nil, false
 	case 1:
 		return rv, true
+	default:
+		slices.Sort(rv)
+
+		return slices.Clip(slices.Compact(rv)), true
 	}
-
-	slices.Sort(rv)
-
-	rv = slices.Clip(slices.Compact(rv))
-
-	return rv, true
 }

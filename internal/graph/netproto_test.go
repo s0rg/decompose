@@ -17,6 +17,7 @@ func TestParseNetproto(t *testing.T) {
 		{Val: "tcp", Valid: true, Want: graph.TCP},
 		{Val: "udp", Valid: true, Want: graph.UDP},
 		{Val: "all", Valid: true, Want: graph.ALL},
+		{Val: "unix", Valid: true, Want: graph.UNIX},
 		{Val: "bad", Valid: false},
 	}
 
@@ -33,27 +34,6 @@ func TestParseNetproto(t *testing.T) {
 
 		if got != tc.Want {
 			t.Fatalf("case[%d] failed for '%s' want: %s got: %s", i, tc.Val, tc.Want.String(), got.String())
-		}
-	}
-}
-
-func TestNetprotoString(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Val  string
-		Want string
-	}{
-		{Val: "tcp", Want: "t"},
-		{Val: "udp", Want: "u"},
-		{Val: "all", Want: "tu"},
-	}
-
-	for i, tc := range testCases {
-		p, _ := graph.ParseNetProto(tc.Val)
-
-		if p.Flag() != tc.Want {
-			t.Fatalf("case[%d] failed for '%s' want: %s got: %s", i, tc.Val, tc.Want, p.Flag())
 		}
 	}
 }

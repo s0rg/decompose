@@ -60,8 +60,8 @@ func TestDockerClientContainersError(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false, false,
+		graph.TCP|graph.UDP,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -91,8 +91,8 @@ func TestDockerClientContainersEmpty(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false, false,
+		graph.TCP|graph.UDP,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -130,8 +130,8 @@ func TestDockerClientContainersSingleExited(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false, false,
+		graph.TCP|graph.UDP,
+		false,
 		nil,
 		voidProgress,
 	)
@@ -187,8 +187,7 @@ func TestDockerClientContainersExecCreateError(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -241,8 +240,7 @@ func TestDockerClientContainersInspectError(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		true,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -281,6 +279,34 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{
+			{
+				Type:        "bind",
+				Source:      "src",
+				Destination: "dst",
+			},
+			{
+				Type:        "bind",
+				Source:      "src1",
+				Destination: "dst1",
+			},
+			{
+				Type:        "mount",
+				Source:      "src2",
+				Destination: "dst2",
+			},
+		}
+
+		return rv
+	}
+
 	cm.OnExecCreate = func() (rv types.IDResponse) {
 		cm.Err = testErr
 
@@ -299,8 +325,7 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -339,6 +364,34 @@ func TestDockerClientContainersParseError(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{
+			{
+				Type:        "bind",
+				Source:      "src",
+				Destination: "dst",
+			},
+			{
+				Type:        "bind",
+				Source:      "src1",
+				Destination: "dst1",
+			},
+			{
+				Type:        "mount",
+				Source:      "src2",
+				Destination: "dst2",
+			},
+		}
+
+		return rv
+	}
+
 	cm.OnExecCreate = func() (rv types.IDResponse) {
 		return
 	}
@@ -362,8 +415,7 @@ func TestDockerClientContainersParseError(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -420,6 +472,33 @@ func TestDockerClientContainersSingle(t *testing.T) {
 				},
 			}
 		},
+		OnInspect: func() (rv types.ContainerJSON) {
+			rv.ContainerJSONBase = &types.ContainerJSONBase{}
+			rv.State = &types.ContainerState{Pid: 1}
+			rv.Config = &container.Config{
+				Cmd: []string{"foo"},
+				Env: []string{"BAR=1"},
+			}
+			rv.Mounts = []types.MountPoint{
+				{
+					Type:        "bind",
+					Source:      "src",
+					Destination: "dst",
+				},
+				{
+					Type:        "bind",
+					Source:      "src1",
+					Destination: "dst1",
+				},
+				{
+					Type:        "mount",
+					Source:      "src2",
+					Destination: "dst2",
+				},
+			}
+
+			return rv
+		},
 		OnExecCreate: func() (rv types.IDResponse) {
 			return
 		},
@@ -443,8 +522,7 @@ func TestDockerClientContainersSingle(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -543,8 +621,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		true,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -625,8 +702,7 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		true,
+		graph.TCP|graph.UDP,
 		false,
 		[]string{"BAZ"},
 		voidProgress,
@@ -732,16 +808,15 @@ func TestDockerClientNsEnterInspectError(t *testing.T) {
 		t.Fatal("client:", err)
 	}
 
-	_, err = cli.Containers(
+	rv, _ := cli.Containers(
 		context.Background(),
 		graph.ALL,
-		false,
 		false,
 		nil,
 		voidProgress,
 	)
 
-	if !errors.Is(err, testErr) {
+	if len(rv) > 0 {
 		t.Fail()
 	}
 }
@@ -775,17 +850,29 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
-			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
 	}
 
 	failEnter := func(_ int, _ graph.NetProto, _ func(
-		_ *graph.Connection,
+		_ int, _ *graph.Connection,
 	)) error {
 		return testErr
 	}
@@ -795,22 +882,21 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(failEnter),
+		client.WithNsenterFn(failEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
 	}
 
-	_, err = cli.Containers(
+	rv, _ := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
 	)
 
-	if !errors.Is(err, testErr) {
+	if len(rv) > 0 {
 		t.Fail()
 	}
 }
@@ -842,12 +928,25 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{},
 			{"a"},
 			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
@@ -856,7 +955,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 	var count int
 
 	enter := func(_ int, _ graph.NetProto, _ func(
-		_ *graph.Connection,
+		_ int, _ *graph.Connection,
 	)) error {
 		count++
 
@@ -868,7 +967,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(enter),
+		client.WithNsenterFn(enter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -876,8 +975,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 
 	if _, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -886,6 +984,7 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 	}
 
 	if count != 1 {
+		t.Log("here")
 		t.Fail()
 	}
 }
@@ -917,19 +1016,31 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 		}
 	}
 
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1", "BAZ=2"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
-			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
 	}
 
 	testEnter := func(_ int, _ graph.NetProto, fn func(
-		_ *graph.Connection,
+		_ int, _ *graph.Connection,
 	)) error {
-		fn(&graph.Connection{})
+		fn(1, &graph.Connection{})
 
 		return nil
 	}
@@ -939,7 +1050,7 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(testEnter),
+		client.WithNsenterFn(testEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -947,8 +1058,7 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 
 	_, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -983,22 +1093,45 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 	}
 
 	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
-		rv.Titles = []string{"PID"}
+		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
-			{"1"},
+			{"1", "test"},
 		}
 
 		return rv
 	}
 
-	testEnter := func(_ int, _ graph.NetProto, fn func(*graph.Connection)) error {
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{
+			{
+				Type:        "bind",
+				Source:      "src",
+				Destination: "dst",
+			},
+			{
+				Type:        "bind",
+				Source:      "src1",
+				Destination: "dst1",
+			},
+		}
+
+		return rv
+	}
+
+	testEnter := func(_ int, _ graph.NetProto, fn func(int, *graph.Connection)) error {
 		loc := net.ParseIP("127.0.0.1")
 		nod := net.ParseIP("1.1.1.1")
 		rem := net.ParseIP("2.2.2.2")
 
-		fn(&graph.Connection{Process: "1", LocalPort: 1, RemotePort: 0, LocalIP: nod, Proto: graph.TCP})
-		fn(&graph.Connection{Process: "1", LocalPort: 10, RemotePort: 2, LocalIP: nod, RemoteIP: rem, Proto: graph.TCP})
-		fn(&graph.Connection{Process: "1", LocalPort: 5, LocalIP: loc, Proto: graph.TCP})
+		fn(1, &graph.Connection{Process: "1", SrcPort: 1, Listen: true, SrcIP: nod, Proto: graph.TCP})
+		fn(1, &graph.Connection{Process: "1", SrcPort: 10, DstPort: 2, SrcIP: nod, DstIP: rem, Proto: graph.TCP})
+		fn(1, &graph.Connection{Process: "1", SrcPort: 5, Listen: true, SrcIP: loc, Proto: graph.TCP})
 
 		return nil
 	}
@@ -1008,7 +1141,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 			return cm, nil
 		}),
 		client.WithMode(client.LinuxNsenter),
-		client.WithNsEnter(testEnter),
+		client.WithNsenterFn(testEnter),
 	)
 	if err != nil {
 		t.Fatal("client:", err)
@@ -1016,8 +1149,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 
 	rv, err := cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		false,
 		nil,
 		voidProgress,
@@ -1036,8 +1168,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 
 	rv, err = cli.Containers(
 		context.Background(),
-		graph.ALL,
-		false,
+		graph.TCP|graph.UDP,
 		true,
 		nil,
 		voidProgress,
@@ -1051,6 +1182,104 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 	}
 
 	if rv[0].ConnectionsCount() != 3 {
+		t.Log("4", rv[0].ConnectionsCount())
+		t.Fail()
+	}
+}
+
+func TestDockerClientUnixSockets(t *testing.T) {
+	t.Parallel()
+
+	cm := &clientMock{}
+
+	cm.OnList = func() (rv []types.Container) {
+		return []types.Container{
+			{
+				ID:    "1",
+				Names: []string{"test1"},
+				Image: "test-image",
+				State: "running",
+				NetworkSettings: &types.SummaryNetworkSettings{
+					Networks: map[string]*network.EndpointSettings{
+						"test-net": {
+							EndpointID: "1",
+							IPAddress:  "1.1.1.1",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+		rv.Titles = []string{"PID,CMD"}
+		rv.Processes = [][]string{
+			{"1", "test"},
+		}
+
+		return rv
+	}
+
+	cm.OnInspect = func() (rv types.ContainerJSON) {
+		rv.ContainerJSONBase = &types.ContainerJSONBase{}
+		rv.State = &types.ContainerState{Pid: 1}
+		rv.Config = &container.Config{
+			Cmd: []string{"foo"},
+			Env: []string{"BAR=1"},
+		}
+		rv.Mounts = []types.MountPoint{}
+
+		return rv
+	}
+
+	const myTestInode uint64 = 12345
+
+	testInodes := func(_ int, cb func(uint64)) error {
+		cb(myTestInode)
+
+		return nil
+	}
+
+	testEnter := func(_ int, _ graph.NetProto, fn func(int, *graph.Connection)) error {
+		fn(1, &graph.Connection{
+			Process: "1",
+			Listen:  true,
+			Path:    "/test/unix",
+			Proto:   graph.UNIX,
+			Inode:   myTestInode,
+		})
+
+		return nil
+	}
+
+	cli, err := client.NewDocker(
+		client.WithClientCreator(func() (client.DockerClient, error) {
+			return cm, nil
+		}),
+		client.WithMode(client.LinuxNsenter),
+		client.WithNsenterFn(testEnter),
+		client.WithInodesFn(testInodes),
+	)
+	if err != nil {
+		t.Fatal("client:", err)
+	}
+
+	rv, err := cli.Containers(
+		context.Background(),
+		graph.UNIX,
+		true,
+		nil,
+		voidProgress,
+	)
+	if err != nil {
+		t.Fatal("containers:", err)
+	}
+
+	if len(rv) != 1 {
+		t.Fail()
+	}
+
+	if rv[0].ConnectionsCount() != 1 {
 		t.Fail()
 	}
 }

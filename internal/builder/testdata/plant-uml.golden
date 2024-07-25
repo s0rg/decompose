@@ -4,47 +4,47 @@ skinparam nodesep 5
 skinparam ranksep 5
 component "1" as id_b8d1bdeb90c390c3f601 {
  component "" as id_b8d1bdeb90c390c3f601 {
-  portin "1/tcp" as id_d39ac7cbd4ded393cd01
-  portin "2/tcp" as id_f692a2faacfbd4a6b501
-  portin "5/tcp" as id_ffbfeddcc8fcb4e09901
+  portin "tcp:1" as id_baafedd79f8dae92d601
+  portin "tcp:2" as id_87acedd79fedad92d601
+  portin "tcp:5" as id_eea1edd79f8dad92d601
  }
- portin "1/tcp" as id_d39ac7cbd4ded393cd01
- portin "2/tcp" as id_f692a2faacfbd4a6b501
+ portin "tcp:1" as id_baafedd79f8dae92d601
+ portin "tcp:2" as id_87acedd79fedad92d601
 }
 component "2" as id_d1dbbdeb90a391c3f601 {
  component "" as id_d1dbbdeb90a391c3f601 {
-  portin "1/tcp" as id_988bfed49acfb0f020
-  portin "2/tcp" as id_d9c5d0b2bdec95fb60
+  portin "tcp:1" as id_a9bca8f08cc3a2cf18
+  portin "tcp:2" as id_90b2a8f08ce3a1cf18
  }
- portin "1/tcp" as id_988bfed49acfb0f020
- portin "2/tcp" as id_d9c5d0b2bdec95fb60
+ portin "tcp:1" as id_a9bca8f08cc3a2cf18
+ portin "tcp:2" as id_90b2a8f08ce3a1cf18
 }
 component "3" as id_e2bc86b0c8c9ebb1af01 {
  component "" as id_e2bc86b0c8c9ebb1af01 {
-  portin "1/tcp" as id_a9c28885c4aedcb323
-  portin "2/tcp" as id_a89eb990a1ceb69b8e01
+  portin "tcp:1" as id_9885fdc88aa7fef313
+  portin "tcp:2" as id_b18ffdc88a87fff313
  }
- portin "1/tcp" as id_a9c28885c4aedcb323
- portin "2/tcp" as id_a89eb990a1ceb69b8e01
+ portin "tcp:1" as id_9885fdc88aa7fef313
+ portin "tcp:2" as id_b18ffdc88a87fff313
 }
 cloud "Externals" as ext {
  component "ext2" as id_a7fadbdd96b2cbabd101 {
-  portin "443/tcp" as id_b494f7ce9df8ea8aad01
+  portin "tcp:443" as id_e1dee4c2d0c6cdbcfa01
   }
  }
  component "ext2" as id_a7fadbdd96b2cbabd101 {
-  portin "443/tcp" as id_b494f7ce9df8ea8aad01
+  portin "tcp:443" as id_e1dee4c2d0c6cdbcfa01
   }
  }
 }
 
-id_d39ac7cbd4ded393cd01 -> id_d39ac7cbd4ded393cd01
-id_f692a2faacfbd4a6b501 -> id_f692a2faacfbd4a6b501
-id_b8d1bdeb90c390c3f601 --> id_ffbfeddcc8fcb4e09901
-id_b8d1bdeb90c390c3f601 -----> id_d9c5d0b2bdec95fb60: 2/tcp
-id_988bfed49acfb0f020 -> id_988bfed49acfb0f020
-id_d9c5d0b2bdec95fb60 -> id_d9c5d0b2bdec95fb60
-id_d1dbbdeb90a391c3f601 -----> id_d39ac7cbd4ded393cd01: 1/tcp
-id_d1dbbdeb90a391c3f601 -----> id_f692a2faacfbd4a6b501: 2/tcp
-id_d1dbbdeb90a391c3f601 -----> id_a1aca2e8affb90bf9701: 3/tcp
+id_baafedd79f8dae92d601 -> id_baafedd79f8dae92d601
+id_87acedd79fedad92d601 -> id_87acedd79fedad92d601
+id_b8d1bdeb90c390c3f601 --> id_eea1edd79f8dad92d601
+id_b8d1bdeb90c390c3f601 -----> id_90b2a8f08ce3a1cf18: tcp:2
+id_a9bca8f08cc3a2cf18 -> id_a9bca8f08cc3a2cf18
+id_90b2a8f08ce3a1cf18 -> id_90b2a8f08ce3a1cf18
+id_d1dbbdeb90a391c3f601 -----> id_baafedd79f8dae92d601: tcp:1
+id_d1dbbdeb90a391c3f601 -----> id_87acedd79fedad92d601: tcp:2
+id_d1dbbdeb90a391c3f601 -----> id_d4a8edd79fcdad92d601: tcp:3
 @enduml

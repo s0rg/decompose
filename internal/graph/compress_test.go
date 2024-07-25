@@ -47,7 +47,7 @@ func TestCompressor(t *testing.T) {
 
 	tb := &testNamedBuilder{}
 
-	c := graph.NewCompressor(tb, diff, false)
+	c := graph.NewCompressor(tb, "", diff, false)
 
 	// ingress
 	nginx := &node.Node{
@@ -56,7 +56,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	nginx.Ports.Add("nginx", &node.Port{Kind: "tcp", Value: 443})
+	nginx.Ports.Add("nginx", &node.Port{Kind: "tcp", Value: "443"})
 	c.AddNode(nginx)
 
 	// apps
@@ -66,7 +66,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	app1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	app1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(app1)
 
 	app2 := &node.Node{
@@ -75,7 +75,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	app2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	app2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(app2)
 
 	// dbs
@@ -85,7 +85,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	bouncer.Ports.Add("pgbouncer", &node.Port{Kind: "tcp", Value: 5432})
+	bouncer.Ports.Add("pgbouncer", &node.Port{Kind: "tcp", Value: "5432"})
 	c.AddNode(bouncer)
 
 	db1 := &node.Node{
@@ -94,7 +94,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	db1.Ports.Add("postgres", &node.Port{Kind: "tcp", Value: 5432})
+	db1.Ports.Add("postgres", &node.Port{Kind: "tcp", Value: "5432"})
 	c.AddNode(db1)
 
 	db2 := &node.Node{
@@ -103,7 +103,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	db2.Ports.Add("postgres", &node.Port{Kind: "tcp", Value: 5432})
+	db2.Ports.Add("postgres", &node.Port{Kind: "tcp", Value: "5432"})
 	c.AddNode(db2)
 
 	// external
@@ -113,7 +113,7 @@ func TestCompressor(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	ext.Ports.Add("", &node.Port{Kind: "tcp", Value: 9000})
+	ext.Ports.Add("", &node.Port{Kind: "tcp", Value: "9000"})
 	c.AddNode(ext)
 
 	// edges
@@ -121,67 +121,67 @@ func TestCompressor(t *testing.T) {
 	c.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "2",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "3",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "2",
 		DstID: "4",
-		Port:  &node.Port{Kind: "tcp", Value: 5432},
+		Port:  &node.Port{Kind: "tcp", Value: "5432"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "4",
-		Port:  &node.Port{Kind: "tcp", Value: 5432},
+		Port:  &node.Port{Kind: "tcp", Value: "5432"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "4",
 		DstID: "5",
-		Port:  &node.Port{Kind: "tcp", Value: 5432},
+		Port:  &node.Port{Kind: "tcp", Value: "5432"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "4",
 		DstID: "5",
-		Port:  &node.Port{Kind: "tcp", Value: 5432},
+		Port:  &node.Port{Kind: "tcp", Value: "5432"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "2",
-		Port:  &node.Port{Kind: "udp", Value: 22},
+		Port:  &node.Port{Kind: "udp", Value: "22"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "X",
 		DstID: "2",
-		Port:  &node.Port{Kind: "udp", Value: 22},
+		Port:  &node.Port{Kind: "udp", Value: "22"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "1",
 		DstID: "X",
-		Port:  &node.Port{Kind: "udp", Value: 22},
+		Port:  &node.Port{Kind: "udp", Value: "22"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "2",
 		DstID: "EXT",
-		Port:  &node.Port{Kind: "tcp", Value: 9000},
+		Port:  &node.Port{Kind: "tcp", Value: "9000"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "3",
 		DstID: "EXT",
-		Port:  &node.Port{Kind: "tcp", Value: 9000},
+		Port:  &node.Port{Kind: "tcp", Value: "9000"},
 	})
 
 	if err := c.Write(nil); err != nil {
@@ -198,7 +198,7 @@ func TestCompressorForce(t *testing.T) {
 
 	tb := &testNamedBuilder{}
 
-	c := graph.NewCompressor(tb, 1, true)
+	c := graph.NewCompressor(tb, "", 1, true)
 
 	a1 := &node.Node{
 		ID:    "a1-id",
@@ -206,7 +206,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	a1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	a1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(a1)
 
 	a2 := &node.Node{
@@ -215,7 +215,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	a2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	a2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(a2)
 
 	a3 := &node.Node{
@@ -224,7 +224,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	a3.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	a3.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(a3)
 
 	b1 := &node.Node{
@@ -233,7 +233,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	b1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	b1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(b1)
 
 	b2 := &node.Node{
@@ -242,7 +242,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	b2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	b2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(b2)
 
 	b3 := &node.Node{
@@ -251,7 +251,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	b3.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	b3.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(b3)
 
 	c1 := &node.Node{
@@ -260,7 +260,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	c1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	c1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(c1)
 
 	c2 := &node.Node{
@@ -269,7 +269,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	c2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	c2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(c2)
 
 	c3 := &node.Node{
@@ -278,7 +278,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	c3.Ports.Add("app", &node.Port{Kind: "tcp", Value: 8080})
+	c3.Ports.Add("app", &node.Port{Kind: "tcp", Value: "8080"})
 	c.AddNode(c3)
 
 	d1 := &node.Node{
@@ -287,7 +287,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	d1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 5555})
+	d1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "5555"})
 	c.AddNode(d1)
 
 	d2 := &node.Node{
@@ -296,7 +296,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	d2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 5555})
+	d2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "5555"})
 	c.AddNode(d2)
 
 	e1 := &node.Node{
@@ -305,7 +305,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	e1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 6666})
+	e1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "6666"})
 	c.AddNode(e1)
 
 	e2 := &node.Node{
@@ -314,7 +314,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	e2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 6666})
+	e2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "6666"})
 	c.AddNode(e2)
 
 	f1 := &node.Node{
@@ -323,7 +323,7 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	f1.Ports.Add("app", &node.Port{Kind: "tcp", Value: 7777})
+	f1.Ports.Add("app", &node.Port{Kind: "tcp", Value: "7777"})
 	c.AddNode(f1)
 
 	f2 := &node.Node{
@@ -332,139 +332,139 @@ func TestCompressorForce(t *testing.T) {
 		Ports: &node.Ports{},
 	}
 
-	f2.Ports.Add("app", &node.Port{Kind: "tcp", Value: 7777})
+	f2.Ports.Add("app", &node.Port{Kind: "tcp", Value: "7777"})
 	c.AddNode(f2)
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a1-id",
 		DstID: "b1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a1-id",
 		DstID: "c1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a2-id",
 		DstID: "b2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a2-id",
 		DstID: "c2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b1-id",
 		DstID: "a1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b1-id",
 		DstID: "c1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b2-id",
 		DstID: "a2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b2-id",
 		DstID: "c2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "c1-id",
 		DstID: "a1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "c1-id",
 		DstID: "b1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "c2-id",
 		DstID: "a2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "c2-id",
 		DstID: "a2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a1-id",
 		DstID: "d1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 5555},
+		Port:  &node.Port{Kind: "tcp", Value: "5555"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a2-id",
 		DstID: "d2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 5555},
+		Port:  &node.Port{Kind: "tcp", Value: "5555"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b1-id",
 		DstID: "e1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 6666},
+		Port:  &node.Port{Kind: "tcp", Value: "6666"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "b2-id",
 		DstID: "e2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 6666},
+		Port:  &node.Port{Kind: "tcp", Value: "6666"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "e1-id",
 		DstID: "b2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "e2-id",
 		DstID: "b1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "f1-id",
 		DstID: "c1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "f2-id",
 		DstID: "c2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a1-id",
 		DstID: "a1-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	c.AddEdge(&node.Edge{
 		SrcID: "a1-id",
 		DstID: "a2-id",
-		Port:  &node.Port{Kind: "tcp", Value: 8080},
+		Port:  &node.Port{Kind: "tcp", Value: "8080"},
 	})
 
 	if err := c.Write(nil); err != nil {
@@ -481,7 +481,7 @@ func TestCompressorName(t *testing.T) {
 
 	tb := &testNamedBuilder{}
 
-	c := graph.NewCompressor(tb, diff, false)
+	c := graph.NewCompressor(tb, "", diff, false)
 
 	if !strings.Contains(c.Name(), "compressed") {
 		t.Fail()
@@ -496,7 +496,7 @@ func TestCompressorAddError(t *testing.T) {
 		AddError: myErr,
 	}
 
-	c := graph.NewCompressor(tb, diff, false)
+	c := graph.NewCompressor(tb, "", diff, false)
 
 	if err := c.AddNode(&node.Node{Ports: &node.Ports{}}); err != nil {
 		t.Fail()
@@ -516,7 +516,7 @@ func TestCompressorWriteError(t *testing.T) {
 		WriteError: myErr,
 	}
 
-	c := graph.NewCompressor(tb, diff, false)
+	c := graph.NewCompressor(tb, "", diff, false)
 
 	if err := c.AddNode(&node.Node{Ports: &node.Ports{}}); err != nil {
 		t.Fail()

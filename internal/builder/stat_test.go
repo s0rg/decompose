@@ -35,16 +35,16 @@ func TestStat(t *testing.T) {
     "is_external": false,
     "networks": ["test"],
     "listen": {"1": [
-        {"kind": "tcp", "value": 1},
-        {"kind": "udp", "value": 1}
+        {"kind": "tcp", "value": "1"},
+        {"kind": "udp", "value": "1"}
     ]},
     "connected": {
         "test2":[
-            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": 2}},
-            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": 2}}
+            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": "2"}},
+            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": "2"}}
         ],
         "test3":[
-            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": 3}}
+            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": "3"}}
         ]
       }
     }
@@ -53,16 +53,16 @@ func TestStat(t *testing.T) {
     "is_external": false,
     "networks": ["test"],
     "listen": {"2":[
-        {"kind": "tcp", "value": 2},
-        {"kind": "udp", "value": 2}
+        {"kind": "tcp", "value": "2"},
+        {"kind": "udp", "value": "2"}
     ]},
     "connected": {
         "test1":[
-            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": 1}},
-            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": 1}}
+            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": "1"}},
+            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": "1"}}
         ],
         "test3": [
-            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": 3}}
+            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": "3"}}
         ]
       }
     }
@@ -71,8 +71,8 @@ func TestStat(t *testing.T) {
     "is_external": true,
     "networks": ["test"],
     "listen": {"3":[
-        {"kind": "tcp", "value": 3},
-        {"kind": "udp", "value": 3}
+        {"kind": "tcp", "value": "3"},
+        {"kind": "udp", "value": "3"}
     ]},
     "connected": {}
     }`
@@ -106,23 +106,23 @@ func TestStat(t *testing.T) {
 		t.Fail()
 	}
 
-	if strings.Count(res, "1/tcp") != 1 {
+	if strings.Count(res, "tcp:1") != 1 {
 		t.Fail()
 	}
 
-	if strings.Count(res, "2/tcp") != 1 {
+	if strings.Count(res, "tcp:2") != 1 {
 		t.Fail()
 	}
 
-	if strings.Count(res, "1/udp") != 1 {
+	if strings.Count(res, "udp:1") != 1 {
 		t.Fail()
 	}
 
-	if strings.Count(res, "2/udp") != 1 {
+	if strings.Count(res, "udp:2") != 1 {
 		t.Fail()
 	}
 
-	if strings.Contains(res, "3/tcp") || strings.Contains(res, "3/udp") {
+	if strings.Contains(res, "tcp:3") || strings.Contains(res, "udp:3") {
 		t.Fail()
 	}
 }
@@ -130,8 +130,8 @@ func TestStat(t *testing.T) {
 func TestStatCluster(t *testing.T) {
 	t.Parallel()
 
-	const rules = `[{"name": "foo", "if": "node.Listen.Has('1/tcp')"},
-{"name": "bar", "if": "node.Listen.HasAny('2/tcp')"}]`
+	const rules = `[{"name": "foo", "if": "node.Listen.Has('tcp:1')"},
+{"name": "bar", "if": "node.Listen.HasAny('tcp:2')"}]`
 
 	cb := cluster.NewRules(builder.NewStat(), nil)
 
@@ -152,16 +152,16 @@ func TestStatCluster(t *testing.T) {
     "is_external": false,
     "networks": ["test"],
     "listen": {"1": [
-        {"kind": "tcp", "value": 1},
-        {"kind": "udp", "value": 1}
+        {"kind": "tcp", "value": "1"},
+        {"kind": "udp", "value": "1"}
     ]},
     "connected": {
         "test2":[
-            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": 2}},
-            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": 2}}
+            {"src": "1", "dst": "2", "port": {"kind": "tcp", "value": "2"}},
+            {"src": "1", "dst": "2", "port": {"kind": "udp", "value": "2"}}
         ],
         "test3":[
-            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": 3}}
+            {"src": "1", "dst": "3", "port": {"kind": "tcp", "value": "3"}}
         ]
       }
     }
@@ -170,16 +170,16 @@ func TestStatCluster(t *testing.T) {
     "is_external": false,
     "networks": ["test"],
     "listen": {"2":[
-        {"kind": "tcp", "value": 2},
-        {"kind": "udp", "value": 2}
+        {"kind": "tcp", "value": "2"},
+        {"kind": "udp", "value": "2"}
     ]},
     "connected": {
         "test1":[
-            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": 1}},
-            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": 1}}
+            {"src": "2", "dst": "1", "port": {"kind": "tcp", "value": "1"}},
+            {"src": "2", "dst": "1", "port": {"kind": "udp", "value": "1"}}
         ],
         "test3": [
-            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": 3}}
+            {"src": "2", "dst": "3", "port": {"kind": "udp", "value": "3"}}
         ]
       }
     }`

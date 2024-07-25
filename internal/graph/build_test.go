@@ -20,7 +20,7 @@ type testClient struct {
 func (tc *testClient) Containers(
 	_ context.Context,
 	_ graph.NetProto,
-	_, _ bool,
+	_ bool,
 	_ []string,
 	fn func(int, int),
 ) ([]*graph.Container, error) {
@@ -136,24 +136,24 @@ func testClientWithEnv() graph.ContainerClient {
 
 	// node 1
 	cli.Data[0].AddMany([]*graph.Connection{
-		{LocalPort: 1, Proto: graph.TCP},                                     // listen 1
-		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP},    // connected to node2:2
-		{RemoteIP: external, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to external:1
+		{SrcPort: 1, Proto: graph.TCP, Listen: true},                 // listen 1
+		{DstIP: node2, SrcPort: 10, DstPort: 2, Proto: graph.TCP},    // connected to node2:2
+		{DstIP: external, SrcPort: 10, DstPort: 1, Proto: graph.TCP}, // connected to external:1
 	})
 
 	// node 2
 	cli.Data[1].AddMany([]*graph.Connection{
-		{LocalPort: 2, Proto: graph.TCP},                                     // listen 2
-		{RemoteIP: node3, LocalPort: 10, RemotePort: 3, Proto: graph.TCP},    // connected to node3:3
-		{RemoteIP: external, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to external:2
+		{SrcPort: 2, Proto: graph.TCP, Listen: true},                 // listen 2
+		{DstIP: node3, SrcPort: 10, DstPort: 3, Proto: graph.TCP},    // connected to node3:3
+		{DstIP: external, SrcPort: 10, DstPort: 2, Proto: graph.TCP}, // connected to external:2
 	})
 
 	// node 3
 	cli.Data[2].AddMany([]*graph.Connection{
-		{LocalPort: 3, Proto: graph.TCP},                                     // listen 3
-		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP},    // connected to node1:1
-		{RemoteIP: node2, LocalPort: 122, RemotePort: 22, Proto: graph.TCP},  // connected to node2:22
-		{RemoteIP: external, LocalPort: 10, RemotePort: 3, Proto: graph.TCP}, // connected to external:3
+		{SrcPort: 3, Proto: graph.TCP, Listen: true},                 // listen 3
+		{DstIP: node1, SrcPort: 10, DstPort: 1, Proto: graph.TCP},    // connected to node1:1
+		{DstIP: node2, SrcPort: 122, DstPort: 22, Proto: graph.TCP},  // connected to node2:22
+		{DstIP: external, SrcPort: 10, DstPort: 3, Proto: graph.TCP}, // connected to external:3
 	})
 
 	return cli
@@ -235,8 +235,9 @@ func TestBuildNoNodes(t *testing.T) {
 
 	cli := testClientWithEnv()
 	cfg := &graph.Config{
-		Follow: flw,
-		Proto:  graph.ALL,
+		Follow:    flw,
+		OnlyLocal: true,
+		Proto:     graph.ALL,
 	}
 
 	if err := graph.Build(cfg, cli); err == nil {
@@ -302,15 +303,15 @@ func TestBuildLoops(t *testing.T) {
 	}}
 
 	cli.Data[0].AddMany([]*graph.Connection{
-		{LocalPort: 1, Proto: graph.TCP},                                  // listen 1
-		{RemoteIP: node2, LocalPort: 10, RemotePort: 2, Proto: graph.TCP}, // connected to node2:2
-		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to itself
+		{SrcPort: 1, Proto: graph.TCP},                            // listen 1
+		{DstIP: node2, SrcPort: 10, DstPort: 2, Proto: graph.TCP}, // connected to node2:2
+		{DstIP: node1, SrcPort: 10, DstPort: 1, Proto: graph.TCP}, // connected to itself
 	})
 
 	cli.Data[1].AddMany([]*graph.Connection{
-		{LocalPort: 2, Proto: graph.TCP},                                  // listen 2
-		{RemoteIP: node1, LocalPort: 10, RemotePort: 1, Proto: graph.TCP}, // connected to node1:1
-		{RemoteIP: local, LocalPort: 11, RemotePort: 2, Proto: graph.TCP}, // connected to self:2
+		{SrcPort: 2, Proto: graph.TCP},                            // listen 2
+		{DstIP: node1, SrcPort: 10, DstPort: 1, Proto: graph.TCP}, // connected to node1:1
+		{DstIP: local, SrcPort: 11, DstPort: 2, Proto: graph.TCP}, // connected to self:2
 	})
 
 	bld := &testBuilder{}

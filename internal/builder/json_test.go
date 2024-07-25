@@ -30,8 +30,8 @@ func TestJSON(t *testing.T) {
 		Networks: []string{"test"},
 		Listen: map[string][]*node.Port{
 			"foo": {
-				&node.Port{Kind: "tcp", Value: 2},
-				&node.Port{Kind: "udp", Value: 1},
+				&node.Port{Kind: "tcp", Value: "2"},
+				&node.Port{Kind: "udp", Value: "1"},
 			},
 		},
 		Tags:      []string{},
@@ -100,18 +100,18 @@ func TestJSONAddEdge(t *testing.T) {
           "is_external": false,
           "networks": ["test"],
           "listen": {"foo":[
-            {"kind": "udp", "value": 1}
+            {"kind": "udp", "value": "1"}
            ]},
-          "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": 2}}]}
+          "connected": {"test2":[{"src": "foo", "dst": "bar", "port": {"kind": "tcp", "value": "2"}}]}
         }
         {
           "name": "test2",
           "is_external": false,
           "networks": ["test"],
           "listen": {"bar": [
-            {"kind": "tcp", "value": 2}
+            {"kind": "tcp", "value": "2"}
           ]},
-          "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": 1}}]}
+          "connected": {"test1":[{"src": "bar", "dst": "foo", "port": {"kind": "udp", "value": "1"}}]}
         }`
 
 	bldr := builder.NewJSON()

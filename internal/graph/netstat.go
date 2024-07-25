@@ -12,7 +12,28 @@ import (
 const (
 	stateListen      = "LISTEN"
 	stateEstablished = "ESTABLISHED"
+	netstatCmd       = "netstat"
+	netstatArg       = "-apn"
 )
+
+func netstatArgFor(p NetProto) (rv string) {
+	if p.Has(TCP) {
+		rv += "t"
+	}
+
+	if p.Has(UDP) {
+		rv += "u"
+	}
+
+	return rv
+}
+
+func NetstatCMD(p NetProto) []string {
+	return []string{
+		netstatCmd,
+		netstatArg + netstatArgFor(p),
+	}
+}
 
 func ParseNetstat(r io.Reader, cb func(*Connection)) (err error) {
 	s := bufio.NewScanner(r)
@@ -52,17 +73,20 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		return nil, false
 	}
 
-	conn = &Connection{}
-
-	if conn.Proto, ok = parseKind(parts[0], len(parts)); !ok {
+	proto, ok := parseKind(parts[0], len(parts))
+	if !ok {
 		return nil, false
 	}
 
-	if conn.LocalIP, conn.LocalPort, ok = splitIP(parts[3]); !ok {
+	conn = &Connection{
+		Proto: proto,
+	}
+
+	if conn.SrcIP, conn.SrcPort, ok = splitIP(parts[3]); !ok {
 		return nil, false
 	}
 
-	if conn.RemoteIP, conn.RemotePort, ok = splitIP(parts[4]); !ok {
+	if conn.DstIP, conn.DstPort, ok = splitIP(parts[4]); !ok {
 		return nil, false
 	}
 
@@ -72,10 +96,14 @@ func parseConnection(s string) (conn *Connection, ok bool) {
 		nProcField = 6
 
 		switch parts[5] {
-		case stateListen, stateEstablished:
+		case stateListen:
+			conn.Listen = true
+		case stateEstablished:
 		default: // skip all other states
 			return nil, false
 		}
+	} else {
+		conn.Listen = (conn.DstPort > 0 && conn.SrcPort < conn.DstPort) || conn.DstPort == 0
 	}
 
 	if conn.Process, ok = splitName(parts[nProcField]); !ok {
@@ -102,7 +130,7 @@ func parseKind(kind string, fieldsNum int) (k NetProto, ok bool) {
 	return
 }
 
-func splitIP(v string) (ip net.IP, port uint16, ok bool) {
+func splitIP(v string) (ip net.IP, port int, ok bool) {
 	idx := strings.LastIndexByte(v, ':')
 	if idx < 0 {
 		return
@@ -120,7 +148,7 @@ func splitIP(v string) (ip net.IP, port uint16, ok bool) {
 			return
 		}
 
-		port = uint16(uval)
+		port = int(uval)
 	}
 
 	return ip, port, true
@@ -139,7 +167,9 @@ func splitName(v string) (name string, ok bool) {
 		return
 	}
 
-	name = fields[0]
+	if name = fields[0]; name == "" {
+		return
+	}
 
-	return name, name != ""
+	return name, true
 }

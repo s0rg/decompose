@@ -64,7 +64,7 @@ func (cm *clientMock) ContainerInspect(
 func (cm *clientMock) ContainerExecCreate(
 	_ context.Context,
 	_ string,
-	_ types.ExecConfig,
+	_ container.ExecOptions,
 ) (rv types.IDResponse, err error) {
 	if cm.Err != nil {
 		err = cm.Err
@@ -78,7 +78,7 @@ func (cm *clientMock) ContainerExecCreate(
 func (cm *clientMock) ContainerExecAttach(
 	_ context.Context,
 	_ string,
-	_ types.ExecStartCheck,
+	_ container.ExecStartOptions,
 ) (rv types.HijackedResponse, err error) {
 	if cm.Err != nil {
 		err = cm.Err

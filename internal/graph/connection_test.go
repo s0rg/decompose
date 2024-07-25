@@ -11,13 +11,13 @@ func TestConnectionIsListener(t *testing.T) {
 
 	c := graph.Connection{}
 
-	if !c.IsListener() {
+	if c.IsListener() {
 		t.Fail()
 	}
 
-	c.RemotePort = 1
+	c.Listen = true
 
-	if c.IsListener() {
+	if !c.IsListener() {
 		t.Fail()
 	}
 }
@@ -27,13 +27,13 @@ func TestConnectionIsInbound(t *testing.T) {
 
 	c := graph.Connection{}
 
-	c.RemotePort = 1
+	c.DstPort = 1
 
 	if !c.IsInbound() {
 		t.Fail()
 	}
 
-	c.LocalPort = 2
+	c.SrcPort = 2
 
 	if c.IsInbound() {
 		t.Fail()

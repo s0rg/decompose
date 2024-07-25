@@ -12,9 +12,9 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/prometheus/procfs"
-	"github.com/s0rg/set"
 
 	"github.com/s0rg/decompose/internal/graph"
+	"github.com/s0rg/set"
 )
 
 const (
@@ -54,20 +54,21 @@ func Default() (rv DockerClient, err error) {
 	return dc, nil
 }
 
-func isValidState(state uint64) (ok bool) {
-	switch state {
-	case tcpEstablished, tcpListen:
-		ok = true
-	default:
+func checkState(state uint64) (listener, valid bool) {
+	if state == tcpListen {
+		return true, true
 	}
 
-	return ok
+	if state == tcpEstablished {
+		return false, true
+	}
+
+	return false, false
 }
 
 func scanTCP(
 	pfs procfs.FS,
 	name string,
-	inodes set.Unordered[uint64],
 	onconn func(*graph.Connection),
 ) (err error) {
 	tcp4, err := pfs.NetTCP()
@@ -76,21 +77,20 @@ func scanTCP(
 	}
 
 	for _, s := range tcp4 {
-		if !isValidState(s.St) {
-			continue
-		}
-
-		if !inodes.Has(s.Inode) {
+		listener, ok := checkState(s.St)
+		if !ok {
 			continue
 		}
 
 		onconn(&graph.Connection{
-			LocalIP:    s.LocalAddr,
-			RemoteIP:   s.RemAddr,
-			LocalPort:  uint16(s.LocalPort),
-			RemotePort: uint16(s.RemPort),
-			Proto:      graph.TCP,
-			Process:    name,
+			Process: name,
+			Inode:   s.Inode,
+			SrcIP:   s.LocalAddr,
+			DstIP:   s.RemAddr,
+			SrcPort: int(s.LocalPort),
+			DstPort: int(s.RemPort),
+			Proto:   graph.TCP,
+			Listen:  listener,
 		})
 	}
 
@@ -100,21 +100,20 @@ func scanTCP(
 	}
 
 	for _, s := range tcp6 {
-		if !isValidState(s.St) {
-			continue
-		}
-
-		if !inodes.Has(s.Inode) {
+		listener, ok := checkState(s.St)
+		if !ok {
 			continue
 		}
 
 		onconn(&graph.Connection{
-			LocalIP:    s.LocalAddr,
-			RemoteIP:   s.RemAddr,
-			LocalPort:  uint16(s.LocalPort),
-			RemotePort: uint16(s.RemPort),
-			Proto:      graph.TCP,
-			Process:    name,
+			Process: name,
+			Inode:   s.Inode,
+			SrcIP:   s.LocalAddr,
+			DstIP:   s.RemAddr,
+			SrcPort: int(s.LocalPort),
+			DstPort: int(s.RemPort),
+			Proto:   graph.TCP,
+			Listen:  listener,
 		})
 	}
 
@@ -124,7 +123,6 @@ func scanTCP(
 func scanUDP(
 	pfs procfs.FS,
 	name string,
-	inodes set.Unordered[uint64],
 	onconn func(*graph.Connection),
 ) (err error) {
 	udp4, err := pfs.NetUDP()
@@ -133,17 +131,14 @@ func scanUDP(
 	}
 
 	for _, s := range udp4 {
-		if !inodes.Has(s.Inode) {
-			continue
-		}
-
 		onconn(&graph.Connection{
-			LocalIP:    s.LocalAddr,
-			RemoteIP:   s.RemAddr,
-			LocalPort:  uint16(s.LocalPort),
-			RemotePort: uint16(s.RemPort),
-			Proto:      graph.UDP,
-			Process:    name,
+			Process: name,
+			Inode:   s.Inode,
+			SrcIP:   s.LocalAddr,
+			DstIP:   s.RemAddr,
+			SrcPort: int(s.LocalPort),
+			DstPort: int(s.RemPort),
+			Proto:   graph.UDP,
 		})
 	}
 
@@ -153,17 +148,37 @@ func scanUDP(
 	}
 
 	for _, s := range udp6 {
-		if !inodes.Has(s.Inode) {
-			continue
-		}
-
 		onconn(&graph.Connection{
-			LocalIP:    s.LocalAddr,
-			RemoteIP:   s.RemAddr,
-			LocalPort:  uint16(s.LocalPort),
-			RemotePort: uint16(s.RemPort),
-			Proto:      graph.UDP,
-			Process:    name,
+			Process: name,
+			Inode:   s.Inode,
+			SrcIP:   s.LocalAddr,
+			DstIP:   s.RemAddr,
+			SrcPort: int(s.LocalPort),
+			DstPort: int(s.RemPort),
+			Proto:   graph.UDP,
+		})
+	}
+
+	return nil
+}
+
+func scanUNIX(
+	pfs procfs.FS,
+	name string,
+	onconn func(*graph.Connection),
+) (err error) {
+	unix, err := pfs.NetUNIX()
+	if err != nil {
+		return fmt.Errorf("procfs/unix: %w", err)
+	}
+
+	for _, s := range unix.Rows {
+		onconn(&graph.Connection{
+			Process: name,
+			Inode:   s.Inode,
+			Path:    s.Path,
+			Listen:  s.Flags != 0,
+			Proto:   graph.UNIX,
 		})
 	}
 
@@ -172,30 +187,46 @@ func scanUDP(
 
 func processInfo(pid int) (
 	name string,
-	inodes set.Unordered[uint64],
 	err error,
 ) {
 	pfs, err := procfs.NewFS(procROOT)
 	if err != nil {
-		return "", nil, fmt.Errorf("procfs: %w", err)
+		return "", fmt.Errorf("procfs: %w", err)
 	}
 
 	proc, err := pfs.Proc(pid)
 	if err != nil {
-		return "", nil, fmt.Errorf("procfs/pid: %w", err)
+		return "", fmt.Errorf("procfs/pid: %w", err)
 	}
 
 	name, err = proc.Executable()
 	if err != nil {
-		return "", nil, fmt.Errorf("procfs/executable: %w", err)
+		return "", fmt.Errorf("procfs/executable: %w", err)
+	}
+
+	return filepath.Base(name), nil
+}
+
+func Inodes(
+	pid int,
+	cb func(uint64),
+) error {
+	pfs, err := procfs.NewFS(procROOT)
+	if err != nil {
+		return fmt.Errorf("procfs: %w", err)
+	}
+
+	proc, err := pfs.Proc(pid)
+	if err != nil {
+		return fmt.Errorf("procfs/pid: %w", err)
 	}
 
 	fds, err := proc.FileDescriptorsInfo()
 	if err != nil {
-		return "", nil, fmt.Errorf("procfs/descriptors: %w", err)
+		return fmt.Errorf("procfs/descriptors: %w", err)
 	}
 
-	inodes = make(set.Unordered[uint64])
+	seen := make(set.Unordered[uint64])
 
 	for _, f := range fds {
 		ino, err := strconv.ParseUint(f.Ino, 10, 64)
@@ -203,22 +234,28 @@ func processInfo(pid int) (
 			continue
 		}
 
-		inodes.Add(ino)
+		if seen.Add(ino) {
+			cb(ino)
+		}
 	}
 
-	return filepath.Base(name), inodes, nil
+	return nil
 }
 
 func Nsenter(
 	pid int,
 	proto graph.NetProto,
-	onconn func(*graph.Connection),
+	onconn func(int, *graph.Connection),
 ) (
 	err error,
 ) {
-	name, inodes, err := processInfo(pid)
+	name, err := processInfo(pid)
 	if err != nil {
 		return fmt.Errorf("procfs: %w", err)
+	}
+
+	connWithPid := func(c *graph.Connection) {
+		onconn(pid, c)
 	}
 
 	fs, err := procfs.NewFS(filepath.Join(procROOT, strconv.Itoa(pid)))
@@ -226,14 +263,20 @@ func Nsenter(
 		return fmt.Errorf("procfs/net: %w", err)
 	}
 
-	if proto == graph.ALL || proto == graph.TCP {
-		if err = scanTCP(fs, name, inodes, onconn); err != nil {
+	if proto.Has(graph.TCP) {
+		if err = scanTCP(fs, name, connWithPid); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}
 
-	if proto == graph.ALL || proto == graph.UDP {
-		if err = scanUDP(fs, name, inodes, onconn); err != nil {
+	if proto.Has(graph.UDP) {
+		if err = scanUDP(fs, name, connWithPid); err != nil {
+			return fmt.Errorf("scan: %w", err)
+		}
+	}
+
+	if proto.Has(graph.UNIX) {
+		if err = scanUNIX(fs, name, connWithPid); err != nil {
 			return fmt.Errorf("scan: %w", err)
 		}
 	}

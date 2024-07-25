@@ -3,7 +3,6 @@ package cluster
 import (
 	"cmp"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -13,12 +12,6 @@ import (
 
 	"github.com/s0rg/decompose/internal/graph"
 	"github.com/s0rg/decompose/internal/node"
-)
-
-var (
-	ErrInvalidFormat = errors.New("invalid format")
-	ErrInvalidRange  = errors.New("invalid range")
-	ErrPortCollision = errors.New("ports collision")
 )
 
 type (
@@ -184,7 +177,7 @@ func (cb *Rules) FromReader(r io.Reader) (err error) {
 
 func (cb *Rules) Match(n *node.Node) (cluster string, ok bool) {
 	if len(cb.rules) == 0 {
-		return "", false
+		return
 	}
 
 	for _, rule := range cb.rules {
