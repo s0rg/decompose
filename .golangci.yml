@@ -57,6 +57,14 @@ issues:
       text: "fieldalignment"
       linters:
         - govet # fieldalignment issue, ignored for yaml readability
+    - path: internal/client/defaults\.go
+      text: "G115" # uint56 -> int overflow, impossible for ip ports ranges
+      linters:
+        - gosec
+    - path: internal/graph/netstat\.go
+      text: "G115" # uint56 -> int overflow, impossible for ip ports ranges
+      linters:
+        - gosec
     - path: ._test\.go
       linters:
         - gocritic

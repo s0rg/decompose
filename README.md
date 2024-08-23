@@ -56,7 +56,7 @@ Closest analogs, i can find, that not suit my needs very well:
 - auto-clusterization based on graph topology
 - deep inspection mode, in wich connections between procesess inside containers, also collected and shown
 - unix-sockets connections
-- 100% test-coverage
+- over 95% test-coverage
 
 ## known limitations
 
