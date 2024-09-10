@@ -39,3 +39,32 @@ func TestConnectionIsInbound(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestConnectionUNIX(t *testing.T) {
+	t.Parallel()
+
+	const uniqID = "/some/unix.sock"
+
+	c := graph.Connection{
+		Proto: graph.UNIX,
+		Path:  uniqID,
+	}
+
+	if c.IsLocal() {
+		t.Fail()
+	}
+
+	if c.IsInbound() {
+		t.Fail()
+	}
+
+	c.Listen = true
+
+	if !c.IsInbound() {
+		t.Fail()
+	}
+
+	if _, ok := c.UniqID(); !ok {
+		t.Fail()
+	}
+}

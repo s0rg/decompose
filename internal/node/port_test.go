@@ -135,3 +135,34 @@ func TestPortsHasAny(t *testing.T) {
 		}
 	}
 }
+
+func TestPortJSON(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		JSON   []byte
+		Ok     bool
+		Number int
+	}{
+		{[]byte(`{`), false, 0},
+		{[]byte(`{"value": "string"}`), false, 0},
+		{[]byte(`{"kind": "tcp", "value": "80"}`), true, 80},
+	}
+
+	for _, tc := range testCases {
+		var p node.Port
+
+		err := p.UnmarshalJSON(tc.JSON)
+
+		switch {
+		case err != nil && !tc.Ok:
+		case err == nil && tc.Ok:
+		default:
+			t.FailNow()
+		}
+
+		if p.Number != tc.Number {
+			t.FailNow()
+		}
+	}
+}

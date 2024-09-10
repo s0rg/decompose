@@ -65,10 +65,6 @@ func (m *InodesMap) MarkListener(containerID string, pid int, path string) {
 }
 
 func (m *InodesMap) findListener(containerID string, pid int) (path string, ok bool) {
-	if m.l == nil {
-		return
-	}
-
 	pids, ok := m.l[containerID]
 	if !ok {
 		return
@@ -80,10 +76,6 @@ func (m *InodesMap) findListener(containerID string, pid int) (path string, ok b
 }
 
 func (m *InodesMap) nameFor(containerID string, pid int) (name string, ok bool) {
-	if m.n == nil {
-		return
-	}
-
 	names, ok := m.n[containerID]
 	if !ok {
 		return

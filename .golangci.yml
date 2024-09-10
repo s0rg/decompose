@@ -1,6 +1,5 @@
 run:
   allow-parallel-runners: true
-  go: '1.22'
 
 output:
   print-issued-lines: true
