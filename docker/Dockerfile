@@ -1,4 +1,4 @@
-FROM golang:1.22 AS builder
+FROM golang:1.23 AS builder
 
 ADD .. /go/src/github.com/s0rg/decompose
 WORKDIR /go/src/github.com/s0rg/decompose

@@ -35,8 +35,12 @@ func (p *Port) UnmarshalJSON(b []byte) (err error) {
 		return fmt.Errorf("unmarshal json: %w", err)
 	}
 
-	if p.Number, err = strconv.Atoi(v.Value); err != nil {
-		return fmt.Errorf("invalid port: '%s' atoi: %w", v.Value, err)
+	const sUNIX = "unix"
+
+	if v.Kind != sUNIX {
+		if p.Number, err = strconv.Atoi(v.Value); err != nil {
+			return fmt.Errorf("invalid port: '%s' atoi: %w", v.Value, err)
+		}
 	}
 
 	p.Kind = v.Kind
