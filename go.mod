@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/docker/docker v27.3.1+incompatible
-	github.com/emicklei/dot v1.6.2
+	github.com/emicklei/dot v1.6.3
 	github.com/expr-lang/expr v1.16.9
 	github.com/prometheus/procfs v0.15.1
 	github.com/s0rg/set v1.2.1
