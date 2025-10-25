@@ -68,36 +68,6 @@ func (l *Layers) AddEdge(e *node.Edge) {
 	l.g.AddEdge(e.SrcID, e.DstID)
 }
 
-func (l *Layers) upsertEdge(src, dst string, p *node.Port) {
-	dest, ok := l.edges[src]
-	if !ok {
-		dest = make(map[string]*node.Ports)
-	}
-
-	var ports *node.Ports
-
-	if ports, ok = dest[dst]; !ok {
-		ports = &node.Ports{}
-		dest[dst] = ports
-	}
-
-	ports.Add(clusterPorts, p)
-
-	l.edges[src] = dest
-}
-
-func (l *Layers) names(ids []string) (rv []string) {
-	rv = make([]string, 0, len(ids))
-
-	for _, id := range ids {
-		n := l.nodes[id]
-
-		rv = append(rv, n.Name)
-	}
-
-	return rv
-}
-
 func (l *Layers) Write(w io.Writer) error {
 	var (
 		seen  = make(set.Unordered[string])
@@ -159,6 +129,36 @@ func (l *Layers) Write(w io.Writer) error {
 	}
 
 	return nil
+}
+
+func (l *Layers) upsertEdge(src, dst string, p *node.Port) {
+	dest, ok := l.edges[src]
+	if !ok {
+		dest = make(map[string]*node.Ports)
+	}
+
+	var ports *node.Ports
+
+	if ports, ok = dest[dst]; !ok {
+		ports = &node.Ports{}
+		dest[dst] = ports
+	}
+
+	ports.Add(clusterPorts, p)
+
+	l.edges[src] = dest
+}
+
+func (l *Layers) names(ids []string) (rv []string) {
+	rv = make([]string, 0, len(ids))
+
+	for _, id := range ids {
+		n := l.nodes[id]
+
+		rv = append(rv, n.Name)
+	}
+
+	return rv
 }
 
 func CreateLabel(names []string, nmax int) (rv string) {

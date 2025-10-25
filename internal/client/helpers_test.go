@@ -14,18 +14,18 @@ func voidProgress(_, _ int) {}
 
 type clientMock struct {
 	Err            error
-	OnList         func() []types.Container
-	OnInspect      func() types.ContainerJSON
-	OnExecCreate   func() types.IDResponse
+	OnList         func() []container.Summary
+	OnInspect      func() container.InspectResponse
+	OnExecCreate   func() container.ExecCreateResponse
 	OnExecAttach   func() types.HijackedResponse
-	OnContainerTop func() container.ContainerTopOKBody
+	OnContainerTop func() container.TopResponse
 }
 
 func (cm *clientMock) ContainerTop(
 	_ context.Context,
 	_ string,
 	_ []string,
-) (rv container.ContainerTopOKBody, err error) {
+) (rv container.TopResponse, err error) {
 	if cm.Err != nil {
 		err = cm.Err
 
@@ -38,7 +38,7 @@ func (cm *clientMock) ContainerTop(
 func (cm *clientMock) ContainerList(
 	_ context.Context,
 	_ container.ListOptions,
-) (rv []types.Container, err error) {
+) (rv []container.Summary, err error) {
 	if cm.Err != nil {
 		err = cm.Err
 
@@ -51,7 +51,7 @@ func (cm *clientMock) ContainerList(
 func (cm *clientMock) ContainerInspect(
 	_ context.Context,
 	_ string,
-) (rv types.ContainerJSON, err error) {
+) (rv container.InspectResponse, err error) {
 	if cm.Err != nil {
 		err = cm.Err
 
@@ -65,7 +65,7 @@ func (cm *clientMock) ContainerExecCreate(
 	_ context.Context,
 	_ string,
 	_ container.ExecOptions,
-) (rv types.IDResponse, err error) {
+) (rv container.ExecCreateResponse, err error) {
 	if cm.Err != nil {
 		err = cm.Err
 

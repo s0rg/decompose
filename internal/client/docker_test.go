@@ -74,7 +74,7 @@ func TestDockerClientContainersEmpty(t *testing.T) {
 	t.Parallel()
 
 	cm := &clientMock{
-		OnList: func() (rv []types.Container) {
+		OnList: func() (rv []container.Summary) {
 			return rv
 		},
 	}
@@ -109,8 +109,8 @@ func TestDockerClientContainersSingleExited(t *testing.T) {
 	t.Parallel()
 
 	cm := &clientMock{
-		OnList: func() (rv []types.Container) {
-			return []types.Container{
+		OnList: func() (rv []container.Summary) {
+			return []container.Summary{
 				{
 					State: "exited",
 				},
@@ -151,16 +151,16 @@ func TestDockerClientContainersExecCreateError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
+	cm.OnList = func() (rv []container.Summary) {
 		cm.Err = testErr
 
-		return []types.Container{
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -204,16 +204,16 @@ func TestDockerClientContainersInspectError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
+	cm.OnList = func() (rv []container.Summary) {
 		cm.Err = testErr
 
-		return []types.Container{
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -257,14 +257,14 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -279,14 +279,14 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
 			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{
+		rv.Mounts = []container.MountPoint{
 			{
 				Type:        "bind",
 				Source:      "src",
@@ -307,7 +307,7 @@ func TestDockerClientContainersExecAttachError(t *testing.T) {
 		return rv
 	}
 
-	cm.OnExecCreate = func() (rv types.IDResponse) {
+	cm.OnExecCreate = func() (rv container.ExecCreateResponse) {
 		cm.Err = testErr
 
 		return
@@ -342,14 +342,14 @@ func TestDockerClientContainersParseError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -364,14 +364,14 @@ func TestDockerClientContainersParseError(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
 			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{
+		rv.Mounts = []container.MountPoint{
 			{
 				Type:        "bind",
 				Source:      "src",
@@ -392,7 +392,7 @@ func TestDockerClientContainersParseError(t *testing.T) {
 		return rv
 	}
 
-	cm.OnExecCreate = func() (rv types.IDResponse) {
+	cm.OnExecCreate = func() (rv container.ExecCreateResponse) {
 		return
 	}
 
@@ -451,14 +451,14 @@ func TestDockerClientContainersSingle(t *testing.T) {
 	t.Parallel()
 
 	cm := &clientMock{
-		OnList: func() (rv []types.Container) {
-			return []types.Container{
+		OnList: func() (rv []container.Summary) {
+			return []container.Summary{
 				{
 					ID:    "1",
 					Names: []string{"test"},
 					Image: "test-image",
 					State: "running",
-					NetworkSettings: &types.SummaryNetworkSettings{
+					NetworkSettings: &container.NetworkSettingsSummary{
 						Networks: map[string]*network.EndpointSettings{
 							"test-net": {
 								EndpointID: "1",
@@ -472,14 +472,14 @@ func TestDockerClientContainersSingle(t *testing.T) {
 				},
 			}
 		},
-		OnInspect: func() (rv types.ContainerJSON) {
-			rv.ContainerJSONBase = &types.ContainerJSONBase{}
-			rv.State = &types.ContainerState{Pid: 1}
+		OnInspect: func() (rv container.InspectResponse) {
+			rv.ContainerJSONBase = &container.ContainerJSONBase{}
+			rv.State = &container.State{Pid: 1}
 			rv.Config = &container.Config{
 				Cmd: []string{"foo"},
 				Env: []string{"BAR=1"},
 			}
-			rv.Mounts = []types.MountPoint{
+			rv.Mounts = []container.MountPoint{
 				{
 					Type:        "bind",
 					Source:      "src",
@@ -499,7 +499,7 @@ func TestDockerClientContainersSingle(t *testing.T) {
 
 			return rv
 		},
-		OnExecCreate: func() (rv types.IDResponse) {
+		OnExecCreate: func() (rv container.ExecCreateResponse) {
 			return
 		},
 		OnExecAttach: func() (rv types.HijackedResponse) {
@@ -550,14 +550,14 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 	t.Parallel()
 
 	cm := &clientMock{
-		OnList: func() (rv []types.Container) {
-			return []types.Container{
+		OnList: func() (rv []container.Summary) {
+			return []container.Summary{
 				{
 					ID:    "1",
 					Names: []string{"test"},
 					Image: "test-image",
 					State: "running",
-					NetworkSettings: &types.SummaryNetworkSettings{
+					NetworkSettings: &container.NetworkSettingsSummary{
 						Networks: map[string]*network.EndpointSettings{
 							"test-net": {
 								EndpointID: "1",
@@ -571,14 +571,14 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 				},
 			}
 		},
-		OnInspect: func() (rv types.ContainerJSON) {
-			rv.ContainerJSONBase = &types.ContainerJSONBase{}
-			rv.State = &types.ContainerState{Pid: 1}
+		OnInspect: func() (rv container.InspectResponse) {
+			rv.ContainerJSONBase = &container.ContainerJSONBase{}
+			rv.State = &container.State{Pid: 1}
 			rv.Config = &container.Config{
 				Cmd: []string{"foo"},
 				Env: []string{"BAR=1"},
 			}
-			rv.Mounts = []types.MountPoint{
+			rv.Mounts = []container.MountPoint{
 				{
 					Type:        "bind",
 					Source:      "src",
@@ -598,7 +598,7 @@ func TestDockerClientContainersSingleFull(t *testing.T) {
 
 			return rv
 		},
-		OnExecCreate: func() (rv types.IDResponse) {
+		OnExecCreate: func() (rv container.ExecCreateResponse) {
 			return
 		},
 		OnExecAttach: func() (rv types.HijackedResponse) {
@@ -647,14 +647,14 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 	t.Parallel()
 
 	cm := &clientMock{
-		OnList: func() (rv []types.Container) {
-			return []types.Container{
+		OnList: func() (rv []container.Summary) {
+			return []container.Summary{
 				{
 					ID:    "1",
 					Names: []string{"test"},
 					Image: "test-image",
 					State: "running",
-					NetworkSettings: &types.SummaryNetworkSettings{
+					NetworkSettings: &container.NetworkSettingsSummary{
 						Networks: map[string]*network.EndpointSettings{
 							"test-net": {
 								EndpointID: "1",
@@ -668,18 +668,18 @@ func TestDockerClientContainersSingleFullSkipEnv(t *testing.T) {
 				},
 			}
 		},
-		OnInspect: func() (rv types.ContainerJSON) {
-			rv.ContainerJSONBase = &types.ContainerJSONBase{}
-			rv.State = &types.ContainerState{Pid: 1}
+		OnInspect: func() (rv container.InspectResponse) {
+			rv.ContainerJSONBase = &container.ContainerJSONBase{}
+			rv.State = &container.State{Pid: 1}
 			rv.Config = &container.Config{
 				Cmd: []string{"foo"},
-				Env: []string{"BAR=1", "BAZ=2"},
+				Env: []string{"BAR=1"},
 			}
-			rv.Mounts = []types.MountPoint{}
+			rv.Mounts = []container.MountPoint{}
 
 			return rv
 		},
-		OnExecCreate: func() (rv types.IDResponse) {
+		OnExecCreate: func() (rv container.ExecCreateResponse) {
 			return
 		},
 		OnExecAttach: func() (rv types.HijackedResponse) {
@@ -774,16 +774,16 @@ func TestDockerClientNsEnterInspectError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
+	cm.OnList = func() (rv []container.Summary) {
 		cm.Err = testErr
 
-		return []types.Container{
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -828,14 +828,14 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -850,19 +850,19 @@ func TestDockerClientNsEnterConnectionsError(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
-			Env: []string{"BAR=1", "BAZ=2"},
+			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{}
+		rv.Mounts = []container.MountPoint{}
 
 		return rv
 	}
 
-	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+	cm.OnContainerTop = func() (rv container.TopResponse) {
 		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{"1", "test"},
@@ -906,14 +906,14 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -928,19 +928,19 @@ func TestDockerClientNsEnterContainerTopVariants(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
-			Env: []string{"BAR=1", "BAZ=2"},
+			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{}
+		rv.Mounts = []container.MountPoint{}
 
 		return rv
 	}
 
-	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+	cm.OnContainerTop = func() (rv container.TopResponse) {
 		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{},
@@ -994,14 +994,14 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -1016,19 +1016,19 @@ func TestDockerClientNsEnterOk(t *testing.T) {
 		}
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
-			Env: []string{"BAR=1", "BAZ=2"},
+			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{}
+		rv.Mounts = []container.MountPoint{}
 
 		return rv
 	}
 
-	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+	cm.OnContainerTop = func() (rv container.TopResponse) {
 		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{"1", "test"},
@@ -1073,14 +1073,14 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -1092,7 +1092,7 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 		}
 	}
 
-	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+	cm.OnContainerTop = func() (rv container.TopResponse) {
 		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{"1", "test"},
@@ -1101,14 +1101,14 @@ func TestDockerClientNsEnterLocal(t *testing.T) {
 		return rv
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
 			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{
+		rv.Mounts = []container.MountPoint{
 			{
 				Type:        "bind",
 				Source:      "src",
@@ -1192,14 +1192,14 @@ func TestDockerClientUnixSockets(t *testing.T) {
 
 	cm := &clientMock{}
 
-	cm.OnList = func() (rv []types.Container) {
-		return []types.Container{
+	cm.OnList = func() (rv []container.Summary) {
+		return []container.Summary{
 			{
 				ID:    "1",
 				Names: []string{"test1"},
 				Image: "test-image",
 				State: "running",
-				NetworkSettings: &types.SummaryNetworkSettings{
+				NetworkSettings: &container.NetworkSettingsSummary{
 					Networks: map[string]*network.EndpointSettings{
 						"test-net": {
 							EndpointID: "1",
@@ -1211,7 +1211,7 @@ func TestDockerClientUnixSockets(t *testing.T) {
 		}
 	}
 
-	cm.OnContainerTop = func() (rv container.ContainerTopOKBody) {
+	cm.OnContainerTop = func() (rv container.TopResponse) {
 		rv.Titles = []string{"PID,CMD"}
 		rv.Processes = [][]string{
 			{"1", "test"},
@@ -1220,14 +1220,14 @@ func TestDockerClientUnixSockets(t *testing.T) {
 		return rv
 	}
 
-	cm.OnInspect = func() (rv types.ContainerJSON) {
-		rv.ContainerJSONBase = &types.ContainerJSONBase{}
-		rv.State = &types.ContainerState{Pid: 1}
+	cm.OnInspect = func() (rv container.InspectResponse) {
+		rv.ContainerJSONBase = &container.ContainerJSONBase{}
+		rv.State = &container.State{Pid: 1}
 		rv.Config = &container.Config{
 			Cmd: []string{"foo"},
 			Env: []string{"BAR=1"},
 		}
-		rv.Mounts = []types.MountPoint{}
+		rv.Mounts = []container.MountPoint{}
 
 		return rv
 	}

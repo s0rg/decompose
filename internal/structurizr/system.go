@@ -43,24 +43,6 @@ func (s *System) AddContainer(id, name string) (c *Container, ok bool) {
 	return c, true
 }
 
-func (s *System) findRelation(src, dst string) (rv *Relation, found bool) {
-	src, dst = SafeID(src), SafeID(dst)
-
-	if dest, ok := s.relationships[src]; ok {
-		if rel, ok := dest[dst]; ok {
-			return rel, true
-		}
-	}
-
-	if dest, ok := s.relationships[dst]; ok {
-		if rel, ok := dest[src]; ok {
-			return rel, true
-		}
-	}
-
-	return nil, false
-}
-
 func (s *System) AddRelation(srcID, dstID, srcName, dstName string) (rv *Relation, ok bool) {
 	src, ok := s.containers[SafeID(srcID)]
 	if !ok {
@@ -134,4 +116,22 @@ func (s *System) WriteRelations(w io.Writer, level int) {
 			putEnd(w, level)
 		}
 	}
+}
+
+func (s *System) findRelation(src, dst string) (rv *Relation, found bool) {
+	src, dst = SafeID(src), SafeID(dst)
+
+	if dest, ok := s.relationships[src]; ok {
+		if rel, ok := dest[dst]; ok {
+			return rel, true
+		}
+	}
+
+	if dest, ok := s.relationships[dst]; ok {
+		if rel, ok := dest[src]; ok {
+			return rel, true
+		}
+	}
+
+	return nil, false
 }

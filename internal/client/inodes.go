@@ -64,28 +64,6 @@ func (m *InodesMap) MarkListener(containerID string, pid int, path string) {
 	pids[pid] = path
 }
 
-func (m *InodesMap) findListener(containerID string, pid int) (path string, ok bool) {
-	pids, ok := m.l[containerID]
-	if !ok {
-		return
-	}
-
-	path, ok = pids[pid]
-
-	return
-}
-
-func (m *InodesMap) nameFor(containerID string, pid int) (name string, ok bool) {
-	names, ok := m.n[containerID]
-	if !ok {
-		return
-	}
-
-	name, ok = names[pid]
-
-	return
-}
-
 func (m *InodesMap) MarkUnknown(containerID string, pid int, inode uint64) {
 	if m.u == nil {
 		m.u = make(map[string]map[int]set.Unordered[uint64])
@@ -171,4 +149,26 @@ func (m *InodesMap) Has(containerID string, pid int, inode uint64) (yes bool) {
 	}
 
 	return inodes.Has(inode)
+}
+
+func (m *InodesMap) findListener(containerID string, pid int) (path string, ok bool) {
+	pids, ok := m.l[containerID]
+	if !ok {
+		return
+	}
+
+	path, ok = pids[pid]
+
+	return
+}
+
+func (m *InodesMap) nameFor(containerID string, pid int) (name string, ok bool) {
+	names, ok := m.n[containerID]
+	if !ok {
+		return
+	}
+
+	name, ok = names[pid]
+
+	return
 }

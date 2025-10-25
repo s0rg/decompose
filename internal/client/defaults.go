@@ -5,6 +5,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -70,33 +71,35 @@ func scanTCP(
 	pfs procfs.FS,
 	name string,
 	onconn func(*graph.Connection),
-) (err error) {
+) {
 	tcp4, err := pfs.NetTCP()
 	if err != nil {
-		return fmt.Errorf("procfs/tcp4: %w", err)
-	}
+		log.Printf("[-] procfs/tcp: %v", err)
+	} else {
+		for _, s := range tcp4 {
+			listener, ok := checkState(s.St)
+			if !ok {
+				continue
+			}
 
-	for _, s := range tcp4 {
-		listener, ok := checkState(s.St)
-		if !ok {
-			continue
+			onconn(&graph.Connection{
+				Process: name,
+				Inode:   s.Inode,
+				SrcIP:   s.LocalAddr,
+				DstIP:   s.RemAddr,
+				SrcPort: int(s.LocalPort),
+				DstPort: int(s.RemPort),
+				Proto:   graph.TCP,
+				Listen:  listener,
+			})
 		}
-
-		onconn(&graph.Connection{
-			Process: name,
-			Inode:   s.Inode,
-			SrcIP:   s.LocalAddr,
-			DstIP:   s.RemAddr,
-			SrcPort: int(s.LocalPort),
-			DstPort: int(s.RemPort),
-			Proto:   graph.TCP,
-			Listen:  listener,
-		})
 	}
 
 	tcp6, err := pfs.NetTCP6()
 	if err != nil {
-		return fmt.Errorf("procfs/tcp6: %w", err)
+		log.Printf("[-] procfs/tcp6: %v", err)
+
+		return
 	}
 
 	for _, s := range tcp6 {
@@ -116,35 +119,35 @@ func scanTCP(
 			Listen:  listener,
 		})
 	}
-
-	return nil
 }
 
 func scanUDP(
 	pfs procfs.FS,
 	name string,
 	onconn func(*graph.Connection),
-) (err error) {
+) {
 	udp4, err := pfs.NetUDP()
 	if err != nil {
-		return fmt.Errorf("procfs/udp4: %w", err)
-	}
-
-	for _, s := range udp4 {
-		onconn(&graph.Connection{
-			Process: name,
-			Inode:   s.Inode,
-			SrcIP:   s.LocalAddr,
-			DstIP:   s.RemAddr,
-			SrcPort: int(s.LocalPort),
-			DstPort: int(s.RemPort),
-			Proto:   graph.UDP,
-		})
+		log.Printf("[-] procfs/udp: %v", err)
+	} else {
+		for _, s := range udp4 {
+			onconn(&graph.Connection{
+				Process: name,
+				Inode:   s.Inode,
+				SrcIP:   s.LocalAddr,
+				DstIP:   s.RemAddr,
+				SrcPort: int(s.LocalPort),
+				DstPort: int(s.RemPort),
+				Proto:   graph.UDP,
+			})
+		}
 	}
 
 	udp6, err := pfs.NetUDP6()
 	if err != nil {
-		return fmt.Errorf("procfs/udp6: %w", err)
+		log.Printf("[-] procfs/udp6: %v", err)
+
+		return
 	}
 
 	for _, s := range udp6 {
@@ -158,18 +161,18 @@ func scanUDP(
 			Proto:   graph.UDP,
 		})
 	}
-
-	return nil
 }
 
 func scanUNIX(
 	pfs procfs.FS,
 	name string,
 	onconn func(*graph.Connection),
-) (err error) {
+) {
 	unix, err := pfs.NetUNIX()
 	if err != nil {
-		return fmt.Errorf("procfs/unix: %w", err)
+		log.Printf("[-] procfs/unix: %v", err)
+
+		return
 	}
 
 	for _, s := range unix.Rows {
@@ -181,8 +184,6 @@ func scanUNIX(
 			Proto:   graph.UNIX,
 		})
 	}
-
-	return nil
 }
 
 func processInfo(pid int) (
@@ -264,21 +265,15 @@ func Nsenter(
 	}
 
 	if proto.Has(graph.TCP) {
-		if err = scanTCP(fs, name, connWithPid); err != nil {
-			return fmt.Errorf("scan: %w", err)
-		}
+		scanTCP(fs, name, connWithPid)
 	}
 
 	if proto.Has(graph.UDP) {
-		if err = scanUDP(fs, name, connWithPid); err != nil {
-			return fmt.Errorf("scan: %w", err)
-		}
+		scanUDP(fs, name, connWithPid)
 	}
 
 	if proto.Has(graph.UNIX) {
-		if err = scanUNIX(fs, name, connWithPid); err != nil {
-			return fmt.Errorf("scan: %w", err)
-		}
+		scanUNIX(fs, name, connWithPid)
 	}
 
 	return nil
