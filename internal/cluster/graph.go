@@ -12,22 +12,6 @@ const clusterPorts = "[cluster]"
 
 type connGraph map[string]*Node
 
-func (g connGraph) upsert(id string) (gn *Node) {
-	var ok bool
-
-	if gn, ok = g[id]; !ok {
-		gn = &Node{
-			Outbounds: make(set.Unordered[string]),
-			Inbounds:  make(set.Unordered[string]),
-			Ports:     &node.Ports{},
-		}
-
-		g[id] = gn
-	}
-
-	return gn
-}
-
 func (g connGraph) AddNode(n *node.Node) {
 	gn := g.upsert(n.ID)
 
@@ -71,4 +55,20 @@ func (g connGraph) NextLayer(
 	slices.Sort(rv)
 
 	return rv
+}
+
+func (g connGraph) upsert(id string) (gn *Node) {
+	var ok bool
+
+	if gn, ok = g[id]; !ok {
+		gn = &Node{
+			Outbounds: make(set.Unordered[string]),
+			Inbounds:  make(set.Unordered[string]),
+			Ports:     &node.Ports{},
+		}
+
+		g[id] = gn
+	}
+
+	return gn
 }

@@ -63,24 +63,6 @@ func (s *Stat) AddNode(n *node.Node) error {
 	return nil
 }
 
-func (s *Stat) isSuitable(srcID, dstID string) (uniq, yes bool) {
-	sc, ok := s.conns[srcID]
-	if !ok {
-		return
-	}
-
-	dc, ok := s.conns[dstID]
-	if !ok {
-		return
-	}
-
-	uniq = !(sc.Has(dstID) || dc.Has(srcID))
-
-	sc.Add(dstID)
-
-	return uniq, true
-}
-
 func (s *Stat) AddEdge(e *node.Edge) {
 	uniq, ok := s.isSuitable(e.SrcID, e.DstID)
 	if !ok {
@@ -115,6 +97,24 @@ func (s *Stat) Write(w io.Writer) error {
 	writeStats(w, ports)
 
 	return nil
+}
+
+func (s *Stat) isSuitable(srcID, dstID string) (uniq, yes bool) {
+	sc, ok := s.conns[srcID]
+	if !ok {
+		return
+	}
+
+	dc, ok := s.conns[dstID]
+	if !ok {
+		return
+	}
+
+	uniq = !sc.Has(dstID) && !dc.Has(srcID) // !(sc.Has(dstID) || dc.Has(srcID))
+
+	sc.Add(dstID)
+
+	return uniq, true
 }
 
 func (s *Stat) calcStats() (ports, clusters []*stat) {

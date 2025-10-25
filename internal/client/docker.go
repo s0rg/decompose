@@ -34,11 +34,11 @@ type (
 )
 
 type DockerClient interface {
-	ContainerList(context.Context, container.ListOptions) ([]types.Container, error)
-	ContainerInspect(context.Context, string) (types.ContainerJSON, error)
-	ContainerExecCreate(context.Context, string, container.ExecOptions) (types.IDResponse, error)
+	ContainerList(context.Context, container.ListOptions) ([]container.Summary, error)
+	ContainerInspect(context.Context, string) (container.InspectResponse, error)
+	ContainerExecCreate(context.Context, string, container.ExecOptions) (container.ExecCreateResponse, error)
 	ContainerExecAttach(context.Context, string, container.ExecStartOptions) (types.HijackedResponse, error)
-	ContainerTop(ctx context.Context, containerID string, arguments []string) (container.ContainerTopOKBody, error)
+	ContainerTop(ctx context.Context, containerID string, arguments []string) (container.TopResponse, error)
 	Close() error
 }
 
@@ -154,9 +154,17 @@ func (d *Docker) Containers(
 	return slices.Clip(rv), nil
 }
 
+func (d *Docker) Close() (err error) {
+	if err = d.cli.Close(); err != nil {
+		return fmt.Errorf("close: %w", err)
+	}
+
+	return nil
+}
+
 func (d *Docker) collectInodes(
 	ctx context.Context,
-	containers []types.Container,
+	containers []container.Summary,
 	errcb func(int, error) bool,
 ) (
 	inodes *InodesMap,
@@ -192,7 +200,7 @@ func (d *Docker) collectInodes(
 
 func (d *Docker) extractInfo(
 	ctx context.Context,
-	c *types.Container,
+	c *container.Summary,
 	proto graph.NetProto,
 	deep bool,
 	skeys set.Unordered[string],
@@ -239,14 +247,6 @@ func (d *Docker) extractInfo(
 	rv.SortConnections()
 
 	return rv, nil
-}
-
-func (d *Docker) Close() (err error) {
-	if err = d.cli.Close(); err != nil {
-		return fmt.Errorf("close: %w", err)
-	}
-
-	return nil
 }
 
 func (d *Docker) connections(
@@ -351,7 +351,7 @@ func (d *Docker) processesContainer(
 }
 
 func extractContainerInfo(
-	c *types.ContainerJSON,
+	c *container.InspectResponse,
 	s set.Unordered[string],
 ) (rv *graph.ContainerInfo) {
 	rv = &graph.ContainerInfo{
@@ -394,7 +394,7 @@ func extractEndpoints(
 }
 
 func extractVolumesInfo(
-	mounts []types.MountPoint,
+	mounts []container.MountPoint,
 ) (rv []*graph.VolumeInfo) {
 	rv = make([]*graph.VolumeInfo, len(mounts))
 

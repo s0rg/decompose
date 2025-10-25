@@ -103,7 +103,7 @@ func (l *Loader) loadNode(n *node.JSON) (id string, rv *node.Node) {
 		nod = l.createNode(id, n)
 	}
 
-	if !(n.IsExternal && l.cfg.OnlyLocal) {
+	if !l.cfg.OnlyLocal || !n.IsExternal { // !(n.IsExternal && l.cfg.OnlyLocal) {
 		loadListeners(nod.Ports, n.Listen)
 	}
 

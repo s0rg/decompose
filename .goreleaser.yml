@@ -1,4 +1,5 @@
 # .goreleaser.yml
+version: 2
 project_name: decompose
 
 before:
@@ -31,9 +32,8 @@ builds:
 
 archives:
   - id: decompose
-    format: tar.gz
-    builds:
-      - decompose-bin
+    formats: ['tar.gz']
+    ids: [decompose-bin]
     name_template: >-
       {{ .ProjectName }}_
       {{- .Tag }}_
@@ -43,7 +43,7 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
 
 nfpms:
   - id: packages

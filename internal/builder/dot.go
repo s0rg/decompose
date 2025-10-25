@@ -49,6 +49,13 @@ func (d *DOT) AddEdge(e *node.Edge) {
 	d.addEdge(e.SrcID, e.DstID, e.Port.Label())
 }
 
+func (d *DOT) Write(w io.Writer) error {
+	d.buildEdges()
+	d.g.Write(w)
+
+	return nil
+}
+
 func (d *DOT) addEdge(src, dst, label string) {
 	dmap, ok := d.edges[src]
 	if !ok {
@@ -95,13 +102,6 @@ func (d *DOT) buildEdges() {
 			d.g.Edge(src, dst, ports...)
 		}
 	}
-}
-
-func (d *DOT) Write(w io.Writer) error {
-	d.buildEdges()
-	d.g.Write(w)
-
-	return nil
 }
 
 func renderNode(n *node.Node) (label, color string) {
