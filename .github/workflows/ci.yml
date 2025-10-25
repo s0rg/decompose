@@ -43,8 +43,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ^1.25
-      - name: tests-only
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: run-test
         run: make test
       - name: push-coverage
         if: ${{ github.event_name == 'push' }}
