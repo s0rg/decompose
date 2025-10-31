@@ -17,6 +17,7 @@ const (
 	sUDP  = "udp"
 	sUNIX = "unix"
 	sALL  = "all"
+	comma = ","
 )
 
 func (p NetProto) String() string {
@@ -38,7 +39,7 @@ func (p NetProto) String() string {
 		buf = append(buf, sNONE)
 	}
 
-	return strings.Join(buf, ",")
+	return strings.Join(buf, comma)
 }
 
 func (p *NetProto) Set(mask NetProto) {
@@ -50,9 +51,7 @@ func (p NetProto) Has(mask NetProto) bool {
 }
 
 func ParseNetProto(val string) (p NetProto, ok bool) {
-	items := strings.Split(val, ",")
-
-	for _, v := range items {
+	for v := range strings.SplitSeq(val, comma) {
 		switch v {
 		case sALL:
 			p.Set(ALL)

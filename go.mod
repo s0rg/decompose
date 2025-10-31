@@ -6,7 +6,7 @@ require (
 	github.com/docker/docker v28.5.1+incompatible
 	github.com/emicklei/dot v1.9.2
 	github.com/expr-lang/expr v1.17.6
-	github.com/prometheus/procfs v0.19.0
+	github.com/prometheus/procfs v0.19.2
 	github.com/s0rg/set v1.2.4
 	github.com/s0rg/trie v1.3.4
 	gopkg.in/yaml.v3 v3.0.1

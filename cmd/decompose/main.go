@@ -384,6 +384,7 @@ func doBuild(
 
 	if runtime.GOOS == linuxOS && os.Geteuid() == 0 {
 		mode = client.LinuxNsenter
+
 		opts = append(opts,
 			client.WithNsenterFn(client.Nsenter),
 			client.WithInodesFn(client.Inodes),
