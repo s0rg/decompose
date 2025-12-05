@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/docker/docker v28.5.1+incompatible
-	github.com/emicklei/dot v1.9.2
+	github.com/emicklei/dot v1.10.0
 	github.com/expr-lang/expr v1.17.6
 	github.com/prometheus/procfs v0.19.2
 	github.com/s0rg/set v1.2.4
