@@ -3,6 +3,7 @@
 ![Issues](https://img.shields.io/github/issues/s0rg/decompose)
 
 [![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/s0rg/decompose/blob/master/LICENSE)
+![coverage](https://img.shields.io/badge/coverage-84.9%25-brightgreen)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fs0rg%2Fdecompose?ref=badge_shield)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/s0rg/decompose)](go.mod)
 [![Release](https://img.shields.io/github/v/release/s0rg/decompose)](https://github.com/s0rg/decompose/releases/latest)
