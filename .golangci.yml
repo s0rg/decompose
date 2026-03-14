@@ -66,6 +66,10 @@ linters:
         path: internal/client/defaults\.go
         text: G115
       - linters:
+          - staticcheck
+        path: internal/client/defaults\.go
+        text: SA1019
+      - linters:
           - gosec
         path: internal/graph/netstat\.go
         text: G115

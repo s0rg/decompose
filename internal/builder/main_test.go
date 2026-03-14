@@ -38,7 +38,7 @@ func golden(t *testing.T, file, actual string) string {
 	defer fd.Close()
 
 	if *update {
-		if _, werr := fd.WriteString(actual); err != nil {
+		if _, werr := fd.WriteString(actual); werr != nil {
 			t.Fatalf("Error writing to file %s: %s", path, werr)
 		}
 
