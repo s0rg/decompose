@@ -1,60 +1,114 @@
-SHELL=/usr/bin/env bash
+SHELL := /usr/bin/env bash
 
-BIN=bin/decompose
-COP=cover.out
+OUT := decompose
+ALL := ./...
+BIN := ./bin/${OUT}
+SRC := ./cmd/${OUT}
+COP := cover.out
+SELF = $(CURDIR)/$(lastword $(MAKEFILE_LIST))
 
-CMD=./cmd/decompose
-ALL=./...
+GIT_TAG := `git describe --abbrev=0 2>/dev/null || echo -n "no-tag"`
+GIT_REV := `git rev-parse --short HEAD 2>/dev/null || echo -n "no-git"`
+BUILD_AT := `date +%FT%T%z`
+LDFLAGS := -w -s \
+		  -X main.gitTag=${GIT_TAG} \
+		  -X main.gitHash=${GIT_REV} \
+		  -X main.buildDate=${BUILD_AT}
 
-GIT_TAG=`git describe --abbrev=0 2>/dev/null || echo -n "no-tag"`
-GIT_HASH=`git rev-parse --short HEAD 2>/dev/null || echo -n "no-git"`
-BUILD_AT=`date +%FT%T%z`
+COMPILER := go build
+CCFLAGS := ${COMPILER} -ldflags "${LDFLAGS}"
 
-LDFLAGS=-w -s \
-		-X main.buildDate=${BUILD_AT} \
-		-X main.gitVersion=${GIT_TAG} \
-		-X main.gitHash=${GIT_HASH}
+TESTER := go test
+TSTFLAGS := ${TESTER} -race -count 1 -vet=off -tags=test -v
 
 export CGO_ENABLED=0
 
-.PHONY: build
-build: vet
-	@go build -trimpath -ldflags "${LDFLAGS}" -o "${BIN}" "${CMD}"
+.PHONY: $(wildcard *)
 
-.PHONY: vet
-vet:
+## help: Prints this help message
+help:
+	@echo -e "\nUsage:"
+	@sed -n 's/^##//p' "${SELF}" | column -t -s ':' | sed -e 's/^/\t/'
+
+## build: Default build action - for Linux
+build: build/linux
+
+## build/linux: Builds for Linux
+build/linux: code/vet
+	@echo "Building for Linux..."
+	@GOOS=linux ${CCFLAGS} -o "${BIN}" "${SRC}"
+
+## build/freebsd: Builds for FreeBSD
+build/freebsd: code/vet
+	@echo "Building for FreeBSD..."
+	@GOOS=freebsd ${CCFLAGS} -o "${BIN}".bin "${SRC}"
+
+## build/windows: Builds for Windows
+build/windows: code/vet
+	@echo "Building for Windows..."
+	@GOOS=windows ${CCFLAGS} -o "${BIN}".exe "${SRC}"
+
+## build/darwin: Builds for MacOS
+build/darwin: code/vet
+	@echo "Building for MacOS..."
+	@GOOS=darwin ${CCFLAGS} -o "${BIN}".osx "${SRC}"
+
+## code/vet: Performs basic linting for code
+code/vet:
+	@echo "Running go vet..."
 	@go vet "${ALL}"
 
-.PHONY: test
-test: vet
-	@CGO_ENABLED=1 go test -v -race -count 1 -tags=test \
-				-cover -coverpkg="${ALL}" -coverprofile="${COP}" \
-				"${ALL}"
+## code/lint: Performs advanced linting for code
+code/lint: code/vet
+	@echo "Running golangci-lint..."
+	@golangci-lint run
 
-.PHONY: test-update
-test-update: test-clean
+## code/test-all: Runs tests suite
+code/test-all: code/vet
+	@echo "Running all tests"
+	@CGO_ENABLED=1 ${TSTFLAGS} -coverprofile="${COP}" "${ALL}"
+
+## code/test [name]: Runs specified test
+code/test: code/vet
+	@echo "Running single test: ${name}"
+	@CGO_ENABLED=1 ${TSTFLAGS} -run ${name} "${ALL}"
+
+## code/test-cover: Runs test-coverage
+code/ci-cover: code/vet
+	@echo "Calculating test coverage for CI"
+	@${TESTER} -v -coverprofile="$(COP)" -cover ${ALL} -coverpkg ${ALL} -covermode=count
+	@go tool cover -func="$(COP)" -o="$(COP)"
+
+## code/benchmark: Runs code benchmarks
+code/benchmark: code/test
+	@echo "Running benchmarks..."
+	@CGO_ENABLED=1 ${TESTER} -v -benchmem -bench=${ALL}
+
+## code/coverage: Calculates overall test coverage
+code/coverage: code/test-all
+	@echo "Calculating code coverage..."
+	@go tool cover -func="${COP}"
+
+## code/clean: Performs clean-up
+code/clean:
+	@echo "Cleaning up..."
+	[ -f "${COP}" ] && rm "${COP}"
+	[ -f "${BIN}" ] && rm "${BIN}"
+	[ -f "${BIN}".bin ] && rm "${BIN}".bin
+	[ -f "${BIN}".exe ] && rm "${BIN}".exe
+	[ -f "${BIN}".osx ] && rm "${BIN}".osx
+
+## test/update: Updates golden files for testing
+test/update: test/clean
 	@echo "updating golden files..."
 	@go test -tags=test "./internal/builder" -update
 
-.PHONY: test-clean
-test-clean:
+## test/clean: Cleans-up golden files
+test/clean:
 	@echo "clean-up..."
 	@find . -name "*.golden" -delete
 
-.PHONY: test-cover
-test-cover: test
-	@go tool cover -func="${COP}"
-
-.PHONY: lint
-lint: vet
-	@golangci-lint run
-
-.PHONY: markdown-fix
-markdown-fix:
+## markdown/fix: Fixes md files
+markdown/fix:
 	# https://github.com/executablebooks/mdformat
 	mdformat .
-
-.PHONY: clean
-clean:
-	[ -f "${BIN}" ] && rm "${BIN}"
-	[ -f "${COP}" ] && rm "${COP}"
