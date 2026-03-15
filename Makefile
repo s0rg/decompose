@@ -76,7 +76,7 @@ code/test: code/vet
 ## code/test-cover: Runs test-coverage
 code/ci-cover: code/vet
 	@echo "Calculating test coverage for CI"
-	@${TESTER} -v -coverprofile="$(COP)" -cover ${ALL} -coverpkg ${ALL} -covermode=count
+	@${TESTER} -v -tags=test -coverprofile="$(COP)" -cover ${ALL} -coverpkg ${ALL} -covermode=count
 	@go tool cover -func="$(COP)" -o="$(COP)"
 
 ## code/benchmark: Runs code benchmarks
