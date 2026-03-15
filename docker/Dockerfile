@@ -1,9 +1,9 @@
-FROM golang:1.25 AS builder
+FROM golang:1.26 AS builder
 
 ADD .. /go/src/github.com/s0rg/decompose
 WORKDIR /go/src/github.com/s0rg/decompose
 
-RUN make build
+RUN make build/linux
 
 FROM scratch
 

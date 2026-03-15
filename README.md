@@ -1,5 +1,5 @@
 [![CI](https://github.com/s0rg/decompose/workflows/ci/badge.svg)](https://github.com/s0rg/decompose/actions?query=workflow%3Aci)
-![coverage](https://img.shields.io/badge/coverage-84.9%25-brightgreen)
+![coverage](https://img.shields.io/badge/coverage-98.0%25-brightgreen)
 [![Go Report Card](https://goreportcard.com/badge/github.com/s0rg/decompose)](https://goreportcard.com/report/github.com/s0rg/decompose)
 ![Issues](https://img.shields.io/github/issues/s0rg/decompose)
 
