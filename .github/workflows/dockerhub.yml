@@ -12,16 +12,16 @@ jobs:
       contents: read
     steps:
       - name: Log in
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Check out
         uses: actions/checkout@v6
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile
