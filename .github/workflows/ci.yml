@@ -20,7 +20,7 @@ jobs:
       name: ci
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: setup golang
         uses: actions/setup-go@v6
         with:
@@ -40,7 +40,7 @@ jobs:
       contents: write
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
@@ -81,7 +81,7 @@ jobs:
       name: ci
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: setup golang
         uses: actions/setup-go@v6
         with:
