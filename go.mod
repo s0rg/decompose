@@ -6,7 +6,7 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/emicklei/dot v1.11.0
 	github.com/expr-lang/expr v1.17.8
-	github.com/prometheus/procfs v0.20.1
+	github.com/prometheus/procfs v0.22.0
 	github.com/s0rg/set v1.2.4
 	github.com/s0rg/trie v1.3.4
 	gopkg.in/yaml.v3 v3.0.1
@@ -38,7 +38,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 )
